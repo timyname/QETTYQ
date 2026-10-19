@@ -7,10 +7,10 @@ async function openDiscovery(
   options: { goal?: string; minutes?: number; budget?: number } = {},
 ) {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /Как проведём/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /2 минуты на выбор/ })).toBeVisible();
 
   await page.getByRole("button", { name: options.goal ?? "Попробовать новое" }).click();
-  await expect(page.getByRole("heading", { name: /Сколько у нас/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Сколько времени/ })).toBeVisible();
 
   if (options.minutes !== undefined) {
     await page.locator('input[type="range"]').fill(String(options.minutes));
@@ -19,25 +19,25 @@ async function openDiscovery(
     await page.getByLabel("Бюджет на человека").fill(String(options.budget));
   }
 
-  await page.getByRole("button", { name: /Выбрать настроение/ }).click();
-  await expect(page.getByText("1/4", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: /Перейти к 15 свайпам/ }).click();
+  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
 }
 
-async function reactFourTimes(page: Page, reactions: Reaction[]) {
-  expect(reactions).toHaveLength(4);
+async function reactFifteenTimes(page: Page, reactions: Reaction[]) {
+  expect(reactions).toHaveLength(15);
   for (let index = 0; index < reactions.length; index += 1) {
-    await expect(page.getByText(`${index + 1}/4`, { exact: true })).toBeVisible();
+    await expect(page.getByText(`${index + 1}/15`, { exact: true })).toBeVisible();
     await page.getByRole("button", { name: reactions[index], exact: true }).click();
   }
 }
 
-test("основной путь: цель → ограничения → 4 реакции → результаты со snapshot-источниками", async ({ page }) => {
+test("основной путь: цель → ограничения → 15 реакций → результаты со snapshot-источниками", async ({ page }) => {
   await openDiscovery(page, { minutes: 120, budget: 5_000 });
 
   const recommendationRequest = page.waitForRequest((request) =>
     request.url().endsWith("/api/recommendations") && request.method() === "POST",
   );
-  await reactFourTimes(page, ["Интересно", "Не сейчас", "Интересно", "Не сейчас"]);
+  await reactFifteenTimes(page, Array.from({ length: 15 }, (_, index) => (index % 3 === 0 ? "Интересно" : "Не сейчас") as Reaction));
 
   const request = await recommendationRequest;
   expect(request.postDataJSON()).toMatchObject({
@@ -46,8 +46,8 @@ test("основной путь: цель → ограничения → 4 ре�
     budget: 5_000,
   });
 
-  await expect(page.getByRole("heading", { name: /Вот что подходит сейчас/ })).toBeVisible();
-  await expect(page.getByText(/AI-объяснение недоступно/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Подходящие варианты/ })).toBeVisible();
+  await expect(page.getByText(/Подборка рассчитана локально/)).toBeVisible();
 
   const resultCards = page.locator(".result-card");
   await expect(resultCards.first()).toBeVisible();
@@ -60,7 +60,7 @@ test("основной путь: цель → ограничения → 4 ре�
 
 test("жёсткое ограничение времени даёт честную пустую выдачу без автоматического ослабления", async ({ page }) => {
   await openDiscovery(page, { goal: "Погулять", minutes: 30, budget: 0 });
-  await reactFourTimes(page, ["Не сейчас", "Не сейчас", "Не сейчас", "Не сейчас"]);
+  await reactFifteenTimes(page, Array.from({ length: 15 }, () => "Не сейчас" as Reaction));
 
   await expect(page.getByRole("heading", { name: "Подходящих вариантов пока нет" })).toBeVisible();
   await expect(page.getByText(/ограничения не были ослаблены автоматически/)).toBeVisible();
@@ -78,18 +78,18 @@ test("отказ recommendation API остаётся явной ошибкой �
   });
 
   await openDiscovery(page);
-  await reactFourTimes(page, ["Не сейчас", "Не сейчас", "Не сейчас", "Интересно"]);
+  await reactFifteenTimes(page, Array.from({ length: 15 }, (_, index) => (index === 14 ? "Интересно" : "Не сейчас") as Reaction));
 
   await expect(page.getByText("Не удалось получить варианты", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /Вот что подходит сейчас/ })).toHaveCount(0);
-  await expect(page.getByText("4/4", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Подходящие варианты/ })).toHaveCount(0);
+  await expect(page.getByText("15/15", { exact: true })).toBeVisible();
 });
 
 test("mobile viewport и reduced motion: управление доступно кнопками без горизонтального overflow", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Попробовать новое" })).toBeVisible();
 
-  const reducedMotion = await page.locator(".goal-card").first().evaluate((element) => {
+  const reducedMotion = await page.locator(".quick-intents button").first().evaluate((element) => {
     const duration = getComputedStyle(element).transitionDuration
       .split(",")
       .map((part) => Number.parseFloat(part) * (part.includes("ms") ? 1 : 1_000));
@@ -103,9 +103,9 @@ test("mobile viewport и reduced motion: управление доступно �
   expect(hasHorizontalOverflow).toBe(false);
 
   await page.getByRole("button", { name: "Попробовать новое" }).click();
-  await page.getByRole("button", { name: /Выбрать настроение/ }).scrollIntoViewIfNeeded();
-  await expect(page.getByRole("button", { name: /Выбрать настроение/ })).toBeVisible();
-  await page.getByRole("button", { name: /Выбрать настроение/ }).click();
+  await page.getByRole("button", { name: /Перейти к 15 свайпам/ }).scrollIntoViewIfNeeded();
+  await expect(page.getByRole("button", { name: /Перейти к 15 свайпам/ })).toBeVisible();
+  await page.getByRole("button", { name: /Перейти к 15 свайпам/ }).click();
   await expect(page.getByRole("button", { name: "Не сейчас" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Интересно" })).toBeVisible();
 });

@@ -10,3 +10,4 @@ test-results/
 .DS_Store
 data/raw/
 tmp/
+.codex-presentations/
