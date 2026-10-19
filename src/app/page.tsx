@@ -1,8 +1,9 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
 import { ArrowLeft, ArrowRight, CalendarDays, Clock3, Heart, MapPin, MessageCircle, Navigation, RotateCcw, WalletCards } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import type { Goal, Recommendation } from "@/domain/types";
 import { CityMap } from "@/components/CityMap";
@@ -25,22 +26,22 @@ const goals: Array<{ id: Goal; icon: string; title: string; text: string; tags: 
 ];
 
 const interestCards = [
-  { title: "Современное искусство", tag: "arts_centre", tone: "violet", mark: "Искусство", symbol: "◫" },
-  { title: "Тихий парк", tag: "garden", tone: "green", mark: "Прогулка", symbol: "↟" },
-  { title: "Кофе с видом", tag: "cafe", tone: "orange", mark: "Кофе", symbol: "◒" },
-  { title: "История города", tag: "museum", tone: "blue", mark: "Музей", symbol: "⌂" },
-  { title: "Театр вечером", tag: "theatre", tone: "coral", mark: "Сцена", symbol: "✦" },
-  { title: "Архитектура Астаны", tag: "architecture", tone: "violet", mark: "Город", symbol: "◇" },
-  { title: "Книжное место", tag: "library", tone: "blue", mark: "Тишина", symbol: "▤" },
-  { title: "Прогулка у воды", tag: "park", tone: "green", mark: "Воздух", symbol: "≈" },
-  { title: "Локальная кухня", tag: "restaurant", tone: "orange", mark: "Еда", symbol: "○" },
-  { title: "Новая выставка", tag: "museum", tone: "violet", mark: "Выставка", symbol: "□" },
-  { title: "Камерная музыка", tag: "theatre", tone: "coral", mark: "Музыка", symbol: "♪" },
-  { title: "Необычный ракурс", tag: "viewpoint", tone: "blue", mark: "Вид", symbol: "△" },
-  { title: "С детьми", tag: "playground", tone: "green", mark: "Семья", symbol: "☺" },
-  { title: "Быстро перекусить", tag: "fast_food", tone: "orange", mark: "Быстро", symbol: "◐" },
-  { title: "Новое без плана", tag: "culture", tone: "violet", mark: "Сюрприз", symbol: "✦" },
-];
+  { id: "culture-history", title: "Культура и история", tag: "museum", image: "/assets/ideas/01-culture-history.jpg", alt: "Иллюстрация интереса: культура и история" },
+  { id: "rock-live-music", title: "Рок и живая музыка", tag: "theatre", image: "/assets/ideas/02-rock-live-music.jpg", alt: "Иллюстрация интереса: рок и живая музыка" },
+  { id: "ballet-theatre", title: "Балет и театр", tag: "theatre", image: "/assets/ideas/03-ballet-theatre.jpg", alt: "Иллюстрация интереса: балет и театр" },
+  { id: "bachata-social-dance", title: "Бачата и танцы", tag: "arts_centre", image: "/assets/ideas/04-bachata-social-dance.jpg", alt: "Иллюстрация интереса: бачата и социальные танцы" },
+  { id: "drums-hand-music", title: "Барабаны и ритм", tag: "arts_centre", image: "/assets/ideas/05-drums-hand-music.jpg", alt: "Иллюстрация интереса: барабаны и музыка руками" },
+  { id: "armwrestling-strength", title: "Армрестлинг и сила", tag: "sports_centre", image: "/assets/ideas/06-armwrestling-strength.jpg", alt: "Иллюстрация интереса: армрестлинг и силовой спорт" },
+  { id: "active-leisure", title: "Активный отдых", tag: "park", image: "/assets/ideas/07-active-leisure.jpg", alt: "Иллюстрация интереса: активный отдых" },
+  { id: "banya-country-retreat", title: "Баня и загородный отдых", tag: "spa", image: "/assets/ideas/08-banya-country-retreat.jpg", alt: "Иллюстрация интереса: баня и загородный отдых" },
+  { id: "shashlik-friends", title: "Шашлык и компания", tag: "restaurant", image: "/assets/ideas/09-shashlik-friends.jpg", alt: "Иллюстрация интереса: шашлык и компания" },
+  { id: "fine-dining", title: "Fine dining", tag: "restaurant", image: "/assets/ideas/10-fine-dining.jpg", alt: "Иллюстрация интереса: гастрономический вечер" },
+  { id: "coffee-quiet-evening", title: "Кофе и спокойный вечер", tag: "cafe", image: "/assets/ideas/11-coffee-quiet-evening.jpg", alt: "Иллюстрация интереса: кофе и спокойный вечер" },
+  { id: "exhibition-contemporary-art", title: "Выставка и современное искусство", tag: "arts_centre", image: "/assets/ideas/12-exhibition-contemporary-art.jpg", alt: "Иллюстрация интереса: выставка и современное искусство" },
+  { id: "cinema", title: "Кино", tag: "cinema", image: "/assets/ideas/13-cinema.jpg", alt: "Иллюстрация интереса: кино" },
+  { id: "workshop-creativity", title: "Мастер-класс и творчество", tag: "arts_centre", image: "/assets/ideas/14-workshop-creativity.jpg", alt: "Иллюстрация интереса: мастер-класс и творчество" },
+  { id: "walk-architecture", title: "Прогулка и архитектура", tag: "architecture", image: "/assets/ideas/15-walk-architecture.jpg", alt: "Иллюстрация интереса: прогулка и архитектура" },
+] as const;
 
 const SWIPE_COUNT = interestCards.length;
 
@@ -61,6 +62,10 @@ export default function Home() {
   const [eventQuery, setEventQuery] = useState("");
   const [activeEventId, setActiveEventId] = useState(cityEvents[0].id);
   const [locale, setLocale] = useState<Locale>("ru");
+  const dragX = useMotionValue(0);
+  const cardRotate = useTransform(dragX, [-180, 180], [-6, 6]);
+  const likeOpacity = useTransform(dragX, [18, 118], [0, 1]);
+  const skipOpacity = useTransform(dragX, [-118, -18], [1, 0]);
   const copy = localeCopy[locale];
 
   const localProfile = useMemo<LocalPreferenceProfile>(() => ({ locale, goal, minutes, budget, likedTags }), [budget, goal, likedTags, locale, minutes]);
@@ -108,6 +113,7 @@ export default function Home() {
   }
 
   function react(like: boolean) {
+    dragX.set(0);
     const nextTags = like && !likedTags.includes(current.tag) ? [...likedTags, current.tag] : likedTags;
     if (nextTags !== likedTags) setLikedTags(nextTags);
     if (cardIndex >= SWIPE_COUNT - 1) void finishDiscovery(nextTags);
@@ -228,13 +234,29 @@ export default function Home() {
           <motion.section className="screen discover" key="discover" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={reduceMotion ? undefined : { opacity: 0 }}>
             <div className="discover-head"><button className="back" onClick={() => setStage("limits")}><ArrowLeft size={18} /></button><div className="progress"><i style={{ width: `${progress}%` }} /></div><span>{Math.min(cardIndex + 1, SWIPE_COUNT)}/{SWIPE_COUNT}</span></div>
             <div className="context-chip"><Clock3 size={15} /> {minutes} мин <i /> до {budget.toLocaleString("ru-RU")} ₸ <button onClick={() => setStage("limits")}>Изменить</button></div>
-            <p className="deck-kicker">Свайп вправо, если откликается</p>
+            <div className="deck-kicker"><b>Выбери, что тебе по душе</b><span>Мы запомним ответы и соберём ленту событий по твоему вайбу.</span></div>
             <AnimatePresence mode="popLayout">
-              <motion.article className={`swipe-card ${current.tone}`} key={current.tag} initial={reduceMotion ? false : { opacity: 0, scale: .94, rotate: 2 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={reduceMotion ? undefined : { opacity: 0, x: 160, rotate: 8 }} transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 24 }}>
-                <div className="card-grid" />
-                <span className="card-mark">{current.mark}</span>
-                <div className="card-symbol">{current.symbol}</div>
-                <div><small>Это интерес, не обещание события</small><h2>{current.title}</h2><p>После свайпов найдём реальные места и покажем источник каждого варианта.</p></div>
+              <motion.article
+                className="swipe-card"
+                key={current.id}
+                aria-label={`${current.title}. Свайп вправо — интересно, влево — не сейчас.`}
+                drag={reduceMotion ? false : "x"}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                style={{ x: dragX, rotate: reduceMotion ? 0 : cardRotate }}
+                initial={reduceMotion ? false : { opacity: 0, scale: .97, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={reduceMotion ? undefined : { opacity: 0, scale: .96 }}
+                transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 24 }}
+                onDragEnd={(_, info) => {
+                  if (Math.abs(info.offset.x) >= 96 || Math.abs(info.velocity.x) >= 520) react(info.offset.x > 0);
+                }}
+              >
+                <Image className="swipe-card-image" src={current.image} alt={current.alt} fill sizes="(max-width: 799px) 82vw, 342px" priority={cardIndex < 2} />
+                <div className="swipe-card-shade" />
+                <motion.span className="swipe-verdict is-skip" style={{ opacity: skipOpacity }}>Не сейчас</motion.span>
+                <motion.span className="swipe-verdict is-like" style={{ opacity: likeOpacity }}>Интересно</motion.span>
+                <div className="swipe-card-copy"><small>Идея · не реальное событие</small><h2>{current.title}</h2></div>
               </motion.article>
             </AnimatePresence>
             {error && <p className="error">{error}</p>}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-20",
+  "cityScope": "astana",
+  "mediaType": "category_illustration",
+  "dataMode": "synthetic_visual",
+  "generator": "OpenAI built-in imagegen",
+  "aspectRatio": "3:4",
+  "runtimeSize": { "width": 720, "height": 960 },
+  "notice": "These images represent preference categories, not real venues, events, prices, schedules or availability.",
+  "cards": [
+    { "id": "culture-history", "order": 1, "titleRu": "Культура и история", "src": "/assets/ideas/01-culture-history.jpg", "master": "design/generated/interest-cards/01-culture-history.png", "tags": ["culture", "history", "museum", "architecture"] },
+    { "id": "rock-live-music", "order": 2, "titleRu": "Рок и живая музыка", "src": "/assets/ideas/02-rock-live-music.jpg", "master": "design/generated/interest-cards/02-rock-live-music.png", "tags": ["rock", "live-music", "concert", "night"] },
+    { "id": "ballet-theatre", "order": 3, "titleRu": "Балет и театр", "src": "/assets/ideas/03-ballet-theatre.jpg", "master": "design/generated/interest-cards/03-ballet-theatre.png", "tags": ["ballet", "theatre", "performance", "culture"] },
+    { "id": "bachata-social-dance", "order": 4, "titleRu": "Бачата и танцы", "src": "/assets/ideas/04-bachata-social-dance.jpg", "master": "design/generated/interest-cards/04-bachata-social-dance.png", "tags": ["bachata", "dance", "social", "movement"] },
+    { "id": "drums-hand-music", "order": 5, "titleRu": "Барабаны и ритм", "src": "/assets/ideas/05-drums-hand-music.jpg", "master": "design/generated/interest-cards/05-drums-hand-music.png", "tags": ["drums", "rhythm", "music", "hands-on"] },
+    { "id": "armwrestling-strength", "order": 6, "titleRu": "Армрестлинг и сила", "src": "/assets/ideas/06-armwrestling-strength.jpg", "master": "design/generated/interest-cards/06-armwrestling-strength.png", "tags": ["armwrestling", "strength", "sport", "competition"] },
+    { "id": "active-leisure", "order": 7, "titleRu": "Активный отдых", "src": "/assets/ideas/07-active-leisure.jpg", "master": "design/generated/interest-cards/07-active-leisure.png", "tags": ["active", "outdoors", "movement", "friends"] },
+    { "id": "banya-country-retreat", "order": 8, "titleRu": "Баня и загородный отдых", "src": "/assets/ideas/08-banya-country-retreat.jpg", "master": "design/generated/interest-cards/08-banya-country-retreat.png", "tags": ["banya", "relax", "country", "wellness"] },
+    { "id": "shashlik-friends", "order": 9, "titleRu": "Шашлык и компания", "src": "/assets/ideas/09-shashlik-friends.jpg", "master": "design/generated/interest-cards/09-shashlik-friends.png", "tags": ["shashlik", "friends", "food", "outdoors"] },
+    { "id": "fine-dining", "order": 10, "titleRu": "Fine dining", "src": "/assets/ideas/10-fine-dining.jpg", "master": "design/generated/interest-cards/10-fine-dining.png", "tags": ["fine-dining", "gastronomy", "restaurant", "special-evening"] },
+    { "id": "coffee-quiet-evening", "order": 11, "titleRu": "Кофе и спокойный вечер", "src": "/assets/ideas/11-coffee-quiet-evening.jpg", "master": "design/generated/interest-cards/11-coffee-quiet-evening.png", "tags": ["coffee", "quiet", "reading", "evening"] },
+    { "id": "exhibition-contemporary-art", "order": 12, "titleRu": "Выставка и современное искусство", "src": "/assets/ideas/12-exhibition-contemporary-art.jpg", "master": "design/generated/interest-cards/12-exhibition-contemporary-art.png", "tags": ["exhibition", "contemporary-art", "gallery", "culture"] },
+    { "id": "cinema", "order": 13, "titleRu": "Кино", "src": "/assets/ideas/13-cinema.jpg", "master": "design/generated/interest-cards/13-cinema.png", "tags": ["cinema", "film", "screening", "evening"] },
+    { "id": "workshop-creativity", "order": 14, "titleRu": "Мастер-класс и творчество", "src": "/assets/ideas/14-workshop-creativity.jpg", "master": "design/generated/interest-cards/14-workshop-creativity.png", "tags": ["workshop", "craft", "creativity", "hands-on"] },
+    { "id": "walk-architecture", "order": 15, "titleRu": "Прогулка и архитектура", "src": "/assets/ideas/15-walk-architecture.jpg", "master": "design/generated/interest-cards/15-walk-architecture.png", "tags": ["walk", "architecture", "city", "outdoors"] }
+  ]
+}

@@ -1,14 +1,16 @@
 # Отчёт проверки
 
-Дата: 19 октября 2026. Среда: macOS arm64, Node.js 24.19.0, pnpm 11.25.0.
+Дата последней проверки: 20 октября 2026. Среда: macOS arm64, bundled Node.js, pnpm.
 
 | Проверка | Статус | Детали |
 |---|---|---|
 | `pnpm data:validate` | PASS | 80 snapshot POI с provenance |
 | `pnpm test` | PASS | 13 unit + integration тестов |
-| `pnpm test:e2e` | PASS | 4 mobile Chromium сценария, 390×844, reduced motion |
+| `pnpm test:e2e` | PASS | 5 mobile Chromium сценариев, 390×844, reduced motion; 15 реакций проходят полный путь |
 | `pnpm typecheck` | PASS | TypeScript без ошибок |
-| `pnpm build` | PASS | Next.js production build, UI, рекомендации, sessions/reactions/delete-data API |
+| `pnpm lint` | PASS | ESLint без ошибок |
+| `pnpm build` | PASS | Next.js production build после подключения 15 локальных 3:4 assets |
+| Проверка изображений | PASS | 15 runtime JPEG, каждый 720×960; мастера сохранены отдельно |
 | `pnpm submission:check` | PASS | Обязательные файлы доступны, `.env.example` без ключей |
 | Presentation QA | PASS | 9-slide PPTX, 9-page PDF, montage и full-size inspection |
 | Secret scan | PASS | Финальный submission ZIP без известных ключевых паттернов |
