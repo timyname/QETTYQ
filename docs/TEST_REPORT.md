@@ -14,5 +14,11 @@
 | `pnpm submission:check` | PASS | Обязательные файлы доступны, `.env.example` без ключей |
 | Presentation QA | PASS | 9-slide PPTX, 9-page PDF, montage и full-size inspection |
 | Secret scan | PASS | Финальный submission ZIP без известных ключевых паттернов |
+| P0 screen manifest | PASS | `jq`: 28 записей; 28 PNG присутствуют и не пусты |
+| Screen master dimensions | PASS | Masters около 853×1844, единая portrait-пропорция; целевой viewport в контракте 430×932 |
 
 Провайдерные mocks не выдаются за live smoke. Реальный сетевой вызов выполнен только для одного ограниченного импорта OSM. Детали E2E: `docs/agent-reports/A8-e2e.md`.
+
+Визуальный QA экранов ограничен композицией. Сгенерированный текст не принимается
+как финальный UI-copy; map-like фон не принимается как настоящая карта. Перед
+релизом каждый экран должен быть воспроизведён кодом и пройти mobile screenshot QA.

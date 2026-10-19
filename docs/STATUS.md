@@ -41,3 +41,15 @@ Onboarding → ограничения → 15 визуальных карточе
 - `exports/QETTYQ_APP_pitch.pptx` — редактируемая презентация, 9 слайдов.
 - `exports/QETTYQ_APP_pitch.pdf` — проверенный PDF, 9 страниц.
 - `exports/QETTYQ_APP_submission.zip` — исходники и материалы без секретов и build-кешей.
+
+## Визуальные экраны
+
+- Зафиксирована инструкция генерации production UI: `design/QETTYQ_APP_SCREEN_GENERATION_INSTRUCTION.md`.
+- Создан P0 prompt set: `design/QETTYQ_APP_SCREEN_PROMPTS_P0.md`.
+- Сгенерировано 28 визуальных эталонов экранов в `design/generated/app-screens/`:
+  первый контакт, контекст, лента, карта, детали, маршруты, помощник, память,
+  источники, приватность и degraded states.
+- Bootstrap, swipe-like/skip и uncertain-feed остаются code-native/derived states,
+  поэтому отдельные растровые макеты им не нужны.
+- PNG не являются source of truth для текста, карт или фактов; точный слой
+  воспроизводится компонентами React по 44-artboard specification.
