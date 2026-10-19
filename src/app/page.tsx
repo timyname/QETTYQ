@@ -6,7 +6,13 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Goal, Recommendation } from "@/domain/types";
 import { CityMap } from "@/components/CityMap";
-import { cityEvents } from "@/data/events";
+import { cityEvents, type Locale } from "@/data/events";
+
+const localeCopy = {
+  ru: { heroA: "2 минуты на выбор.", heroB: "Дальше — готовый план.", lead: "Ответь на 15 коротких карточек. QETTYQ учтёт время, бюджет и настроение, затем покажет 1–3 места, куда ты успеваешь.", map: "Открыть карту событий", free: "Свободное время", city: "Что происходит в городе", search: "Например: выставка или концерт", route: "Маршрут в Google Maps", verify: "Проверить событие", lang: "Язык" },
+  kk: { heroA: "Таңдауға 2 минут.", heroB: "Содан кейін дайын жоспар.", lead: "15 қысқа карточкаға жауап беріңіз. QETTYQ уақытты, бюджетті және көңіл күйді ескеріп, 1–3 орынды ұсынады.", map: "Оқиғалар картасын ашу", free: "Бос уақыт", city: "Қалада не болып жатыр", search: "Мысалы: көрме немесе концерт", route: "Google Maps-та маршрут", verify: "Оқиғаны тексеру", lang: "Тіл" },
+  en: { heroA: "2 minutes to choose.", heroB: "Then your plan is ready.", lead: "Answer 15 quick cards. QETTYQ uses your time, budget and mood to suggest 1–3 places you can actually reach.", map: "Open event map", free: "Free time", city: "What is happening in the city", search: "For example: exhibition or concert", route: "Route in Google Maps", verify: "Verify event", lang: "Language" },
+} as const;
 
 const goals: Array<{ id: Goal; icon: string; title: string; text: string; tags: string[] }> = [
   { id: "food", icon: "🥟", title: "Поесть", text: "Найти место, куда успею", tags: ["cafe", "restaurant", "fast_food"] },
@@ -51,14 +57,16 @@ export default function Home() {
   const [intentText, setIntentText] = useState("");
   const [eventQuery, setEventQuery] = useState("");
   const [activeEventId, setActiveEventId] = useState(cityEvents[0].id);
+  const [locale, setLocale] = useState<Locale>("ru");
+  const copy = localeCopy[locale];
 
   const current = interestCards[cardIndex % interestCards.length];
   const progress = useMemo(() => Math.min(100, (cardIndex / SWIPE_COUNT) * 100), [cardIndex]);
   const visibleEvents = useMemo(() => {
     const query = eventQuery.trim().toLocaleLowerCase("ru-RU");
     if (!query) return cityEvents;
-    return cityEvents.filter((event) => `${event.title} ${event.venue} ${event.category}`.toLocaleLowerCase("ru-RU").includes(query));
-  }, [eventQuery]);
+    return cityEvents.filter((event) => `${event.title[locale]} ${event.venue[locale]} ${event.category}`.toLocaleLowerCase("ru-RU").includes(query));
+  }, [eventQuery, locale]);
   const activeEvent = cityEvents.find((event) => event.id === activeEventId) ?? cityEvents[0];
 
   async function finishDiscovery(tags = likedTags) {
@@ -106,7 +114,7 @@ export default function Home() {
         <button className="wordmark" onClick={() => setStage("start")} aria-label="QETTYQ — на главную">
           QETTYQ<span>•</span>
         </button>
-        <div className="city"><MapPin size={15} /> Астана <small>пилот</small></div>
+        <div className="top-actions"><div className="locale-switch" aria-label="Язык интерфейса">{(["ru", "kk", "en"] as Locale[]).map((code) => <button key={code} className={locale === code ? "active" : ""} onClick={() => setLocale(code)}>{code === "kk" ? "ҚАЗ" : code.toUpperCase()}</button>)}</div><div className="city"><MapPin size={15} /> Астана <small>пилот</small></div></div>
       </header>
 
       <>
@@ -114,8 +122,8 @@ export default function Home() {
           <motion.section className="screen start start-workbench" key="start" initial={false} animate={{ opacity: 1, y: 0 }} exit={reduceMotion ? undefined : { opacity: 0, y: -12 }}>
             <div className="start-copy">
               <div className="eyebrow">Первый запуск в Астане</div>
-              <h1>2 минуты на выбор.<br /><em>Дальше — готовый план.</em></h1>
-              <p className="lead">Ответь на 15 коротких карточек. QETTYQ учтёт время, бюджет и настроение, затем покажет 1–3 места, куда ты успеваешь.</p>
+              <h1>{copy.heroA}<br /><em>{copy.heroB}</em></h1>
+              <p className="lead">{copy.lead}</p>
               <div className="promise-row" aria-label="Как работает подборка">
                 <span><b>15</b> свайпов</span>
                 <span><b>80</b> мест в пилоте</span>
@@ -149,7 +157,7 @@ export default function Home() {
                 <div><ShieldCheck size={17} /><span><b>Неизвестные данные</b><small>Цена, часы работы и маршрут помечаются отдельно</small></span><CheckCircle2 size={16} /></div>
               </div>
               <button className="assistant-cta" onClick={() => { setGoal("new"); setStage("limits"); }}>Начать 15 свайпов <ArrowRight size={18} /></button>
-              <button className="map-open" onClick={() => setStage("explore")}><MapPin size={17} /> Открыть карту событий</button>
+              <button className="map-open" onClick={() => setStage("explore")}><MapPin size={17} /> {copy.map}</button>
               <p className="event-note">События показаны отдельным проверяемым snapshot. Места для персональной выдачи берутся из OSM.</p>
             </aside>
           </motion.section>
@@ -163,24 +171,24 @@ export default function Home() {
             </div>
             <div className="explorer-grid">
               <aside className="event-rail">
-                <div className="event-rail-title"><span>Свободное время</span><h1>Что происходит<br />в городе</h1><p>Выберите событие на карте или опишите план помощнику.</p></div>
-                <div className="mini-chat"><MessageCircle size={18} /><input value={eventQuery} onChange={(event) => setEventQuery(event.target.value)} placeholder="Например: выставка или концерт" /><button aria-label="Найти"><ArrowRight size={17} /></button></div>
+                <div className="event-rail-title"><span>{copy.free}</span><h1>{copy.city}</h1><p>Выберите событие на карте или опишите план помощнику.</p></div>
+                <div className="mini-chat"><MessageCircle size={18} /><input aria-label={copy.search} value={eventQuery} onChange={(event) => setEventQuery(event.target.value)} placeholder={copy.search} /><button aria-label="Найти"><ArrowRight size={17} /></button></div>
                 <div className="event-list">
                   {visibleEvents.map((event, index) => (
                     <button className={event.id === activeEventId ? "event-item active" : "event-item"} key={event.id} onClick={() => setActiveEventId(event.id)}>
-                      <i>{index + 1}</i><span><small>{event.category} · {event.dateLabel}</small><b>{event.title}</b><em>{event.venue} · {event.priceLabel}</em></span>
+                      <i>{index + 1}</i><span><small>{event.category} · {event.dateLabel} · {copy.lang}: {event.contentLanguage.toUpperCase()}</small><b>{event.title[locale]}</b><em>{event.venue[locale]} · {event.priceLabel}</em></span>
                     </button>
                   ))}
                   {!visibleEvents.length && <p className="no-events">В snapshot нет такого события. Измените запрос или откройте источник афиши.</p>}
                 </div>
               </aside>
               <div className="map-workspace">
-                <CityMap points={visibleEvents.length ? visibleEvents : cityEvents} activeId={activeEventId} onSelect={setActiveEventId} />
+                <CityMap points={(visibleEvents.length ? visibleEvents : cityEvents).map((event) => ({ ...event, title: event.title[locale] }))} activeId={activeEventId} onSelect={setActiveEventId} />
                 <article className="map-event-card">
-                  <div><span>{activeEvent.category}</span><h2>{activeEvent.title}</h2><p><CalendarDays size={15} /> {activeEvent.dateLabel} · {activeEvent.venue}</p></div>
+                  <div><span>{activeEvent.category} · {copy.lang}: {activeEvent.contentLanguage.toUpperCase()}</span><h2>{activeEvent.title[locale]}</h2><p><CalendarDays size={15} /> {activeEvent.dateLabel} · {activeEvent.venue[locale]}</p></div>
                   <div className="map-actions">
-                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${activeEvent.lat},${activeEvent.lon}&travelmode=walking`} target="_blank" rel="noreferrer"><Navigation size={16} /> Маршрут в Google Maps</a>
-                    <a href={activeEvent.sourceUrl} target="_blank" rel="noreferrer">Проверить событие <ArrowRight size={15} /></a>
+                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${activeEvent.lat},${activeEvent.lon}&travelmode=walking`} target="_blank" rel="noreferrer"><Navigation size={16} /> {copy.route}</a>
+                    <a href={activeEvent.sourceUrl} target="_blank" rel="noreferrer">{copy.verify} <ArrowRight size={15} /></a>
                   </div>
                 </article>
                 <p className="map-disclosure">Карта: OpenStreetMap fallback без ключа. Кнопка маршрута открывает Google Maps. Для встроенного Google Maps нужен отдельный browser key.</p>
