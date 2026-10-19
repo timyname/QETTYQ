@@ -1,0 +1,19 @@
+[
+  {
+    "id": "osm-overpass-poi",
+    "name": "OpenStreetMap via public Overpass API",
+    "status": "approved_for_scope",
+    "source_type": "open_data_api",
+    "base_url": "https://overpass-api.de/api/interpreter",
+    "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+    "terms_url": "https://www.openstreetmap.org/copyright",
+    "license": "ODbL 1.0",
+    "reviewed_at": "2026-10-19",
+    "allowed_uses": { "fetch": true, "persist": true, "display": true, "send_to_llm": true, "embed": false, "redistribute": true },
+    "attribution_template": "© OpenStreetMap contributors",
+    "storage_policy": "Small dated snapshot; retain provenance and attribution.",
+    "rate_limit_policy": "One manual bounded import; no per-user requests; no parallel imports.",
+    "requires_key": false,
+    "notes": "Public instance is used only for a bounded local prototype import. Production should use an extract, self-hosted instance or suitable provider."
+  }
+]

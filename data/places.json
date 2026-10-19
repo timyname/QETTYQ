@@ -1,0 +1,1495 @@
+[
+  {
+    "id": "osm:node:453247457",
+    "name": "Арарат",
+    "category": "restaurant",
+    "lat": 51.1457657,
+    "lon": 71.4735024,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/453247457",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:453247476",
+    "name": "Королевская охота",
+    "category": "restaurant",
+    "lat": 51.1475966,
+    "lon": 71.4749818,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/453247476",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:455447680",
+    "name": "Русский Академический театр драмы им М.Горького",
+    "category": "theatre",
+    "lat": 51.165132,
+    "lon": 71.4163353,
+    "address": null,
+    "tags": [
+      "theatre",
+      "culture"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/455447680",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 60
+  },
+  {
+    "id": "osm:node:798212552",
+    "name": "Козерог",
+    "category": "restaurant",
+    "lat": 51.179508,
+    "lon": 71.3372377,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/798212552",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:798212555",
+    "name": "Государственный театр танца",
+    "category": "theatre",
+    "lat": 51.1796627,
+    "lon": 71.3387966,
+    "address": null,
+    "tags": [
+      "theatre",
+      "culture"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/798212555",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 60
+  },
+  {
+    "id": "osm:node:984465150",
+    "name": "Узбечка",
+    "category": "restaurant",
+    "lat": 51.1522034,
+    "lon": 71.4409536,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/984465150",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:1198118007",
+    "name": "Mega",
+    "category": "cafe",
+    "lat": 51.1450863,
+    "lon": 71.4135603,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/1198118007",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:1698389963",
+    "name": "Grill Bar",
+    "category": "cafe",
+    "lat": 51.1536311,
+    "lon": 71.4370657,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/1698389963",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:1843876240",
+    "name": "Фархи",
+    "category": "restaurant",
+    "lat": 51.1623558,
+    "lon": 71.4231817,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "regional",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/1843876240",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:1843876243",
+    "name": "Гараж",
+    "category": "restaurant",
+    "lat": 51.1578819,
+    "lon": 71.442862,
+    "address": "Александр Кравцов көшесі, 6",
+    "tags": [
+      "restaurant",
+      "regional",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/1843876243",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:1843876259",
+    "name": "Rafe",
+    "category": "cafe",
+    "lat": 51.1279864,
+    "lon": 71.4372343,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/1843876259",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:1843876263",
+    "name": "Rafe",
+    "category": "cafe",
+    "lat": 51.1624911,
+    "lon": 71.4239556,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/1843876263",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2158757218",
+    "name": "Ямайка",
+    "category": "cafe",
+    "lat": 51.1678676,
+    "lon": 71.4176932,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2158757218",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2349675581",
+    "name": "Театр кукол",
+    "category": "theatre",
+    "lat": 51.1584852,
+    "lon": 71.4287068,
+    "address": null,
+    "tags": [
+      "theatre",
+      "culture"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2349675581",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 60
+  },
+  {
+    "id": "osm:node:2388769508",
+    "name": "Kavkaz",
+    "category": "cafe",
+    "lat": 51.1971755,
+    "lon": 71.390326,
+    "address": null,
+    "tags": [
+      "cafe",
+      "regional",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2388769508",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2389981591",
+    "name": "Турфан",
+    "category": "restaurant",
+    "lat": 51.160515,
+    "lon": 71.4247196,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "regional",
+      "local",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2389981591",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:2404774470",
+    "name": "Нур",
+    "category": "cafe",
+    "lat": 51.1539231,
+    "lon": 71.4893422,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2404774470",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2495957777",
+    "name": "Махаббат",
+    "category": "restaurant",
+    "lat": 51.1932251,
+    "lon": 71.4368195,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2495957777",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:2558378540",
+    "name": "Рауан",
+    "category": "cafe",
+    "lat": 51.1549488,
+    "lon": 71.4355469,
+    "address": "переулок Ташенова, 8",
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2558378540",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2638206825",
+    "name": "Мангал",
+    "category": "cafe",
+    "lat": 51.1719293,
+    "lon": 71.4283431,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2638206825",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2638985382",
+    "name": "Абат",
+    "category": "cafe",
+    "lat": 51.1902663,
+    "lon": 71.4120248,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2638985382",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2639622505",
+    "name": "Дворик",
+    "category": "restaurant",
+    "lat": 51.1589941,
+    "lon": 71.520532,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2639622505",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:2671060738",
+    "name": "Избушка",
+    "category": "cafe",
+    "lat": 51.1283377,
+    "lon": 71.4180466,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2671060738",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2671060739",
+    "name": "Дастархан",
+    "category": "cafe",
+    "lat": 51.1284084,
+    "lon": 71.4174565,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2671060739",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2680126093",
+    "name": "Кавказкая пленница",
+    "category": "cafe",
+    "lat": 51.1556914,
+    "lon": 71.4429696,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2680126093",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2690965969",
+    "name": "KFC",
+    "category": "fast_food",
+    "lat": 51.1146703,
+    "lon": 71.4165017,
+    "address": null,
+    "tags": [
+      "fast_food",
+      "chicken",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2690965969",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2726984507",
+    "name": "Верди",
+    "category": "restaurant",
+    "lat": 51.1616168,
+    "lon": 71.4556108,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2726984507",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:2726984517",
+    "name": "Акниет",
+    "category": "cafe",
+    "lat": 51.1634177,
+    "lon": 71.4536632,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2726984517",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2826095151",
+    "name": "Panda Lamian",
+    "category": "cafe",
+    "lat": 51.1689014,
+    "lon": 71.4084238,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2826095151",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:2826173218",
+    "name": "Мюллер",
+    "category": "restaurant",
+    "lat": 51.1619255,
+    "lon": 71.4327462,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "regional",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2826173218",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:2864129921",
+    "name": "Алтын Адам",
+    "category": "restaurant",
+    "lat": 51.1481094,
+    "lon": 71.4845127,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/2864129921",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:3215319702",
+    "name": "Абдулла",
+    "category": "restaurant",
+    "lat": 51.1590556,
+    "lon": 71.4763348,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3215319702",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:3215326162",
+    "name": "Мясная лавка",
+    "category": "restaurant",
+    "lat": 51.1597838,
+    "lon": 71.4739521,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3215326162",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:3215326163",
+    "name": "Визит",
+    "category": "cafe",
+    "lat": 51.1608438,
+    "lon": 71.4748653,
+    "address": null,
+    "tags": [
+      "cafe",
+      "regional,pizza,asian",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3215326163",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:3273260003",
+    "name": "Белес",
+    "category": "cafe",
+    "lat": 51.1987547,
+    "lon": 71.3586197,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3273260003",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:3301995161",
+    "name": "KFC",
+    "category": "fast_food",
+    "lat": 51.1752466,
+    "lon": 71.4023613,
+    "address": null,
+    "tags": [
+      "fast_food",
+      "chicken",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3301995161",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:3355349466",
+    "name": "Хива",
+    "category": "restaurant",
+    "lat": 51.1953765,
+    "lon": 71.3960232,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3355349466",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:3404172551",
+    "name": "Кишлак",
+    "category": "restaurant",
+    "lat": 51.1304095,
+    "lon": 71.4135031,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3404172551",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:3421255008",
+    "name": "Домовая кухня",
+    "category": "cafe",
+    "lat": 51.1367206,
+    "lon": 71.3676021,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3421255008",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:3628048287",
+    "name": "Узбечка 1/1",
+    "category": "restaurant",
+    "lat": 51.1363306,
+    "lon": 71.3682996,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3628048287",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:3780072973",
+    "name": "Luxor",
+    "category": "restaurant",
+    "lat": 51.1607607,
+    "lon": 71.4600226,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3780072973",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:3780075095",
+    "name": "Mix донер",
+    "category": "fast_food",
+    "lat": 51.1618246,
+    "lon": 71.464636,
+    "address": null,
+    "tags": [
+      "fast_food",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3780075095",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:3824846563",
+    "name": "Органный зал Национальной академии музыки РК",
+    "category": "arts_centre",
+    "lat": 51.1738815,
+    "lon": 71.4110111,
+    "address": null,
+    "tags": [
+      "arts_centre",
+      "culture"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/3824846563",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 60
+  },
+  {
+    "id": "osm:node:4106957689",
+    "name": "Bolognese",
+    "category": "restaurant",
+    "lat": 51.1677941,
+    "lon": 71.4171277,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4106957689",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4108293490",
+    "name": "Тайказан",
+    "category": "cafe",
+    "lat": 51.126424,
+    "lon": 71.4375196,
+    "address": null,
+    "tags": [
+      "cafe",
+      "regional",
+      "steak",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4108293490",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4133836392",
+    "name": "Дастаркан",
+    "category": "cafe",
+    "lat": 51.1235526,
+    "lon": 71.4219552,
+    "address": "Сығанақ көшесі, 10",
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4133836392",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4133854089",
+    "name": "Rafe",
+    "category": "cafe",
+    "lat": 51.1297293,
+    "lon": 71.4259859,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4133854089",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4163198590",
+    "name": "Пицца Блюз",
+    "category": "cafe",
+    "lat": 51.1479363,
+    "lon": 71.4706166,
+    "address": null,
+    "tags": [
+      "cafe",
+      "pizza",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4163198590",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4163218289",
+    "name": "Пицца Блюз",
+    "category": "fast_food",
+    "lat": 51.174932,
+    "lon": 71.4239199,
+    "address": null,
+    "tags": [
+      "fast_food",
+      "pizza",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4163218289",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4166089092",
+    "name": "Микс",
+    "category": "cafe",
+    "lat": 51.195763,
+    "lon": 71.3931345,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4166089092",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4207115191",
+    "name": "Пекарня Мишеля",
+    "category": "cafe",
+    "lat": 51.1620143,
+    "lon": 71.4183997,
+    "address": null,
+    "tags": [
+      "cafe",
+      "french",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4207115191",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4246528694",
+    "name": "Pivovaroff",
+    "category": "restaurant",
+    "lat": 51.1738894,
+    "lon": 71.4198549,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4246528694",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4286097093",
+    "name": "Дипломат",
+    "category": "cafe",
+    "lat": 51.1795828,
+    "lon": 71.4281623,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4286097093",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4286102095",
+    "name": "Coffee BOOM",
+    "category": "restaurant",
+    "lat": 51.1638848,
+    "lon": 71.4169176,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4286102095",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4300813085",
+    "name": "Корсар",
+    "category": "restaurant",
+    "lat": 51.1379674,
+    "lon": 71.4698561,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4300813085",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4361681890",
+    "name": "Kazakh food",
+    "category": "cafe",
+    "lat": 51.1900572,
+    "lon": 71.3445642,
+    "address": "улица Коктал",
+    "tags": [
+      "cafe",
+      "russian",
+      "italian_pizza",
+      "hot_dog",
+      "fish_and_chips",
+      "fine_dining",
+      "oriental",
+      "filipino",
+      "ethiopian",
+      "diner",
+      "chicken",
+      "cake",
+      "buschenschank",
+      "burger",
+      "coffee_shop",
+      "crepe",
+      "chinese",
+      "curry",
+      "deli",
+      "croatian",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4361681890",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4383977289",
+    "name": "Express Doner Kebab",
+    "category": "fast_food",
+    "lat": 51.1228949,
+    "lon": 71.4216604,
+    "address": null,
+    "tags": [
+      "fast_food",
+      "hot_dog",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4383977289",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4384857439",
+    "name": "The Kitchen",
+    "category": "restaurant",
+    "lat": 51.1286563,
+    "lon": 71.4213807,
+    "address": "Достық көшесі",
+    "tags": [
+      "restaurant",
+      "international",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4384857439",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4409067789",
+    "name": "The Garden",
+    "category": "restaurant",
+    "lat": 51.1467674,
+    "lon": 71.4714725,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "french",
+      "cake",
+      "coffee_shop",
+      "steak_house",
+      "pasta",
+      "italian",
+      "pizza",
+      "chicken",
+      "italian_pizza",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4409067789",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4452020489",
+    "name": "Жираф донер",
+    "category": "fast_food",
+    "lat": 51.1443566,
+    "lon": 71.4279866,
+    "address": null,
+    "tags": [
+      "fast_food",
+      "asian",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4452020489",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4457713697",
+    "name": "Бакы",
+    "category": "cafe",
+    "lat": 51.1529809,
+    "lon": 71.444764,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4457713697",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4464545590",
+    "name": "Шахеризада",
+    "category": "restaurant",
+    "lat": 51.1546581,
+    "lon": 71.4805083,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4464545590",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4484797989",
+    "name": "Сказка Востока",
+    "category": "cafe",
+    "lat": 51.146917,
+    "lon": 71.4751009,
+    "address": null,
+    "tags": [
+      "cafe",
+      "oriental",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4484797989",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4499897795",
+    "name": "Рыба моей мечты",
+    "category": "cafe",
+    "lat": 51.173011,
+    "lon": 71.419872,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4499897795",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4510091189",
+    "name": "Сман, банкетный зал",
+    "category": "cafe",
+    "lat": 51.1861273,
+    "lon": 71.3820741,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4510091189",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4511640890",
+    "name": "Тамерлан",
+    "category": "cafe",
+    "lat": 51.1852208,
+    "lon": 71.372482,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4511640890",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4519161893",
+    "name": "Счастье",
+    "category": "restaurant",
+    "lat": 51.1803927,
+    "lon": 71.3741457,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4519161893",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4519205989",
+    "name": "Керей",
+    "category": "cafe",
+    "lat": 51.1810747,
+    "lon": 71.3731541,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4519205989",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4519260589",
+    "name": "Мизам, кафе-бар",
+    "category": "cafe",
+    "lat": 51.1828691,
+    "lon": 71.3765287,
+    "address": null,
+    "tags": [
+      "cafe",
+      "oriental",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4519260589",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4530615694",
+    "name": "КФС",
+    "category": "fast_food",
+    "lat": 51.1855938,
+    "lon": 71.4078925,
+    "address": null,
+    "tags": [
+      "fast_food",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4530615694",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4543944911",
+    "name": "Coffee BOOM",
+    "category": "cafe",
+    "lat": 51.1537775,
+    "lon": 71.4299178,
+    "address": null,
+    "tags": [
+      "cafe",
+      "coffee_shop",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4543944911",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4548937189",
+    "name": "ШашлыкoFF",
+    "category": "restaurant",
+    "lat": 51.1808296,
+    "lon": 71.4196779,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4548937189",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4624217690",
+    "name": "Бистро Коктем",
+    "category": "restaurant",
+    "lat": 51.1638752,
+    "lon": 71.4227548,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4624217690",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4632918092",
+    "name": "Домашний продукт",
+    "category": "cafe",
+    "lat": 51.1627815,
+    "lon": 71.4664928,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4632918092",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4713010890",
+    "name": "Траттория",
+    "category": "restaurant",
+    "lat": 51.1698522,
+    "lon": 71.4171027,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "italian_pizza",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4713010890",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4714631189",
+    "name": "Аян",
+    "category": "cafe",
+    "lat": 51.2127113,
+    "lon": 71.506609,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4714631189",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4717894989",
+    "name": "Центр Лагмана и Плова",
+    "category": "restaurant",
+    "lat": 51.1881347,
+    "lon": 71.4140717,
+    "address": null,
+    "tags": [
+      "restaurant",
+      "oriental",
+      "chinese",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4717894989",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 55
+  },
+  {
+    "id": "osm:node:4722287000",
+    "name": "Кафе 999",
+    "category": "fast_food",
+    "lat": 51.1657154,
+    "lon": 71.4340976,
+    "address": null,
+    "tags": [
+      "fast_food",
+      "russian",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4722287000",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4786496031",
+    "name": "KFC",
+    "category": "fast_food",
+    "lat": 51.149252,
+    "lon": 71.4453399,
+    "address": null,
+    "tags": [
+      "fast_food",
+      "chicken",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4786496031",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  },
+  {
+    "id": "osm:node:4792472508",
+    "name": "HamStar",
+    "category": "cafe",
+    "lat": 51.1360407,
+    "lon": 71.4219483,
+    "address": null,
+    "tags": [
+      "cafe",
+      "food"
+    ],
+    "sourceUrl": "https://www.openstreetmap.org/node/4792472508",
+    "sourceName": "OpenStreetMap contributors",
+    "retrievedAt": "2026-10-19T16:23:03.315Z",
+    "dataMode": "snapshot",
+    "price": null,
+    "durationMinutes": 35
+  }
+]
