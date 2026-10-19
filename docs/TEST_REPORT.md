@@ -16,6 +16,8 @@
 | Secret scan | PASS | Финальный submission ZIP без известных ключевых паттернов |
 | P0 screen manifest | PASS | `jq`: 28 записей; 28 PNG присутствуют и не пусты |
 | Screen master dimensions | PASS | Masters около 853×1844, единая portrait-пропорция; целевой viewport в контракте 430×932 |
+| UX flow render | PASS | SVG-карта отрендерена Quick Look без ошибок; четыре ветки и 26 состояний видимы |
+| Click-flow P0 | PASS | Пройдено `02→04→05→08→09→10→11→13→14`; dock появился только на `14`; также проверено `14→16→17→24` |
 
 Провайдерные mocks не выдаются за live smoke. Реальный сетевой вызов выполнен только для одного ограниченного импорта OSM. Детали E2E: `docs/agent-reports/A8-e2e.md`.
 

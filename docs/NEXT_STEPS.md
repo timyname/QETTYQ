@@ -11,3 +11,5 @@
    оставшиеся P0 состояния из manifest.
 8. Заменить все сгенерированные надписи точным RU/KK/EN copy и подключить
    runtime map/data слои; не использовать bitmap mockup как интерфейс.
+9. После component-level переноса якорных экранов заменить reference-hotspots
+   Penpot на реальные интеракции между boards и проверить View mode share link.

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>QETTYQ · Click Flow</title>
+  <style>
+    :root{color-scheme:light;--ink:#101915;--muted:#68746f;--jade:#0b6e5d;--dark:#0b332d;--lime:#cffc55;--line:#dce4df;--surface:rgba(255,255,255,.76)}
+    *{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;min-height:100vh;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:radial-gradient(circle at 86% 10%,rgba(207,252,85,.16),transparent 28%),linear-gradient(145deg,#f4f6f2,#eaf1f2)}
+    button{font:inherit}.app{min-height:100vh;display:grid;grid-template-columns:minmax(360px,1fr) minmax(330px,430px);gap:44px;align-items:center;max-width:1240px;margin:auto;padding:38px}
+    .stage{display:grid;place-items:center;min-height:760px}.device{position:relative;width:min(430px,42vw);aspect-ratio:430/932;border-radius:52px;background:#fff;padding:10px;box-shadow:0 30px 80px rgba(11,51,45,.2),inset 0 0 0 1px rgba(255,255,255,.8);overflow:hidden}
+    .screen{width:100%;height:100%;object-fit:cover;border-radius:43px;display:block}.hotspot{position:absolute;border:0;background:transparent;cursor:pointer;border-radius:24px}.hotspot:focus-visible,.debug .hotspot{outline:2px solid var(--lime);background:rgba(207,252,85,.14)}
+    .panel{background:var(--surface);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.84);border-radius:36px;padding:30px;box-shadow:0 22px 60px rgba(11,51,45,.1)}
+    .eyebrow{color:var(--jade);font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.panel h1{font-size:36px;line-height:1;margin:12px 0}.panel p{color:var(--muted);line-height:1.5}.actions{display:grid;gap:10px;margin:24px 0}.action{width:100%;display:flex;justify-content:space-between;gap:16px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:18px;padding:15px 17px;color:var(--ink);font-weight:700;cursor:pointer;text-align:left}.action:hover{border-color:var(--jade);transform:translateY(-1px)}
+    .action.primary{background:var(--dark);color:#fff;border-color:var(--dark)}.action small{color:var(--muted);font-weight:500}.action.primary small{color:#c7d5d0}.dock{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding-top:18px;border-top:1px solid var(--line)}.dock button{border:0;background:transparent;border-radius:14px;padding:10px 2px;color:var(--muted);font-size:11px;cursor:pointer}.dock button:hover{background:#dcefe8;color:var(--jade)}
+    .status{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:7px 10px;border-radius:999px;background:#dcefe8;color:var(--jade);font-size:12px;font-weight:700}.chip.off{background:#fff2c8;color:#745d15}.toolbar{display:flex;justify-content:space-between;align-items:center;margin-top:22px}.toolbar button{border:0;background:transparent;color:var(--jade);cursor:pointer;font-weight:700}.hint{font-size:12px;color:var(--muted)}
+    @media(max-width:840px){.app{grid-template-columns:1fr;padding:20px;gap:20px}.stage{min-height:auto}.device{width:min(430px,92vw)}.panel{width:min(430px,92vw);margin:auto}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="stage"><div class="device" id="device"><img class="screen" id="screen" alt="Экран QETTYQ"><div id="hotspots"></div></div></section>
+    <aside class="panel">
+      <div class="eyebrow">QETTYQ · P0 click flow</div><h1 id="title"></h1><p id="description"></p>
+      <div class="status"><span class="chip" id="flowChip"></span><span class="chip off" id="dockChip"></span></div>
+      <div class="actions" id="actions"></div>
+      <nav class="dock" id="dock" aria-label="Нижняя навигация">
+        <button data-go="14">Для тебя</button><button data-go="16">Карта</button><button data-go="27">Помощник</button><button data-go="26">Планы</button><button data-go="32">Профиль</button>
+      </nav>
+      <div class="toolbar"><button id="back">← Назад</button><button id="debug">Показать зоны</button></div>
+      <p class="hint">Кликайте по кнопкам справа или по подсвечиваемым зонам внутри макета. История Back сохраняется локально в этой вкладке.</p>
+    </aside>
+  </main>
+  <script>
+    const base='../generated/app-screens/';
+    const screens={
+      2:{file:'02-home.png',title:'Главный экран',desc:'Первый контакт: пользователь выбирает настройку предпочтений, карту или помощника.',flow:'Первый контакт',dock:false,actions:[['Настроить подборку','4','Основной путь'],['Сразу к карте','16','Пропустить настройку'],['Спросить помощника','27','Диалог']],hotspots:[[7,86,86,8,'4']]},
+      4:{file:'04-onboarding-intro.png',title:'Два шага до личной ленты',desc:'Объясняем 15 свайпов и последующий контекст времени, бюджета и точки старта.',flow:'Onboarding',dock:false,actions:[['Начать 15 выборов','5','2 минуты']],hotspots:[[8,86,84,8,'5']]},
+      5:{file:'05-swipe.png',title:'15 выборов интересов',desc:'Свайпы относятся к досугу, а не к людям. Skip означает «не сейчас», а не вечный dislike.',flow:'Onboarding',dock:false,actions:[['Интересно','8','После серии свайпов'],['Не сейчас','8','Следующая карточка']],hotspots:[[67,78,18,10,'8'],[15,78,18,10,'8']]},
+      8:{file:'08-context-time.png',title:'Свободное время',desc:'Задаём реальный лимит времени, чтобы код отсёк невозможные планы.',flow:'Контекст',dock:false,actions:[['Дальше','9','Сохранить минуты']],hotspots:[[8,87,84,7,'9']]},
+      9:{file:'09-context-budget.png',title:'Бюджет',desc:'Неизвестная цена не считается нулём. Пользователь выбирает диапазон, а не ложную точность.',flow:'Контекст',dock:false,actions:[['Дальше','10','Сохранить бюджет']],hotspots:[[8,87,84,7,'10']]},
+      10:{file:'10-context-geography.png',title:'Стартовая точка',desc:'Геолокация запрашивается только для маршрута; всегда остаётся ручной выбор.',flow:'Контекст',dock:false,actions:[['Поделиться геопозицией','11','Permission sheet'],['Указать вручную','12','Точка на карте']],hotspots:[[8,47,40,19,'11'],[52,47,40,19,'12']]},
+      11:{file:'11-location-permission.png',title:'Разрешение геолокации',desc:'До системного запроса объясняем, зачем нужна точка и как долго она хранится.',flow:'Permission',dock:false,actions:[['Разрешить один раз','13','Browser permission'],['Указать вручную','12','Без доступа']],hotspots:[[8,71,84,7,'13'],[8,80,84,6,'12']]},
+      12:{file:'12-manual-point.png',title:'Ручная точка',desc:'Пользователь ставит pin без передачи постоянной геолокации.',flow:'Permission',dock:false,actions:[['Использовать точку','13','Запустить проверку']],hotspots:[[8,87,84,7,'13']]},
+      13:{file:'13-search-progress.png',title:'Проверка вариантов',desc:'Проверяем источники, время, путь и ограничения. AI не решает допустимость.',flow:'Retrieval',dock:false,actions:[['Показать результат','14','Персональная лента']],hotspots:[[8,84,84,8,'14']]},
+      14:{file:'14-feed.png',title:'Для тебя',desc:'Персональные варианты из общего candidate set. Здесь впервые появляется нижний dock.',flow:'Основное приложение',dock:true,actions:[['Открыть карточку','20','То же событие'],['Посмотреть на карте','16','Контекст сохраняется']],hotspots:[[8,27,84,49,'20'],[20,90,14,7,'16']]},
+      16:{file:'16-map.png',title:'Карта событий',desc:'Маркеры показывают доступные события и места; карта не подменяется снимком.',flow:'Discovery',dock:true,actions:[['Нажать маркер','17','Bottom sheet'],['Открыть список','18','Без сброса фильтров'],['Фильтры','19','Overlay']],hotspots:[[43,37,18,16,'17'],[5,77,20,8,'18'],[82,8,12,8,'19']]},
+      17:{file:'17-map-selected.png',title:'Событие на карте',desc:'Показываем время в пути, длительность, источник и остаток свободного времени.',flow:'Discovery',dock:true,actions:[['Подробнее','20','Карточка события'],['Добавить в маршрут','24','Один candidateId']],hotspots:[[8,78,55,8,'20'],[79,78,13,8,'24']]},
+      18:{file:'18-map-list.png',title:'Список рядом',desc:'Доступная альтернатива карте и fallback при проблемах map provider.',flow:'Discovery',dock:true,actions:[['Открыть событие','20','Детали'],['Вернуться на карту','16','Без сброса']],hotspots:[[6,24,88,20,'20'],[5,10,25,7,'16']]},
+      19:{file:'19-filters.png',title:'Фильтры',desc:'Дата, цена, язык, категория и доступность. Unknown остаётся unknown.',flow:'Discovery',dock:true,actions:[['Показать варианты','16','Применить фильтры']],hotspots:[[8,86,84,8,'16']]},
+      20:{file:'20-event-detail.png',title:'Карточка события',desc:'Факты, источник, язык и контакт организатора. Наличие мест всегда уточняется.',flow:'Детали',dock:true,actions:[['Построить маршрут','24','Внутри QETTYQ'],['Назад на карту','16','Сохранить выбор']],hotspots:[[8,86,58,7,'24']]},
+      21:{file:'21-place-detail.png',title:'Карточка места',desc:'Постоянная локация отдельно от события; актуальный режим и источник обязательны.',flow:'Детали',dock:true,actions:[['Построить маршрут','24','Добавить точку']],hotspots:[[8,86,58,7,'24']]},
+      24:{file:'24-route.png',title:'Конструктор маршрута',desc:'Код считает время, бюджет и допустимость остановок. Dock скрыт, действия закреплены снизу.',flow:'Маршрут',dock:false,actions:[['Рассчитать маршрут','26','Provider доступен'],['Показать fallback','25','Provider недоступен']],hotspots:[[49,87,43,7,'26']]},
+      25:{file:'25-route-estimated.png',title:'Оценочный маршрут',desc:'Честно показываем оценку по прямой и предлагаем проверить путь во внешней карте.',flow:'Fallback',dock:false,actions:[['Продолжить с оценкой','26','С пометкой'],['Вернуться на карту','16','Выбрать иначе']],hotspots:[[49,87,43,7,'26']]},
+      26:{file:'26-plan-ready.png',title:'Готовый план',desc:'Последовательность остановок, время в пути, бюджет и явный handoff в навигацию.',flow:'План',dock:false,actions:[['Вернуться к рекомендациям','14','Основное приложение'],['Изменить маршрут','24','Редактирование']],hotspots:[[8,88,84,7,'14']]},
+      27:{file:'27-assistant-empty.png',title:'Помощник',desc:'Диалог знает локальные предпочтения и может показывать карточки, но не выдумывает факты.',flow:'Помощник',dock:true,actions:[['Спросить про вечер','28','Уточнение условий']],hotspots:[[8,79,84,8,'28']]},
+      28:{file:'28-assistant-clarify.png',title:'Уточнение запроса',desc:'Помощник уточняет время, бюджет, язык и стартовую точку до поиска.',flow:'Помощник',dock:true,actions:[['Подтвердить условия','29','Карточки результатов']],hotspots:[[8,87,84,7,'29']]},
+      29:{file:'29-assistant-results.png',title:'Ответ с карточками',desc:'Результаты — те же сущности, что в ленте и карте, с видимым источником.',flow:'Помощник',dock:true,actions:[['Показать на карте','17','Тот же candidateId'],['Добавить в маршрут','24','Конструктор']],hotspots:[[8,78,40,8,'17'],[52,78,40,8,'24']]},
+      32:{file:'32-profile-memory.png',title:'Профиль и память',desc:'Пользователь видит интересы, историю сигналов, языки и может очистить память.',flow:'Профиль',dock:true,actions:[['Источники данных','33','Прозрачность'],['Приватность','34','Удаление данных']],hotspots:[[8,66,84,7,'33'],[8,75,84,7,'34']]},
+      33:{file:'33-sources.png',title:'Источники',desc:'Для каждого типа данных показаны provenance, время обновления и переход к первоисточнику.',flow:'Доверие',dock:true,actions:[['Вернуться в профиль','32','Назад']],hotspots:[]},
+      34:{file:'34-privacy-delete.png',title:'Приватность',desc:'Локальная память, геоданные и диалоги управляются отдельно; удаление требует подтверждения.',flow:'Доверие',dock:true,actions:[['Вернуться в профиль','32','Без удаления']],hotspots:[]},
+      42:{file:'42-no-results.png',title:'Нет результатов',desc:'Не заполняем пустоту выдумками: объясняем причину и предлагаем ослабить условия.',flow:'Системное состояние',dock:false,actions:[['Изменить условия','8','Вернуться к контексту'],['Посмотреть карту','16','Ручной поиск']],hotspots:[[8,77,84,7,'8']]},
+      43:{file:'43-degraded-states.png',title:'Provider fallback',desc:'При сбое карты остаётся список, при сбое routing — оценка, при сбое AI — deterministic подбор.',flow:'Системное состояние',dock:false,actions:[['Открыть список','18','Map fallback'],['Вернуться в ленту','14','AI fallback']],hotspots:[]}
+    };
+    const history=[];let current='2';
+    const $=id=>document.getElementById(id);
+    function go(id,push=true){id=String(id);if(!screens[id])return;if(push&&current!==id)history.push(current);current=id;const s=screens[id];$('screen').src=base+s.file;$('screen').alt=s.title;$('title').textContent=s.title;$('description').textContent=s.desc;$('flowChip').textContent=s.flow;$('dockChip').textContent=s.dock?'Dock: 5 разделов':'Dock скрыт';$('dockChip').className='chip '+(s.dock?'':'off');$('dock').hidden=!s.dock;
+      $('actions').replaceChildren(...s.actions.map(([label,target,note],i)=>{const b=document.createElement('button');b.className='action '+(i===0?'primary':'');b.innerHTML=`<span>${label}</span><small>${note} →</small>`;b.onclick=()=>go(target);return b}));
+      $('hotspots').replaceChildren(...s.hotspots.map(([x,y,w,h,target])=>{const b=document.createElement('button');b.className='hotspot';b.style.cssText=`left:${x}%;top:${y}%;width:${w}%;height:${h}%`;b.ariaLabel='Перейти: '+screens[target].title;b.onclick=()=>go(target);return b}));location.hash=id;
+    }
+    $('dock').onclick=e=>{const b=e.target.closest('[data-go]');if(b)go(b.dataset.go)};$('back').onclick=()=>{if(history.length)go(history.pop(),false)};$('debug').onclick=()=>{$('device').classList.toggle('debug');$('debug').textContent=$('device').classList.contains('debug')?'Скрыть зоны':'Показать зоны'};
+    addEventListener('popstate',()=>go(location.hash.slice(1)||2,false));go(location.hash.slice(1)||2,false);
+  </script>
+</body>
+</html>

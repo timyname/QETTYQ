@@ -14,3 +14,4 @@ tmp/
 .codex-finalizer-*/
 *.inspect.ndjson
 .sites-runtime/
+design/flows/thumbs/
