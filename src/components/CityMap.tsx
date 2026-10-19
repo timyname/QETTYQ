@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { CityEvent } from "@/data/events";
 
-type MapPoint = Omit<Pick<CityEvent, "id" | "lat" | "lon" | "dateLabel" | "category">, never> & { title: string };
+type MapPoint = Pick<CityEvent, "id" | "lat" | "lon"> & { title: string; dateLabel: string; category: string };
 
 export function CityMap({ points, activeId, onSelect }: { points: MapPoint[]; activeId?: string; onSelect?: (id: string) => void }) {
   const host = useRef<HTMLDivElement>(null);

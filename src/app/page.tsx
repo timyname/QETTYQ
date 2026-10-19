@@ -1,11 +1,14 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowLeft, ArrowRight, CalendarDays, CheckCircle2, Clock3, Database, Heart, MapPin, MessageCircle, Navigation, RotateCcw, ShieldCheck, Sparkles, WalletCards } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ArrowLeft, ArrowRight, CalendarDays, Clock3, Heart, MapPin, MessageCircle, Navigation, RotateCcw, WalletCards } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Goal, Recommendation } from "@/domain/types";
 import { CityMap } from "@/components/CityMap";
+import { LocalChatAssistant } from "@/components/LocalChatAssistant";
+import type { ChatContextPatch } from "@/client/chat-assistant";
+import type { LocalPreferenceProfile } from "@/client/local-memory";
 import { cityEvents, type Locale } from "@/data/events";
 
 const localeCopy = {
@@ -60,12 +63,26 @@ export default function Home() {
   const [locale, setLocale] = useState<Locale>("ru");
   const copy = localeCopy[locale];
 
+  const localProfile = useMemo<LocalPreferenceProfile>(() => ({ locale, goal, minutes, budget, likedTags }), [budget, goal, likedTags, locale, minutes]);
+  const restoreLocalProfile = useCallback((profile: LocalPreferenceProfile) => {
+    setLocale(profile.locale);
+    setGoal(profile.goal);
+    setMinutes(profile.minutes);
+    setBudget(profile.budget);
+    setLikedTags(profile.likedTags);
+  }, []);
+  const applyChatPatch = useCallback((patch: ChatContextPatch) => {
+    if (patch.goal) setGoal(patch.goal);
+    if (patch.minutes !== undefined) setMinutes(patch.minutes);
+    if (patch.budget !== undefined) setBudget(patch.budget);
+  }, []);
+
   const current = interestCards[cardIndex % interestCards.length];
   const progress = useMemo(() => Math.min(100, (cardIndex / SWIPE_COUNT) * 100), [cardIndex]);
   const visibleEvents = useMemo(() => {
     const query = eventQuery.trim().toLocaleLowerCase("ru-RU");
     if (!query) return cityEvents;
-    return cityEvents.filter((event) => `${event.title[locale]} ${event.venue[locale]} ${event.category}`.toLocaleLowerCase("ru-RU").includes(query));
+    return cityEvents.filter((event) => `${event.title[locale]} ${event.venue[locale]} ${event.category[locale]}`.toLocaleLowerCase("ru-RU").includes(query));
   }, [eventQuery, locale]);
   const activeEvent = cityEvents.find((event) => event.id === activeEventId) ?? cityEvents[0];
 
@@ -143,23 +160,13 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <aside className="assistant-window" aria-label="Окно помощника QETTYQ">
-              <div className="assistant-title"><span className="assistant-orb"><Sparkles size={17} /></span><div><b>Помощник QETTYQ</b><small>Проверяет контекст до рекомендации</small></div><i>prototype</i></div>
-              <div className="assistant-dialogue">
-                <p>Сначала уточню ограничения. После 15 свайпов соберу короткую подборку и объясню каждый вариант.</p>
-                {intentText && <p className="user-message">{intentText}</p>}
-              </div>
-              <div className="check-window">
-                <h2>Что будет проверено</h2>
-                <div><MapPin size={17} /><span><b>Город и расстояние</b><small>Пилотная точка: Байтерек, Астана</small></span><CheckCircle2 size={16} /></div>
-                <div><Clock3 size={17} /><span><b>Время и бюджет</b><small>Ограничения не ослабляются автоматически</small></span><CheckCircle2 size={16} /></div>
-                <div><Database size={17} /><span><b>Источник места</b><small>80 POI из локального снимка OpenStreetMap</small></span><CheckCircle2 size={16} /></div>
-                <div><ShieldCheck size={17} /><span><b>Неизвестные данные</b><small>Цена, часы работы и маршрут помечаются отдельно</small></span><CheckCircle2 size={16} /></div>
-              </div>
-              <button className="assistant-cta" onClick={() => { setGoal("new"); setStage("limits"); }}>Начать 15 свайпов <ArrowRight size={18} /></button>
-              <button className="map-open" onClick={() => setStage("explore")}><MapPin size={17} /> {copy.map}</button>
-              <p className="event-note">События показаны отдельным проверяемым snapshot. Места для персональной выдачи берутся из OSM.</p>
-            </aside>
+            <LocalChatAssistant
+              profile={localProfile}
+              onRestore={restoreLocalProfile}
+              onPatch={applyChatPatch}
+              onStart={() => setStage("limits")}
+              onOpenMap={() => setStage("explore")}
+            />
           </motion.section>
         )}
 
@@ -176,16 +183,16 @@ export default function Home() {
                 <div className="event-list">
                   {visibleEvents.map((event, index) => (
                     <button className={event.id === activeEventId ? "event-item active" : "event-item"} key={event.id} onClick={() => setActiveEventId(event.id)}>
-                      <i>{index + 1}</i><span><small>{event.category} · {event.dateLabel} · {copy.lang}: {event.contentLanguage.toUpperCase()}</small><b>{event.title[locale]}</b><em>{event.venue[locale]} · {event.priceLabel}</em></span>
+                      <i>{index + 1}</i><span><small>{event.category[locale]} · {event.dateLabel[locale]} · {copy.lang}: {event.contentLanguage.toUpperCase()}</small><b>{event.title[locale]}</b><em>{event.venue[locale]} · {event.priceFrom === null ? "цена не указана" : `от ${event.priceFrom.toLocaleString("ru-RU")} ₸`}</em></span>
                     </button>
                   ))}
                   {!visibleEvents.length && <p className="no-events">В snapshot нет такого события. Измените запрос или откройте источник афиши.</p>}
                 </div>
               </aside>
               <div className="map-workspace">
-                <CityMap points={(visibleEvents.length ? visibleEvents : cityEvents).map((event) => ({ ...event, title: event.title[locale] }))} activeId={activeEventId} onSelect={setActiveEventId} />
+                <CityMap points={(visibleEvents.length ? visibleEvents : cityEvents).map((event) => ({ id: event.id, lat: event.lat, lon: event.lon, title: event.title[locale], dateLabel: event.dateLabel[locale], category: event.category[locale] }))} activeId={activeEventId} onSelect={setActiveEventId} />
                 <article className="map-event-card">
-                  <div><span>{activeEvent.category} · {copy.lang}: {activeEvent.contentLanguage.toUpperCase()}</span><h2>{activeEvent.title[locale]}</h2><p><CalendarDays size={15} /> {activeEvent.dateLabel} · {activeEvent.venue[locale]}</p></div>
+                  <div><span>{activeEvent.category[locale]} · {copy.lang}: {activeEvent.contentLanguage.toUpperCase()}</span><h2>{activeEvent.title[locale]}</h2><p><CalendarDays size={15} /> {activeEvent.dateLabel[locale]} · {activeEvent.venue[locale]}</p></div>
                   <div className="map-actions">
                     <a href={`https://www.google.com/maps/dir/?api=1&destination=${activeEvent.lat},${activeEvent.lon}&travelmode=walking`} target="_blank" rel="noreferrer"><Navigation size={16} /> {copy.route}</a>
                     <a href={activeEvent.sourceUrl} target="_blank" rel="noreferrer">{copy.verify} <ArrowRight size={15} /></a>
