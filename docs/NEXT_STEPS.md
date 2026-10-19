@@ -13,3 +13,7 @@
    runtime map/data слои; не использовать bitmap mockup как интерфейс.
 9. После component-level переноса якорных экранов заменить reference-hotspots
    Penpot на реальные интеракции между boards и проверить View mode share link.
+10. Реализовывать остальные экраны только по `qettyq-screen-layers.json`, начиная
+    с P0 variants 01, 06, 07 и 15; не генерировать цельные UI screenshots.
+11. Генерировать недостающие media отдельно по asset manifest: posterless cinema
+    fallback (22), organizer hero (35), Almaty atmosphere (44).

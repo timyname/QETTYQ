@@ -25,7 +25,7 @@ Onboarding → ограничения → 15 визуальных карточе
 ## Проверки
 
 - Валидация данных: 80 записей — PASS.
-- Unit + integration: 13 тестов — PASS.
+- Unit + integration: 18 тестов — PASS.
 - Mobile E2E: 5 сценариев — PASS.
 - Typecheck, lint, build, submission-check, presentation QA и secret scan — PASS; см. `docs/TEST_REPORT.md`.
 
@@ -57,3 +57,9 @@ Onboarding → ограничения → 15 визуальных карточе
   кликабельный click-flow `design/prototype/` для проверки сценариев до вёрстки.
 - Локально поднят Penpot 2.18: файл `QETTYQ · Product UX Map` содержит библиотеку
   из 28 экранов и отдельную страницу `00 · UX Flow Map`.
+- Все 44 artboard разложены на production-слои в
+  `design/QETTYQ_44_SCREEN_LAYER_BLUEPRINT.md`; JSON-близнец содержит 44 уникальных
+  экрана и точный контракт текста, иконок, media, controls и provider-слоёв.
+- Зафиксирован единый Lucide icon/asset system и machine-readable manifest.
+- Screen 14 пересобран кодом: 3:4 media используется только внутри hero, а header,
+  context, факты, unknown, source, CTA, четыре tab и gear являются semantic DOM/SVG.

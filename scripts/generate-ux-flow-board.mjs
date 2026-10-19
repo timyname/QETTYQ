@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const sourceDir = join(root, "design/generated/app-screens");
@@ -144,8 +144,8 @@ const nav = `
   <g id="navigation-legend">
     <rect x="1850" y="140" width="1160" height="190" rx="34" fill="#0B332D"/>
     <text x="1900" y="200" font-family="Inter, Arial, sans-serif" font-size="19" font-weight="700" fill="#CFFC55">BOTTOM NAVIGATION · ТОЛЬКО ВНУТРИ ПРИЛОЖЕНИЯ</text>
-    <text x="1900" y="252" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="650" fill="#FFFFFF">Для тебя  ·  Карта  ·  Помощник  ·  Планы  ·  Профиль</text>
-    <text x="1900" y="296" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="500" fill="#C4D1CC">Скрыта на 01–13 и 24–26, чтобы не ломать onboarding и маршрут.</text>
+    <text x="1900" y="252" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="650" fill="#FFFFFF">Для тебя  ·  Поиск  ·  Карта  ·  Профиль</text>
+    <text x="1900" y="296" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="500" fill="#C4D1CC">Gear — сверху справа. Dock скрыт на 01–13 и 24–26.</text>
   </g>`;
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}" viewBox="0 0 ${canvasWidth} ${canvasHeight}">

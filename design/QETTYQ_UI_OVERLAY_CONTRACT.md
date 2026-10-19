@@ -68,7 +68,11 @@ Variants: `primary`, `secondary`, `text`, `danger`, `icon`. Sizes: 44, 48, 56, 6
 
 ### `BottomDock`
 
-Ровно пять items: `Для тебя`, `Карта`, `Помощник`, `Планы`, `Профиль`. Props: `active`, `hasRealUpdate`, `onNavigate`. Active: jade icon + lime surface 36–40 px, `aria-current=page`. Default route `Планы` ведёт на список/empty (30), не на несуществующий готовый план.
+Ровно четыре items в стилистике screen 14: `Для тебя` (home), `Поиск` (magnifier), `Карта` (map icon, не ticket), `Профиль` (person). Props: `active`, `hasRealUpdate`, `onNavigate`. Active: jade icon + lime surface 36–40 px, `aria-current=page`. `Поиск` объединяет текстовый поиск и assistant thread. `Планы` не являются tab: список открывается из профиля, текущий план — из route/plan context.
+
+### `HeaderSettingsAction`
+
+Gear 44 × 44 располагается справа сверху на основных экранах. Accessible name `Настройки`. Это отдельное действие, не пятый пункт dock. Оно ведёт к настройкам профиля и сохраняет предыдущий tab для Back.
 
 ### `PreferenceDeck`
 
@@ -110,8 +114,8 @@ Composer sticky над dock; keyboard не перекрывает input. Conditi
 /place/:id                21
 /route                    24/25 state
 /plan/:id                 26
-/assistant                27–29 thread states
-/plans                    30
+/search                   27–29 query/thread states
+/plans                    30, entry from profile or route/plan context
 /profile                  32
 /sources                  33
 /privacy                  34
@@ -172,7 +176,7 @@ Dock hidden. 24: real map top 62–66%, route sheet 270–310, drag handles need
 
 ### 27/28/29 Assistant
 
-Dock active `Помощник`. 27 H1 `Чем помочь?`; three example prompts; composer. 28 gives one short clarification and answer buttons, not generic reassurance. 29 says how many results and which constraints passed; CandidateCard shares data with feed/map. Actions `На карте`, `В маршрут`, `Источник`.
+Dock active `Поиск`. 27 H1 `Что найдём?`; screen combines direct text search and assistant clarification. Three example prompts and composer remain. 28 gives one short clarification and answer buttons, not generic reassurance. 29 says how many results and which constraints passed; CandidateCard shares data with feed/map. Actions `На карте`, `В маршрут`, `Источник`.
 
 ### 32/33/34 Trust
 

@@ -5,7 +5,7 @@
 | Проверка | Статус | Детали |
 |---|---|---|
 | `pnpm data:validate` | PASS | 80 snapshot POI с provenance |
-| `pnpm test` | PASS | 13 unit + integration тестов |
+| `pnpm test` | PASS | 18 unit + integration тестов |
 | `pnpm test:e2e` | PASS | 5 mobile Chromium сценариев, 390×844, reduced motion; 15 реакций проходят полный путь |
 | `pnpm typecheck` | PASS | TypeScript без ошибок |
 | `pnpm lint` | PASS | ESLint без ошибок |
@@ -18,6 +18,9 @@
 | Screen master dimensions | PASS | Masters около 853×1844, единая portrait-пропорция; целевой viewport в контракте 430×932 |
 | UX flow render | PASS | SVG-карта отрендерена Quick Look без ошибок; четыре ветки и 26 состояний видимы |
 | Click-flow P0 | PASS | Пройдено `02→04→05→08→09→10→11→13→14`; dock появился только на `14`; также проверено `14→16→17→24` |
+| 44-screen layer contract | PASS | JSON валиден; 44 уникальных ID 01–44; 17 docked screens используют точные 4 labels |
+| Asset/icon manifest | PASS | 44 screen maps, 15 interest cards; все указанные Lucide exports существуют |
+| Screen 14 production UI | PASS | Hero x=22/w=386, dock x=16/w=398, gear/settings overlay, semantic media/facts/actions; screenshot QA 430×932 |
 
 Провайдерные mocks не выдаются за live smoke. Реальный сетевой вызов выполнен только для одного ограниченного импорта OSM. Детали E2E: `docs/agent-reports/A8-e2e.md`.
 

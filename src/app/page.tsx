@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
-import { ArrowLeft, ArrowRight, CalendarDays, Clock3, Heart, MapPin, MessageCircle, Navigation, RotateCcw, WalletCards } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bookmark, CalendarDays, Check, ChevronDown, Clock3, Heart, MapPin, MessageCircle, Navigation, RotateCcw, Settings, WalletCards } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,6 +11,10 @@ import { LocalChatAssistant } from "@/components/LocalChatAssistant";
 import type { ChatContextPatch } from "@/client/chat-assistant";
 import type { LocalPreferenceProfile } from "@/client/local-memory";
 import { cityEvents, type Locale } from "@/data/events";
+import { AppShell } from "@/components/ui/AppShell";
+import type { DockTarget } from "@/components/ui/BottomDock";
+import { QButton } from "@/components/ui/QButton";
+import { QOverlay } from "@/components/ui/QOverlay";
 
 const localeCopy = {
   ru: { heroA: "2 минуты на выбор.", heroB: "Дальше — готовый план.", lead: "Ответь на 15 коротких карточек. QETTYQ учтёт время, бюджет и настроение, затем покажет 1–3 места, куда ты успеваешь.", map: "Открыть карту событий", free: "Свободное время", city: "Что происходит в городе", search: "Например: выставка или концерт", route: "Маршрут в Google Maps", verify: "Проверить событие", lang: "Язык" },
@@ -45,9 +49,19 @@ const interestCards = [
 
 const SWIPE_COUNT = interestCards.length;
 
+function candidateMedia(item: Recommendation) {
+  const category = item.category.toLocaleLowerCase("ru-RU");
+  if (category.includes("theatre") || category.includes("театр")) return { src: "/assets/ideas/03-ballet-theatre.jpg", label: "театр" };
+  if (category.includes("cafe") || category.includes("кафе")) return { src: "/assets/ideas/11-coffee-quiet-evening.jpg", label: "кафе" };
+  if (category.includes("restaurant") || category.includes("ресторан")) return { src: "/assets/ideas/09-shashlik-friends.jpg", label: "ресторан" };
+  if (category.includes("cinema") || category.includes("кино")) return { src: "/assets/ideas/13-cinema.jpg", label: "кино" };
+  if (category.includes("park") || category.includes("парк")) return { src: "/assets/ideas/07-active-leisure.jpg", label: "активный отдых" };
+  return { src: "/assets/ideas/01-culture-history.jpg", label: "культура и город" };
+}
+
 export default function Home() {
   const reduceMotion = useReducedMotion();
-  const [stage, setStage] = useState<"start" | "limits" | "discover" | "results" | "plan" | "explore">("start");
+  const [stage, setStage] = useState<"start" | "limits" | "discover" | "results" | "detail" | "plan" | "explore" | "search" | "profile">("start");
   const [goal, setGoal] = useState<Goal>("new");
   const [minutes, setMinutes] = useState(120);
   const [budget, setBudget] = useState(5000);
@@ -55,13 +69,16 @@ export default function Home() {
   const [likedTags, setLikedTags] = useState<string[]>([]);
   const [results, setResults] = useState<Recommendation[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<Recommendation | null>(null);
-  const [generationMode, setGenerationMode] = useState<"llm" | "deterministic">("deterministic");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [intentText, setIntentText] = useState("");
   const [eventQuery, setEventQuery] = useState("");
   const [activeEventId, setActiveEventId] = useState(cityEvents[0].id);
   const [locale, setLocale] = useState<Locale>("ru");
+  const [savedIds, setSavedIds] = useState<string[]>([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
+  const [saveAnnouncement, setSaveAnnouncement] = useState("");
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-180, 180], [-6, 6]);
   const likeOpacity = useTransform(dragX, [18, 118], [0, 1]);
@@ -103,7 +120,6 @@ export default function Home() {
       if (!response.ok) throw new Error("Не удалось получить варианты");
       const payload = await response.json();
       setResults(payload.items);
-      setGenerationMode(payload.generationMode === "llm" ? "llm" : "deterministic");
       setStage("results");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Неизвестная ошибка");
@@ -129,27 +145,68 @@ export default function Home() {
     setStage("limits");
   }
 
+  const dockTarget: DockTarget | undefined = stage === "results" || stage === "detail"
+    ? "discover"
+    : stage === "explore"
+      ? "map"
+      : stage === "search" || stage === "profile"
+        ? stage
+        : undefined;
+
+  function navigateDock(target: DockTarget) {
+    if (target === "discover") setStage(results.length ? "results" : "start");
+    if (target === "map") setStage("explore");
+    if (target === "search") setStage("search");
+    if (target === "profile") setStage("profile");
+  }
+
+  function toggleSaved(item: Recommendation) {
+    const isSaved = savedIds.includes(item.id);
+    setSavedIds((ids) => isSaved ? ids.filter((id) => id !== item.id) : [...ids, item.id]);
+    setSaveAnnouncement(isSaved ? `${item.name} удалено из сохранённых` : `${item.name} сохранено`);
+  }
+
+  function openDetails(item: Recommendation) {
+    setSelectedPlan(item);
+    setStage("detail");
+  }
+
   return (
-    <main className="shell">
-      <div className="ambient ambient-a" />
-      <div className="ambient ambient-b" />
-      <header className="topbar">
-        <button className="wordmark" onClick={() => setStage("start")} aria-label="QETTYQ — на главную">
+    <AppShell dock={dockTarget} onNavigate={navigateDock}>
+      <header className={`topbar${stage === "results" ? " topbar--feed" : ""}`}>
+        <button className="wordmark" onClick={() => { if (stage === "results") window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" }); else setStage("start"); }} aria-label="QETTYQ — в начало ленты">
           QETTYQ<span>•</span>
         </button>
-        <div className="top-actions"><div className="locale-switch" aria-label="Язык интерфейса">{(["ru", "kk", "en"] as Locale[]).map((code) => <button key={code} className={locale === code ? "active" : ""} onClick={() => setLocale(code)}>{code === "kk" ? "ҚАЗ" : code.toUpperCase()}</button>)}</div><div className="city"><MapPin size={15} /> Астана <small>пилот</small></div></div>
+        <div className="top-actions"><button type="button" className="city" aria-haspopup="dialog" onClick={() => setCityOpen(true)}><MapPin size={17} /> Астана <ChevronDown size={15} aria-hidden="true" /></button><QButton variant="icon" size={44} aria-label="Настройки" leadingIcon={<Settings size={20} />} onClick={() => setSettingsOpen(true)} /></div>
       </header>
+
+      <QOverlay open={cityOpen} title="Город" onClose={() => setCityOpen(false)}>
+        <div className="city-choice" aria-current="true"><MapPin size={20} /><div><b>Астана</b><span>Пилот QETTYQ работает только в этом городе</span></div><Check size={20} /></div>
+      </QOverlay>
+
+      <QOverlay open={settingsOpen} title="Настройки" onClose={() => setSettingsOpen(false)}>
+        <section className="settings-section" aria-labelledby="language-heading">
+          <h3 id="language-heading">Язык интерфейса</h3>
+          <div className="locale-switch locale-switch--settings" aria-label="Язык интерфейса">{(["ru", "kk", "en"] as Locale[]).map((code) => <button key={code} className={locale === code ? "active" : ""} aria-pressed={locale === code} onClick={() => setLocale(code)}>{code === "kk" ? "ҚАЗ" : code.toUpperCase()}</button>)}</div>
+        </section>
+        <section className="settings-section" aria-labelledby="data-heading">
+          <h3 id="data-heading">Данные и память</h3>
+          <p>Предпочтения и диалог сохраняются только в этом браузере. Точная геолокация не сохраняется.</p>
+          <div className="trust-links"><Link href="/sources">Источники данных</Link><Link href="/privacy">Память и приватность</Link></div>
+        </section>
+      </QOverlay>
 
       <>
         {stage === "start" && (
           <motion.section className="screen start start-workbench" key="start" initial={false} animate={{ opacity: 1, y: 0 }} exit={reduceMotion ? undefined : { opacity: 0, y: -12 }}>
             <div className="start-copy">
-              <div className="eyebrow">Первый запуск в Астане</div>
-              <h1>{copy.heroA}<br /><em>{copy.heroB}</em></h1>
+              <div className="eyebrow">Пилот в Астане</div>
+              <h1>Как проведём<br />свободное время?</h1>
+              <h2 className="start-subtitle">{copy.heroA} {copy.heroB}</h2>
               <p className="lead">{copy.lead}</p>
               <div className="promise-row" aria-label="Как работает подборка">
                 <span><b>15</b> свайпов</span>
-                <span><b>80</b> мест в пилоте</span>
+                <span><b>3</b> видимых ограничения</span>
                 <span><b>1–3</b> варианта</span>
               </div>
               <div className="prompt-composer">
@@ -164,6 +221,10 @@ export default function Home() {
                 {goals.map((item) => (
                   <button key={item.id} onClick={() => { setGoal(item.id); setStage("limits"); }}>{item.icon} {item.title}</button>
                 ))}
+              </div>
+              <div className="home-actions">
+                <QButton onClick={() => setStage("limits")} trailingIcon={<ArrowRight size={18} />}>Настроить подборку</QButton>
+                <QButton variant="text" size={48} onClick={() => setStage("explore")}>Показать на карте</QButton>
               </div>
             </div>
             <LocalChatAssistant
@@ -226,13 +287,13 @@ export default function Home() {
               <p>Ноль означает: показывать только подтверждённо бесплатные варианты.</p>
             </div>
             <div className="location-note"><MapPin size={18} /><div><b>Стартуем у Байтерека</b><small>Демо-точка · можно изменить позже</small></div></div>
-            <button className="primary" onClick={() => setStage("discover")}>Перейти к 15 свайпам <ArrowRight size={18} /></button>
+            <QButton onClick={() => setStage("discover")} trailingIcon={<ArrowRight size={18} />}>Перейти к 15 свайпам</QButton>
           </motion.section>
         )}
 
         {stage === "discover" && (
           <motion.section className="screen discover" key="discover" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={reduceMotion ? undefined : { opacity: 0 }}>
-            <div className="discover-head"><button className="back" onClick={() => setStage("limits")}><ArrowLeft size={18} /></button><div className="progress"><i style={{ width: `${progress}%` }} /></div><span>{Math.min(cardIndex + 1, SWIPE_COUNT)}/{SWIPE_COUNT}</span></div>
+            <div className="discover-head"><button className="back" onClick={() => setStage("limits")} aria-label="Назад к условиям"><ArrowLeft size={18} /></button><div className="progress" role="progressbar" aria-label="Выбор интересов" aria-valuemin={0} aria-valuemax={SWIPE_COUNT} aria-valuenow={cardIndex}><i style={{ width: `${progress}%` }} /></div><span>{Math.min(cardIndex + 1, SWIPE_COUNT)}/{SWIPE_COUNT}</span></div>
             <div className="context-chip"><Clock3 size={15} /> {minutes} мин <i /> до {budget.toLocaleString("ru-RU")} ₸ <button onClick={() => setStage("limits")}>Изменить</button></div>
             <div className="deck-kicker"><b>Выбери, что тебе по душе</b><span>Мы запомним ответы и соберём ленту событий по твоему вайбу.</span></div>
             <AnimatePresence mode="popLayout">
@@ -259,34 +320,93 @@ export default function Home() {
                 <div className="swipe-card-copy"><small>Идея · не реальное событие</small><h2>{current.title}</h2></div>
               </motion.article>
             </AnimatePresence>
-            {error && <p className="error">{error}</p>}
+            {error && <div className="error" role="alert"><span>{error}</span><small>Повторите последний выбор.</small></div>}
             <div className="swipe-actions">
-              <button onClick={() => react(false)} aria-label="Не сейчас"><ArrowLeft size={22} /><span>Не сейчас</span></button>
-              <button className="like" onClick={() => react(true)} disabled={loading} aria-label="Интересно"><Heart size={23} fill="currentColor" /><span>{loading ? "Ищем…" : "Интересно"}</span></button>
+              <QButton variant="secondary" size={56} onClick={() => react(false)} aria-label="Не сейчас" leadingIcon={<ArrowLeft size={22} />}>Не сейчас</QButton>
+              <QButton size={56} onClick={() => react(true)} loading={loading} loadingLabel="Ищем варианты…" aria-label="Интересно" leadingIcon={<Heart size={22} fill="currentColor" />}>Интересно</QButton>
             </div>
           </motion.section>
         )}
 
         {stage === "results" && (
-          <motion.section className="screen results" key="results" initial={reduceMotion ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="result-header"><div><span className="step-label">Подборка по текущему контексту</span><h2>Подходящие<br />варианты</h2></div><button className="round" onClick={() => { setCardIndex(0); setLikedTags([]); setStage("discover"); }} aria-label="Начать заново"><RotateCcw size={19} /></button></div>
-            <p className="result-note">{generationMode === "llm" ? "Помощник объяснил выбор по данным найденных мест. Названия и ссылки взяты из OpenStreetMap." : "Подборка рассчитана локально по времени, расстоянию и выбранным интересам."}</p>
-            <div className="result-list">
-              {results.length ? results.map((item, index) => (
-                <article className="result-card" key={item.id}>
-                  <div className="result-index">0{index + 1}</div>
-                  <div className="result-body">
-                    <div className="result-top"><span>{item.category}</span><span className={item.feasibility}>{item.feasibility === "feasible" ? "Подходит" : "Нужно уточнить"}</span></div>
-                    <h3>{item.name}</h3>
-                    <p>{item.reason}</p>
-                    <div className="metrics"><span><MapPin size={15} /> {item.distanceKm.toFixed(1)} км</span><span><Clock3 size={15} /> ≈ {item.totalMinutes} мин</span></div>
-                    <div className="unknown">{item.unknowns[0]}</div>
-                    <a href={item.sourceUrl} target="_blank" rel="noreferrer">Источник: {item.sourceName} <ArrowRight size={15} /></a>
-                    <button className="choose-plan" onClick={() => { setSelectedPlan(item); setStage("plan"); }}>Выбрать этот план <ArrowRight size={15} /></button>
-                  </div>
-                </article>
-              )) : <div className="empty"><h3>Подходящих вариантов пока нет</h3><p>Увеличь время или измени интересы — ограничения не были ослаблены автоматически.</p><button className="primary" onClick={() => setStage("limits")}>Изменить условия</button></div>}
+          <motion.section className="screen results feed-screen" key="results" initial={reduceMotion ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="context-rail" role="list" aria-label="Текущие условия">
+              <span role="listitem"><Clock3 size={15} /> {minutes} мин</span>
+              <span role="listitem"><WalletCards size={15} /> {budget === 0 ? "Только бесплатно" : `до ${budget.toLocaleString("ru-RU")} ₸`}</span>
+              <span role="listitem"><MapPin size={15} /> Байтерек</span>
+              <button type="button" onClick={() => setStage("limits")}>Изменить условия</button>
             </div>
+            <div className="feed-heading"><h1 id="feed-title">Для тебя</h1><button className="round" onClick={() => { setCardIndex(0); setLikedTags([]); setStage("discover"); }} aria-label="Настроить интересы заново"><RotateCcw size={19} /></button></div>
+            <div className="sr-only" aria-live="polite">{saveAnnouncement}</div>
+            {results.length ? (() => {
+              const hero = results[0];
+              const media = candidateMedia(hero);
+              const saved = savedIds.includes(hero.id);
+              return (
+                <>
+                  <article className="feed-hero" aria-labelledby={`candidate-${hero.id}`} onClick={() => openDetails(hero)}>
+                    <div className="feed-hero__media">
+                      <Image src={media.src} alt={`Иллюстрация категории: ${media.label}`} fill sizes="(max-width: 520px) calc(100vw - 44px), 386px" />
+                      <span className="feed-media-label">Иллюстрация категории</span>
+                      <QButton className="feed-save" variant="icon" size={44} aria-label={saved ? "Убрать из сохранённых" : "Сохранить"} aria-pressed={saved} visualState={saved ? "success" : "default"} onClick={(event) => { event.stopPropagation(); toggleSaved(hero); }} leadingIcon={saved ? <Check size={20} /> : <Bookmark size={20} />} />
+                    </div>
+                    <div className="feed-hero__content">
+                      <h2 id={`candidate-${hero.id}`}>{hero.name}</h2>
+                      <p className="feed-category">{hero.category} · Астана</p>
+                      <div className="feed-facts" aria-label="Основные факты">
+                        <span><Navigation size={16} /> ≈ {hero.travelMinutes} мин до места</span>
+                        <span><Clock3 size={16} /> {hero.durationMinutes} мин на посещение</span>
+                        <span><WalletCards size={16} /> {hero.price ? `от ${hero.price.min.toLocaleString("ru-RU")} ₸` : "Цена не указана"}</span>
+                      </div>
+                      <div className="feed-reason"><b>Почему подходит</b><p>{hero.reason}</p></div>
+                      {hero.unknowns.length > 0 && <p className="feed-warning">{hero.unknowns[0]}</p>}
+                      <div className="feed-footer-row">
+                        <a className="feed-source" href={hero.sourceUrl} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>Источник: {hero.sourceName} <ArrowRight size={15} /></a>
+                        <div className="feed-actions"><QButton size={48} onClick={(event) => { event.stopPropagation(); openDetails(hero); }} trailingIcon={<ArrowRight size={16} />}>Подробнее</QButton></div>
+                      </div>
+                    </div>
+                  </article>
+                  {results.length > 1 && <section className="feed-more" aria-labelledby="more-title"><h2 id="more-title">Ещё по вашему настроению</h2><div className="feed-more__rail">{results.slice(1).map((item) => { const itemMedia = candidateMedia(item); return <article className="feed-compact" key={item.id}><button type="button" onClick={() => openDetails(item)} aria-label={`Подробнее: ${item.name}`}><span className="feed-compact__media"><Image src={itemMedia.src} alt={`Иллюстрация категории: ${itemMedia.label}`} fill sizes="238px" /><i>Иллюстрация категории</i></span><span className="feed-compact__body"><b>{item.name}</b><small><Navigation size={14} /> ≈ {item.travelMinutes} мин</small><small><WalletCards size={14} /> {item.price ? `от ${item.price.min.toLocaleString("ru-RU")} ₸` : "Цена не указана"}</small></span></button></article>; })}</div></section>}
+                </>
+              );
+            })() : <div className="empty"><h3>По этим условиям вариантов не нашли</h3><p>Ограничения не были ослаблены автоматически.</p><QButton onClick={() => setStage("limits")}>Изменить условия</QButton></div>}
+          </motion.section>
+        )}
+
+        {stage === "detail" && selectedPlan && (
+          <motion.section className="screen detail-screen" key="detail" initial={reduceMotion ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+            <button className="back" onClick={() => setStage("results")}><ArrowLeft size={18} /> Для тебя</button>
+            <span className="step-label">{selectedPlan.category} · Астана</span>
+            <h1>{selectedPlan.name}</h1>
+            <p className="plan-lead">{selectedPlan.reason}</p>
+            <div className="profile-list"><div><span>До места</span><b>≈ {selectedPlan.travelMinutes} мин</b></div><div><span>Посещение</span><b>{selectedPlan.durationMinutes} мин</b></div><div><span>Цена</span><b>{selectedPlan.price ? `от ${selectedPlan.price.min.toLocaleString("ru-RU")} ₸` : "Не указана"}</b></div></div>
+            {selectedPlan.unknowns.length > 0 && <p className="feed-warning">{selectedPlan.unknowns[0]}</p>}
+            <a className="feed-source" href={selectedPlan.sourceUrl} target="_blank" rel="noreferrer">Источник: {selectedPlan.sourceName} <ArrowRight size={15} /></a>
+            <QButton onClick={() => setStage("plan")} trailingIcon={<Navigation size={18} />}>Построить маршрут</QButton>
+          </motion.section>
+        )}
+
+        {stage === "search" && (
+          <motion.section className="screen dock-screen assistant-screen" key="search" initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="dock-screen__intro"><span className="step-label">Поиск и помощник</span><h1>Что ищем?</h1><p>Найди событие по словам или опиши свободное время, бюджет и настроение. В текущем режиме помощник распознаёт условия локально и не выдумывает события.</p></div>
+            <LocalChatAssistant profile={localProfile} onRestore={restoreLocalProfile} onPatch={applyChatPatch} onStart={() => setStage("limits")} onOpenMap={() => setStage("explore")} />
+          </motion.section>
+        )}
+
+        {stage === "profile" && (
+          <motion.section className="screen dock-screen" key="profile" initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="dock-screen__intro"><span className="step-label">Профиль</span><h1>Твои настройки</h1><p>Предпочтения сохраняются только в этом браузере. Оценки личности и скрытого профиля нет.</p></div>
+            <div className="profile-list">
+              <div><span>Свободное время</span><b>{minutes} минут</b></div>
+              <div><span>Бюджет</span><b>до {budget.toLocaleString("ru-RU")} ₸</b></div>
+              <div><span>Отмечено интересов</span><b>{likedTags.length}</b></div>
+              <div><span>Язык интерфейса</span><b>{locale.toUpperCase()}</b></div>
+            </div>
+            <section className="profile-plans" aria-labelledby="profile-plans-heading">
+              <div><h2 id="profile-plans-heading">Сохранённое и планы</h2><span>{savedIds.length} сохранено</span></div>
+              {selectedPlan ? <article className="saved-plan"><MapPin size={24} /><div><b>{selectedPlan.name}</b><span>≈ {selectedPlan.totalMinutes} мин · {selectedPlan.distanceKm.toFixed(1)} км по прямой</span></div><QButton size={48} onClick={() => setStage("plan")}>Открыть</QButton></article> : <p>Готового маршрута пока нет. Выбери вариант в персональной ленте.</p>}
+            </section>
+            <div className="trust-links"><Link href="/sources">Источники данных</Link><Link href="/privacy">Память и приватность</Link></div>
           </motion.section>
         )}
 
@@ -309,6 +429,6 @@ export default function Home() {
         )}
       </>
       <footer><span>QETTYQ / ASTANA</span><nav><Link href="/about">О продукте</Link><Link href="/sources">Источники</Link><Link href="/privacy">Приватность</Link></nav></footer>
-    </main>
+    </AppShell>
   );
 }
