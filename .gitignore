@@ -11,4 +11,6 @@ test-results/
 data/raw/
 tmp/
 .codex-presentations/
+.codex-finalizer-*/
+*.inspect.ndjson
 .sites-runtime/
