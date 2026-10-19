@@ -10,6 +10,7 @@ QETTYQ — mobile-first сервис выбора досуга в Астане. 
 - проверка временного окна и unknown-цены;
 - 80 реальных POI Астаны из ограниченного импорта Overpass;
 - provenance для каждой записи и ссылка на исходный объект OSM;
+- гостевые сессии, идемпотентные реакции/undo и локальное удаление данных;
 - честные режимы `snapshot`, `deterministic`, `estimated route`;
 - адаптивный интерфейс и reduced-motion режим.
 
@@ -32,6 +33,7 @@ pnpm dev
 ```bash
 pnpm typecheck
 pnpm test
+pnpm test:e2e
 pnpm build
 pnpm submission:check
 ```
@@ -49,3 +51,9 @@ pnpm data:import:poi
 Скопируйте `.env.example` в `.env.local` только при необходимости. Секреты не хранятся в репозитории; текущий вертикальный сценарий работает без ключей и платных API.
 
 Подробный фактический статус: [`docs/STATUS.md`](docs/STATUS.md). Исходный PRD: [`PRD.md`](PRD.md).
+
+## Команда и материалы
+
+**QETTYQ APP** · Tim Asproyanidi · Qaragandy · Boostseller.kz · +7 777 836 8576
+Публичный репозиторий: <https://github.com/timyname/QETTYQ>
+Презентация и архив для подачи находятся в [`exports/`](exports/).

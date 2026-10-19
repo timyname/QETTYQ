@@ -5,10 +5,12 @@
 | Проверка | Статус | Детали |
 |---|---|---|
 | `pnpm data:validate` | PASS | 80 snapshot POI с provenance |
-| `pnpm test` | PASS | 2 unit-теста |
+| `pnpm test` | PASS | 13 unit + integration тестов |
+| `pnpm test:e2e` | PASS | 4 mobile Chromium сценария, 390×844, reduced motion |
 | `pnpm typecheck` | PASS | TypeScript без ошибок |
-| `pnpm build` | PASS | Next.js production build, `/` и `/api/recommendations` |
+| `pnpm build` | PASS | Next.js production build, UI, рекомендации, sessions/reactions/delete-data API |
 | `pnpm submission:check` | PASS | Обязательные файлы доступны, `.env.example` без ключей |
-| Browser smoke | PASS | Start → limits → 4 reactions → 3 snapshot-рекомендации; console errors: 0 |
+| Presentation QA | PASS | 9-slide PPTX, 9-page PDF, montage и full-size inspection |
+| Secret scan | PASS | Финальный submission ZIP без известных ключевых паттернов |
 
-Провайдерные mocks не выдаются за live smoke. Реальный сетевой вызов выполнен только для одного ограниченного импорта OSM.
+Провайдерные mocks не выдаются за live smoke. Реальный сетевой вызов выполнен только для одного ограниченного импорта OSM. Детали E2E: `docs/agent-reports/A8-e2e.md`.

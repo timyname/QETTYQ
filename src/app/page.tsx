@@ -1,8 +1,9 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowRight, Clock3, Heart, MapPin, RotateCcw, Sparkles, WalletCards } from "lucide-react";
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import type { Goal, Recommendation } from "@/domain/types";
 
 const goals: Array<{ id: Goal; icon: string; title: string; text: string; tags: string[] }> = [
@@ -21,13 +22,16 @@ const interestCards = [
 ];
 
 export default function Home() {
-  const [stage, setStage] = useState<"start" | "limits" | "discover" | "results">("start");
+  const reduceMotion = useReducedMotion();
+  const [stage, setStage] = useState<"start" | "limits" | "discover" | "results" | "plan">("start");
   const [goal, setGoal] = useState<Goal>("new");
   const [minutes, setMinutes] = useState(120);
   const [budget, setBudget] = useState(5000);
   const [cardIndex, setCardIndex] = useState(0);
   const [likedTags, setLikedTags] = useState<string[]>([]);
   const [results, setResults] = useState<Recommendation[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<Recommendation | null>(null);
+  const [generationMode, setGenerationMode] = useState<"llm" | "deterministic">("deterministic");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +50,7 @@ export default function Home() {
       if (!response.ok) throw new Error("Не удалось получить варианты");
       const payload = await response.json();
       setResults(payload.items);
+      setGenerationMode(payload.generationMode === "llm" ? "llm" : "deterministic");
       setStage("results");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Неизвестная ошибка");
@@ -71,9 +76,9 @@ export default function Home() {
         <button className="city"><MapPin size={15} /> Астана</button>
       </header>
 
-      <AnimatePresence mode="wait">
+      <>
         {stage === "start" && (
-          <motion.section className="screen start" key="start" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
+          <motion.section className="screen start" key="start" initial={false} animate={{ opacity: 1, y: 0 }} exit={reduceMotion ? undefined : { opacity: 0, y: -12 }}>
             <div className="eyebrow"><span>01</span> ГОРОДСКОЙ ВЫБОР БЕЗ БЕСКОНЕЧНЫХ СПИСКОВ</div>
             <h1>Как проведём<br /><em>свободное время?</em></h1>
             <p className="lead">Соберём время, бюджет и настроение — покажем только те места, куда действительно можно успеть.</p>
@@ -91,7 +96,7 @@ export default function Home() {
         )}
 
         {stage === "limits" && (
-          <motion.section className="screen limits" key="limits" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }}>
+          <motion.section className="screen limits" key="limits" initial={reduceMotion ? false : { opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={reduceMotion ? undefined : { opacity: 0, x: -24 }}>
             <button className="back" onClick={() => setStage("start")}><ArrowLeft size={18} /> Назад</button>
             <div className="step-label">КОНТЕКСТ · 1 ИЗ 2</div>
             <h2>Сколько у нас<br />пространства для выбора?</h2>
@@ -111,12 +116,12 @@ export default function Home() {
         )}
 
         {stage === "discover" && (
-          <motion.section className="screen discover" key="discover" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.section className="screen discover" key="discover" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={reduceMotion ? undefined : { opacity: 0 }}>
             <div className="discover-head"><button className="back" onClick={() => setStage("limits")}><ArrowLeft size={18} /></button><div className="progress"><i style={{ width: `${progress}%` }} /></div><span>{Math.min(cardIndex + 1, 4)}/4</span></div>
             <div className="context-chip"><Clock3 size={15} /> {minutes} мин <i /> до {budget.toLocaleString("ru-RU")} ₸ <button onClick={() => setStage("limits")}>Изменить</button></div>
             <p className="deck-kicker">ОТМЕТЬ, ЧТО ОТКЛИКАЕТСЯ</p>
             <AnimatePresence mode="popLayout">
-              <motion.article className={`swipe-card ${current.tone}`} key={current.tag} initial={{ opacity: 0, scale: .94, rotate: 2 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, x: 160, rotate: 8 }} transition={{ type: "spring", stiffness: 260, damping: 24 }}>
+              <motion.article className={`swipe-card ${current.tone}`} key={current.tag} initial={reduceMotion ? false : { opacity: 0, scale: .94, rotate: 2 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={reduceMotion ? undefined : { opacity: 0, x: 160, rotate: 8 }} transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 24 }}>
                 <div className="card-grid" />
                 <span className="card-mark">{current.mark}</span>
                 <div className="card-symbol">{current.tag === "garden" ? "↟" : current.tag === "cafe" ? "◒" : "✦"}</div>
@@ -132,9 +137,9 @@ export default function Home() {
         )}
 
         {stage === "results" && (
-          <motion.section className="screen results" key="results" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.section className="screen results" key="results" initial={reduceMotion ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
             <div className="result-header"><div><span className="step-label">ПЛАН · SNAPSHOT</span><h2>Вот что<br />подходит сейчас</h2></div><button className="round" onClick={() => { setCardIndex(0); setLikedTags([]); setStage("discover"); }} aria-label="Начать заново"><RotateCcw size={19} /></button></div>
-            <p className="result-note">AI-объяснение недоступно — показан детерминированный поиск по данным OpenStreetMap.</p>
+            <p className="result-note">{generationMode === "llm" ? "AI-объяснение создано только по evidence выбранных OpenStreetMap-записей." : "AI-объяснение недоступно — показан детерминированный поиск по данным OpenStreetMap."}</p>
             <div className="result-list">
               {results.length ? results.map((item, index) => (
                 <article className="result-card" key={item.id}>
@@ -146,14 +151,33 @@ export default function Home() {
                     <div className="metrics"><span><MapPin size={15} /> {item.distanceKm.toFixed(1)} км</span><span><Clock3 size={15} /> ≈ {item.totalMinutes} мин</span></div>
                     <div className="unknown">{item.unknowns[0]}</div>
                     <a href={item.sourceUrl} target="_blank" rel="noreferrer">Источник: {item.sourceName} <ArrowRight size={15} /></a>
+                    <button className="choose-plan" onClick={() => { setSelectedPlan(item); setStage("plan"); }}>Выбрать этот план <ArrowRight size={15} /></button>
                   </div>
                 </article>
               )) : <div className="empty"><h3>Подходящих вариантов пока нет</h3><p>Увеличь время или измени интересы — ограничения не были ослаблены автоматически.</p><button className="primary" onClick={() => setStage("limits")}>Изменить условия</button></div>}
             </div>
           </motion.section>
         )}
-      </AnimatePresence>
-      <footer><span>QETTYQ / ASTANA</span><span>Данные с источниками · Без скрытого профиля</span></footer>
+
+        {stage === "plan" && selectedPlan && (
+          <motion.section className="screen plan" key="plan" initial={reduceMotion ? false : { opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }}>
+            <button className="back" onClick={() => setStage("results")}><ArrowLeft size={18} /> К вариантам</button>
+            <span className="step-label">ВЫБРАННЫЙ ПЛАН · ESTIMATED ROUTE</span>
+            <h2>{selectedPlan.name}</h2>
+            <p className="plan-lead">План не является бронью. Перед выходом проверь условия у первоисточника.</p>
+            <div className="timeline">
+              <div><i>1</i><span><b>Старт · Байтерек</b><small>Демо-точка</small></span></div>
+              <div className="timeline-path"><span>≈ {selectedPlan.travelMinutes} мин пешком</span></div>
+              <div><i>2</i><span><b>{selectedPlan.name}</b><small>Оценка визита: {selectedPlan.durationMinutes} мин</small></span></div>
+              <div className="timeline-path"><span>+ 10 мин запаса</span></div>
+              <div><i>3</i><span><b>Итого ≈ {selectedPlan.totalMinutes} мин</b><small>{selectedPlan.distanceKm.toFixed(1)} км по прямой до места</small></span></div>
+            </div>
+            <div className="plan-warning"><b>Почему «≈»?</b><p>Routing-provider пока не подключён. Время оценено по прямому расстоянию и скорости 4.5 км/ч; это не точный пеший маршрут.</p></div>
+            <a className="primary plan-source" href={selectedPlan.sourceUrl} target="_blank" rel="noreferrer">Открыть источник <ArrowRight size={18} /></a>
+          </motion.section>
+        )}
+      </>
+      <footer><span>QETTYQ / ASTANA</span><nav><Link href="/about">О продукте</Link><Link href="/sources">Источники</Link><Link href="/privacy">Приватность</Link></nav></footer>
     </main>
   );
 }

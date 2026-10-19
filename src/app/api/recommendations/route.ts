@@ -3,6 +3,7 @@ import { z } from "zod";
 import places from "../../../../data/places.json";
 import { recommend } from "@/domain/recommend";
 import type { Place } from "@/domain/types";
+import { createLLMProvider, DeterministicProvider } from "@/server/providers/llm";
 
 const schema = z.object({
   goal: z.enum(["food", "walk", "activity", "new"]),
@@ -18,12 +19,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ code: "VALIDATION_ERROR", issues: parsed.error.issues }, { status: 400 });
   }
   const items = recommend(places as Place[], parsed.data);
+  const selected = items.slice(0, 3);
+  const provider = createLLMProvider();
+  let explanations;
+  try {
+    explanations = await provider.explain(selected);
+  } catch {
+    explanations = await new DeterministicProvider().explain(selected);
+    explanations.warning = "AI-провайдер недоступен — использован детерминированный fallback.";
+  }
+  const explanationById = new Map(explanations.items.map((item) => [item.candidateId, item]));
   return NextResponse.json({
     requestId: crypto.randomUUID(),
     dataMode: "snapshot",
-    generationMode: "deterministic",
+    generationMode: explanations.mode,
     generatedAt: new Date().toISOString(),
-    warnings: ["Маршрут рассчитан приблизительно: внешний routing-provider не подключён."],
-    items: items.slice(0, 3),
+    warnings: ["Маршрут рассчитан приблизительно: внешний routing-provider не подключён.", ...(explanations.warning ? [explanations.warning] : [])],
+    items: selected.map((item) => ({ ...item, reason: explanationById.get(item.id)?.reason ?? item.reason })),
   });
 }

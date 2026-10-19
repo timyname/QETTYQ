@@ -1,13 +1,13 @@
 # Статус QETTYQ
 
 - Версия: локальный рабочий снимок, 19 октября 2026
-- Режим работы среды: последовательные роли, без запуска субагентов
+- Режим работы среды: основной агент + изолированные рабочие роли для API, E2E и конкурсных документов
 - Стек: Next.js 16, React 19, TypeScript, Zod, Motion, Vitest
 - Последняя контрольная точка: G1 пройдена локально
 
 ## Реальные функции
 
-Onboarding → ограничения → карточки интересов → серверный поиск → до трёх рекомендаций → источник. Реакции текущей сессии влияют на ranking. Unknown-цена не превращается в ноль.
+Onboarding → ограничения → карточки интересов → серверный поиск → до трёх рекомендаций → источник → выбранный план. Реакции гостевой сессии идемпотентны; undo и удаление данных реализованы. Unknown-цена не превращается в ноль.
 
 ## Данные
 
@@ -18,19 +18,26 @@ Onboarding → ограничения → карточки интересов �
 
 ## Провайдеры
 
-- AI: `deterministic fallback`; генеративный RAG не завершён.
+- AI: OpenAI Responses adapter со строгой схемой готов, без ключа используется честный `deterministic fallback`.
 - Маршруты: приблизительное пешее время по прямому расстоянию; строгий ETA не заявляется.
 - Карта: не подключена.
 
 ## Проверки
 
 - Валидация данных: 80 записей — PASS.
-- Unit: 2 теста — PASS.
-- Typecheck, unit, build, submission-check и browser smoke — PASS; см. `docs/TEST_REPORT.md`.
+- Unit + integration: 13 тестов — PASS.
+- Mobile E2E: 4 сценария — PASS.
+- Typecheck, lint, build, submission-check, presentation QA и secret scan — PASS; см. `docs/TEST_REPORT.md`.
 
 ## Незакрыто
 
-- P0: LLM/RAG, routing provider, модель событий, persistent sessions/reactions, delete-data endpoint, E2E и презентация.
+- P0: разрешённый live LLM smoke, routing provider, модель событий и подключение UI к reactions API.
 - Deploy: не опубликован.
 - YouTube: `pending_user_upload`.
 - Заявка: не отправлена.
+
+## Материалы подачи
+
+- `exports/QETTYQ_APP_pitch.pptx` — редактируемая презентация, 9 слайдов.
+- `exports/QETTYQ_APP_pitch.pdf` — проверенный PDF, 9 страниц.
+- `exports/QETTYQ_APP_submission.zip` — исходники и материалы без секретов и build-кешей.
