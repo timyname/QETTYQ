@@ -1,5 +1,16 @@
 # Статус QETTYQ
 
+## Клавиатура, афиша и компактный маршрут · 21.10.2026
+
+Опубликован `qettyq:vps-20261021-8`, healthy. Приёмка: 572/572 unit/integration PASS, TypeScript PASS; независимый E2E61/61PASS +landscapeattributionhit-test1/1PASS. Immutable production build PASS; public16events/8coordinates, mixedevent3stopreorder/remove2, memoryrestore/deletePASS. Подробности TEST_REPORT. Физический iPhone/WKWebView пока не проверен.
+
+- Keyboard viewport: offsetTop+height, focus-aware baseline WKWebView, без двойного safe-area. Toast Астаны overlay/close/2sec+fade; общая подложка header убрана, текст о провайдерах перенесён в настройки.
+- План: круглый control справа, компактный bottom sheet/X, 2–5 stops, удержание/перетаскивание и доступные reorder controls, серверный пересчёт. Events с проверенными координатами теперь принимаются тем же API, unknown duration остаётся null. Ожидание начала/опоздание рассчитывает код; данные фильма не выдумываются.
+- Афиша: точное сопоставление площадки/адреса с OSM provenance добавляет две точки Жастар театры. Publicпослепубликации16событий/8координат. HAS SANAT14-Д и неоднозначный Garage не подменяются ближайшим адресом. Публичная афиша и карточки больше не используют generated category photos.
+- Фото: локальные Commons2POI и Google mapless Photos сохраняются; индивидуальных grants на Sxodim posters пока0. Картинка на доступной странице не является разрешением на копирование.
+- 2ГИС: один demo Search probe200/1point. Отдельный MapGL adapter реализован, но отключён до отдельного browser-key+approval/domain restrictions. Серверный ключ не раскрыт; Google/OpenAI бюджеты не меняются. Внешний start route теперь HTTPS2GIS, multi-stop iOS требует физической проверки.
+- Посещения: новый необязательный foreground return prompt с отдельным выключенным opt-in, разрешённой GPS+visits memory и подтверждением человека. Близость не записывается как доказанный визит; фонового слежения нет.
+
 ## Фото, стеклянный интерфейс и диалог · 21.10.2026
 
 Опубликован `qettyq:vps-20261021-7`, healthy/HTTPS200. Финальная приёмка и публичные проверки записаны в TEST_REPORT. Существующие ключи и прикладные бюджеты OpenAI $10 / Google $10 сохраняются; сбросов ledger и нового биллинга нет. Live assistant: OpenAI plan→retrieve→answer PASS,3места/3источника, без Google и скрытой памяти; public memory restore/delete PASS.

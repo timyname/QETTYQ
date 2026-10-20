@@ -21,7 +21,7 @@ export async function handleEvents(request: Request, events: HostedRuntime["even
     // Do not bypass the durable source lease with an unbounded fallback fetch.
     return Response.json({ items: [], dataMode: "unavailable", freshness: "unavailable", warnings: ["Не удалось проверить афишу. События не выдумываются."], error: { code: "EVENTS_UNAVAILABLE" } }, { status: 503, headers });
   }
-  const items = data.items.filter(event => (!date || localDate(event.startsAt) === date) && (!query || `${event.name} ${event.venueName ?? ""} ${event.category ?? ""}`.toLowerCase().includes(query))).map(event => ({ ...event, media: resolveEventMedia(event) }));
+  const items = data.items.filter(event => (!date || localDate(event.startsAt) === date) && (!query || `${event.name} ${event.venueName ?? ""} ${event.category ?? ""}`.toLowerCase().includes(query))).map(event => ({ ...event, media: resolveEventMedia(event, { allowCategoryIllustration: false }) }));
   return Response.json({ ...data, items, cityId: "astana", requestId: crypto.randomUUID(), generatedAt: new Date().toISOString(), total: items.length }, { status: data.dataMode === "unavailable" ? 503 : 200, headers });
 }
 export function GET(request: Request) { return handleEvents(request, getHostedRuntime()?.events); }

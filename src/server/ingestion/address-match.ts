@@ -1,4 +1,5 @@
 import type { LiveAstanaEvent } from './sxodim-live';
+import type { VenueMatch } from './event-geo-media';
 
 export type AddressIndex = { source: { url: string; asOf: string; retrievedAt: string; license: string }; entries: Array<{
   street: string; houseNumber: string; lat: number; lon: number; sourceUrl: string;
@@ -67,10 +68,10 @@ export function createAddressMatcher(index: AddressIndex, now: number | (() => n
   };
 }
 
-export function enrichEventAddresses(events: LiveAstanaEvent[], match: ReturnType<typeof createAddressMatcher>): LiveAstanaEvent[] {
+export function enrichEventAddresses(events: LiveAstanaEvent[], match: ReturnType<typeof createAddressMatcher>, matchVenue?: (event: LiveAstanaEvent) => VenueMatch | null): LiveAstanaEvent[] {
   return events.map(event => {
     if (event.lat !== null || event.lon !== null) return event;
-    const result = match(event.address);
+    const result = match(event.address) ?? matchVenue?.(event);
     if (!result) return event;
     return { ...event, lat: result.lat, lon: result.lon, coordinateMatch: result, coordinateQuality: 'derived',
       coordinateProvenance: { sourceUrl: result.sourceUrl, fetchedAt: result.asOf, quality: 'derived', methodId: result.method },

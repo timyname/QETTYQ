@@ -10,6 +10,8 @@ import { CityMap, clusterMapPoints } from './CityMap';
 import { loadQettyqMapStyle } from './map-style';
 import { markerIconPaths } from './map-marker-icons';
 import s from './MapCanvas.module.css';
+import { DgisMapCanvas } from './DgisMapCanvas';
+import { approvedBrowserMapKey } from '../client/dgis-mapgl';
 
 export type MapCanvasPoint = { id: string; title: string; dateLabel: string; category: string; lat: number; lon: number };
 type Coordinates = { lat: number; lon: number };
@@ -41,6 +43,27 @@ function categoryIcon(category: string, document: Document) {
 }
 
 export function MapCanvas(props: MapCanvasProps) {
+  const [config, setConfig] = useState<{ pending: true } | { pending: false; browserKey: string | null }>({ pending: true });
+  const [unavailable, setUnavailable] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController(); let disposed = false;
+    const timeout = window.setTimeout(() => controller.abort(), 3_000);
+    void fetch('/api/maps/config', { cache: 'no-store', credentials: 'same-origin', signal: controller.signal })
+      .then(async response => {
+        if (!response.ok) throw new Error('MAP_CONFIG_UNAVAILABLE');
+        const data: unknown = await response.json();
+        const browserKey = approvedBrowserMapKey(data);
+        if (!disposed) setConfig({ pending: false, browserKey });
+      }).catch(() => { if (!disposed) setConfig({ pending: false, browserKey: null }); })
+      .finally(() => clearTimeout(timeout));
+    return () => { disposed = true; clearTimeout(timeout); controller.abort(); };
+  }, []);
+  if (config.pending) return <Localize><div className={s.root} data-map-engine="loading"><p className={s.notice} role="status">Загружаем карту Астаны…</p></div></Localize>;
+  if (config.browserKey && !unavailable) return <DgisMapCanvas {...props} browserKey={config.browserKey} onUnavailable={() => setUnavailable(true)} />;
+  return <><MapLibreCanvas {...props} />{unavailable && <p className={s.notice} role="status">Карта 2ГИС недоступна. Резервный режим OpenStreetMap.</p>}</>;
+}
+
+export function MapLibreCanvas(props: MapCanvasProps) {
   const { language } = useI18n();
   const host = useRef<HTMLDivElement>(null);
   const map = useRef<VectorMap | null>(null);

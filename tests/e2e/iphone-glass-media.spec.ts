@@ -1,3 +1,4 @@
+import { showRouteOptions } from './route-ui-helpers';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { pilotPlaces, publicPlace } from '../../src/server/pilot/catalog';
 import { answerPilotChat } from '../../src/server/pilot/chat';
@@ -161,7 +162,7 @@ test('dock navigation, detail/plan back, chat composition and settings remain ta
   const dock = page.getByRole('navigation', { name: 'Основная навигация' });
   await page.getByRole('article').first().getByRole('button', { name: 'Подробнее', exact: true }).click();
   await page.getByRole('button', { name: 'Оценить путь', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Твой маршрут', exact: true })).toBeVisible();
+  await expect(page.getByRole('main', { name: 'Маршрут по Астане', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'На карту', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Город на карте', exact: true })).toBeVisible();
   await dock.getByRole('button', { name: 'Поиск', exact: true }).click();
@@ -215,13 +216,13 @@ test('large-text fixture and landscape keep the app navigable with internal scro
   await page.screenshot({ path: `${imageDirectory}/landscape-large-text.png` });
 });
 
-test('default Google use is disclosed before first send; photo attribution/error fallback and settings opt-out remain correct', async ({ page }) => {
+test('provider explanations live in settings, not chat; photo attribution/error fallback and opt-out remain correct', async ({ page }) => {
   const requests = await installFixtures(page, { googlePhoto: true, aiAvailable: true }); await feed(page);
   await expect(page.getByTestId('google-place-photo')).toHaveCount(0);
   await page.getByRole('navigation').getByRole('button', { name: 'Поиск', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Что придумаем?', exact: true })).toBeVisible();
   const disclosure = page.getByText('Поиск может использовать OpenAI и Google: им передаётся запрос, но не точная геопозиция. История хранится на устройстве; серверная память включается отдельно.', { exact: true });
-  await expect(disclosure).toBeVisible();
+  await expect(disclosure).toHaveCount(0);
   expect(requests.some(entry => entry.value?.googleConsent === true || entry.value?.useAI === true)).toBe(false);
   await page.getByLabel('Сообщение помощнику', { exact: true }).fill('SYNTHETIC QA café');
   await page.getByRole('button', { name: 'Отправить сообщение', exact: true }).click();
@@ -239,6 +240,8 @@ test('default Google use is disclosed before first send; photo attribution/error
   await expect(disclosure).toHaveCount(0);
   await page.locator('[data-screen] > header').getByRole('button', { name: 'Настройки', exact: true }).click();
   const settings = page.getByRole('region', { name: 'Настройки помощника', exact: true });
+  await expect(settings).toContainText('OpenAI получает запрос');
+  await expect(settings).toContainText('Google получает поисковый запрос');
   await expect(settings.getByRole('checkbox', { name: 'Умный ответ OpenAI', exact: true })).toBeChecked();
   const google = settings.getByRole('checkbox', { name: 'Поиск заведений и фото Google', exact: true });
   await expect(google).toBeChecked(); await google.uncheck();
@@ -256,10 +259,11 @@ test('route collapsed/expanded portrait and landscape preserve reachable scroll 
   await page.getByRole('button', { name: 'Оценить путь', exact: true }).click();
   const plan = page.getByRole('region', { name: 'План маршрута', exact: true });
   const start = plan.getByRole('link', { name: 'Начать маршрут', exact: true });
-  await expect(start).toBeVisible(); await tapTarget(start);
+  const bubble = page.getByRole('button', { name: 'Развернуть план маршрута', exact: true });
+  await expect(plan).toHaveCount(0); await tapTarget(bubble);
   await page.screenshot({ path: `${imageDirectory}/route-collapsed-430.png` });
-  await plan.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click();
-  const external = plan.getByRole('link', { name: 'Apple Maps ↗', exact: true });
+  await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click(); await showRouteOptions(page);
+  const external = plan.getByText('Выбранные точки передаются провайдеру только при расчёте или открытии навигации.', { exact: false });
   await external.scrollIntoViewIfNeeded(); await expect(external).toBeVisible();
   await expect(start).toBeVisible();
   await page.screenshot({ path: `${imageDirectory}/route-expanded-430.png` });
@@ -271,20 +275,22 @@ test('route collapsed/expanded portrait and landscape preserve reachable scroll 
     document.documentElement.style.setProperty('--qettyq-safe-area-right', '59px');
   });
   await viewportFits(page); await external.scrollIntoViewIfNeeded(); await expect(external).toBeVisible();
+  const mapCredit = page.locator('.maplibregl-ctrl-attrib a[href*="openstreetmap.org/copyright"], .leaflet-control-attribution a[href*="openstreetmap.org/copyright"]').first();
+  await expect(mapCredit).toBeVisible();
+  expect(await mapCredit.evaluate(element => {
+    const box = element.getBoundingClientRect(), top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+    return top === element || element.contains(top);
+  }), 'landscape copyright link must remain above the map and outside the expanded sheet').toBe(true);
+  const copyright = await mapCredit.boundingBox(), expandedSheet = await plan.boundingBox();
+  expect(copyright!.x + copyright!.width).toBeLessThanOrEqual(expandedSheet!.x);
   await expect(start).toBeVisible(); await tapTarget(start);
   const button = await start.boundingBox(), dock = await page.getByRole('navigation').boundingBox();
   expect(button!.y + button!.height).toBeLessThanOrEqual(dock!.y);
   await page.screenshot({ path: `${imageDirectory}/route-expanded-landscape.png` });
   await plan.getByRole('button', { name: 'Свернуть план маршрута', exact: true }).click();
-  const summary = await plan.getByRole('heading', { name: 'Нужна точка старта', exact: true }).boundingBox();
-  const sheet = await plan.boundingBox();
-  expect(summary!.y).toBeGreaterThanOrEqual(sheet!.y);
-  expect(summary!.y + summary!.height).toBeLessThanOrEqual(sheet!.y + sheet!.height);
-  expect(await plan.getByRole('heading', { name: 'Нужна точка старта', exact: true }).evaluate(element => {
-    const box = element.getBoundingClientRect(), top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
-    return top === element || element.contains(top);
-  }), 'collapsed summary must not be covered by sticky actions').toBe(true);
-  await expect(start).toBeVisible();
+  await expect(plan).toHaveCount(0);
+  await expect(bubble).toBeVisible(); await tapTarget(bubble);
+  expect((await bubble.boundingBox())!.y + (await bubble.boundingBox())!.height).toBeLessThanOrEqual(dock!.y);
   await page.screenshot({ path: `${imageDirectory}/route-collapsed-landscape.png` });
 });
 
@@ -324,7 +330,8 @@ test('feed scrolls beneath stable glass header/dock while city and final control
   expect(scrollerBounds!.y + scrollerBounds!.height).toBe(932);
   const city = header.getByRole('button', { name: 'Астана', exact: true });
   const glass = await header.evaluate(element => getComputedStyle(element).backdropFilter);
-  expect(glass).toContain('blur(');
+  expect(glass).toBe('none');
+  expect(await city.evaluate(element => getComputedStyle(element).backdropFilter)).toContain('blur(');
   const cityFill = await city.evaluate(element => getComputedStyle(element).getPropertyValue('-webkit-text-fill-color'));
   expect(cityFill).not.toMatch(/rgba?\(255,\s*255,\s*255/u);
   const [red, green, blue] = cityFill.match(/[\d.]+/gu)!.map(Number);
@@ -370,8 +377,8 @@ test('native-inset expanded route keeps mandatory routing credit exposed after e
   await page.getByRole('button', { name: 'Показать подборку', exact: true }).click();
   await page.getByRole('article').first().getByRole('button', { name: 'Подробнее', exact: true }).click();
   await page.getByRole('button', { name: 'Оценить путь', exact: true }).click();
-  await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click();
-  await page.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта', exact: true }).check();
+  await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click(); await showRouteOptions(page);
+  await page.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек', exact: true }).check();
   await page.getByRole('button', { name: 'Рассчитать путь по улицам', exact: true }).click();
   const credit = page.getByRole('link', { name: 'FOSSGIS / OSRM Foot · synthetic_test', exact: true });
   await expect(credit).toBeVisible();
@@ -386,7 +393,7 @@ test('native-inset expanded route keeps mandatory routing credit exposed after e
 test('first-send settings opt-out persists without enabling server memory and two-turn dating history reaches the bounded request', async ({ page }) => {
   const requests = await installFixtures(page, { aiAvailable: true }); await feed(page);
   await page.getByRole('navigation').getByRole('button', { name: 'Поиск', exact: true }).click();
-  await page.getByRole('button', { name: 'Настроить', exact: true }).click();
+  await page.locator('[data-screen] > header').getByRole('button', { name: 'Настройки', exact: true }).click();
   const settings = page.getByRole('region', { name: 'Настройки помощника', exact: true });
   const ai = settings.getByRole('checkbox', { name: 'Умный ответ OpenAI', exact: true }), google = settings.getByRole('checkbox', { name: 'Поиск заведений и фото Google', exact: true });
   await expect(ai).toBeChecked(); await expect(google).toBeChecked(); await ai.uncheck(); await google.uncheck();
@@ -425,6 +432,7 @@ test('chat composer and navigation share one glass panel; synthetic visualViewpo
   expect(navBox!.y - inputBox!.y - inputBox!.height).toBeLessThanOrEqual(12);
   await page.screenshot({ path: `${imageDirectory}/chat-joined-dock-first-send-430.png` });
   // Synthetic browser event, NOT proof of an actual WKWebView keyboard.
+  await input.focus();
   await page.evaluate(() => {
     if (!window.visualViewport) throw new Error('visualViewport fixture unavailable');
     Object.defineProperty(window.visualViewport, 'height', { configurable: true, value: 560 });

@@ -86,8 +86,8 @@ test('Google: disclosed defaults, explicit settings opt-out/enable, English shel
   await page.getByRole('button', { name: 'QETTYQ — home' }).click();
   await page.getByRole('navigation').getByRole('button', { name: 'Search', exact: true }).click();
   const disclosure = page.getByText('Search may use OpenAI and Google: they receive your query, not your precise location. History stays on this device; server memory is enabled separately.', { exact: true });
-  await expect(disclosure).toBeVisible();
-  await disclosure.locator('..').getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(disclosure).toHaveCount(0);
+  await page.locator('[data-screen] > header').getByRole('button', { name: 'Settings', exact: true }).click();
   const settings = page.getByRole('region', { name: 'Assistant settings', exact: true });
   const google = settings.getByRole('checkbox', { name: 'Google places and photos', exact: true });
   await expect(google).toBeChecked(); await google.uncheck();

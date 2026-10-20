@@ -16,7 +16,7 @@ export type LiveAstanaEvent = {
   coordinateQuality?: "observed" | "derived" | "unknown";
   coordinateProvenance?: { sourceUrl: string; fetchedAt: string; quality: "observed" | "derived"; methodId: string | null };
   coordinateMatch?: { lat: number; lon: number; sourceUrl: string; asOf: string; quality: "derived";
-    method: "osm-exact-address-v1"; precision: "building_or_address_point" };
+    method: "osm-exact-address-v1" | "osm-exact-venue-v1"; precision: "building_or_address_point" };
   startsAt: string; endsAt: string | null; timeZone: "Asia/Almaty";
   durationMinutes: number | null; contentLanguage: "ru" | "kk" | "en" | "und";
   contentLanguages?: ("ru" | "kk" | "en" | "und")[];
@@ -108,7 +108,7 @@ export function extractSxodimMediaCandidates(html: string, sourcePageUrl: string
 }
 
 /** Server-only safe render plan. Public image and raw source/cache facts stay unchanged. */
-export function resolveEventMedia(event: Pick<LiveAstanaEvent, "name" | "category" | "contactUrl">, options: { policy?: EventMediaPolicy; now?: string } = {}): EventMediaPlan {
+export function resolveEventMedia(event: Pick<LiveAstanaEvent, "name" | "category" | "contactUrl">, options: { policy?: EventMediaPolicy; now?: string; allowCategoryIllustration?: boolean } = {}): EventMediaPlan {
   const policy: EventMediaPolicy = options.policy ?? defaultMediaPolicy;
   const now = Date.parse(options.now ?? new Date().toISOString());
   const safePosterPath = (path: string) => /^\/assets\/event-posters\/[a-z0-9][a-z0-9._-]{0,120}\.(jpe?g|png|webp|avif)$/i.test(path) && !path.includes("..");
@@ -121,7 +121,7 @@ export function resolveEventMedia(event: Pick<LiveAstanaEvent, "name" | "categor
     return { kind: "organizer_poster", src: item.localAssetPath, alt: `Афиша «${event.name}», предоставленная организатором с разрешением.`, label: "Афиша организатора", notice: null, credit: typeof item.credit === "string" ? item.credit : null, fit: "contain" };
   }
   const owned = policy.ownedCategoryIllustrations;
-  if (owned?.mediaType === "category_illustration" && owned.rightsBasis === "project_generated_visuals" && owned.provenance === "public/assets/ideas/manifest.json" && typeof owned.mandatoryNotice === "string" && owned.mandatoryNotice.trim() && Array.isArray(owned.mappings)) {
+  if (options.allowCategoryIllustration !== false && owned?.mediaType === "category_illustration" && owned.rightsBasis === "project_generated_visuals" && owned.provenance === "public/assets/ideas/manifest.json" && typeof owned.mandatoryNotice === "string" && owned.mandatoryNotice.trim() && Array.isArray(owned.mappings)) {
     const category = event.category?.trim().toLowerCase();
     const match = owned.mappings.slice(0, 100).find(mapping => Array.isArray(mapping?.categories) && mapping.categories.some(alias => typeof alias === "string" && alias.trim().toLowerCase() === category));
     // Only existing project illustration slots are eligible; arbitrary local or remote URLs are denied.

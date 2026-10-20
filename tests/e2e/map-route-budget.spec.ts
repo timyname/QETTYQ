@@ -1,3 +1,4 @@
+import { showRouteOptions } from './route-ui-helpers';
 import { expect, test, type Page } from '@playwright/test';
 import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
 
@@ -66,18 +67,18 @@ test('маршрут: время Астаны независимо от timezone
   const plan = page.getByRole('main', { name: 'Маршрут по Астане' });
   const sheet = page.getByRole('region', { name: 'План маршрута' });
   await expect(plan).toBeVisible();
-  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click();
+  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click(); await showRouteOptions(page);
   const departure = page.getByLabel('Дата и время начала маршрута', { exact: true });
   await expect(departure).toHaveValue('2026-10-20T10:00');
   await departure.fill('2026-10-23T18:30');
   await expect(departure).toHaveValue('2026-10-23T18:30');
-  await expect(sheet.getByText('Астана · 23 октября', { exact: true })).toBeVisible();
+  await expect(sheet.getByText('Мой план · 23 октября', { exact: true })).toBeVisible();
   await expect(sheet.getByText('18:30 · начало', { exact: true })).toBeVisible();
-  await expect(sheet.getByRole('listitem')).toHaveCount(2);
+  await expect(sheet.locator('#route-details > ol > li')).toHaveCount(2);
   const cta = page.getByRole('link', { name: 'Начать маршрут', exact: true });
-  await expect(cta).toHaveAttribute('href', /origin=51\.1282%2C71\.4304/);
-  await expect(cta).toHaveAttribute('href', /travelmode=walking/);
-  await expect(page.getByRole('button', { name: 'Свернуть план маршрута' })).toHaveAttribute('aria-expanded', 'true');
+  await expect(cta).toHaveAttribute('href', /points\/71\.4304,51\.1282\|/);
+  await expect(cta).toHaveAttribute('href', /\/directions\/tab\/pedestrian\//);
+  await expect(page.getByRole('button', { name: 'Свернуть план маршрута' })).toBeVisible();
   const note = sheet.getByText('На карте — точки плана, не линия дороги. Время пешком оценено по прямой; точный путь уточнит навигация. Посещения — проектная оценка, не бронь.', { exact: true });
   await note.scrollIntoViewIfNeeded();
   await expect(note).toBeVisible();

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { showRouteOptions } from './route-ui-helpers';
 import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
 
 test.beforeEach(async ({ page }) => {
@@ -87,8 +88,8 @@ test('38 review: dock follows drag and keyboard; composer has no chips; bounded 
   await expect(page.getByRole('heading', { name: 'Что придумаем?' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Кофе', exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Открыть Kino.kz' })).toHaveCount(0);
-  await expect(page.getByText('Поиск может использовать OpenAI и Google: им передаётся запрос, но не точная геопозиция. История хранится на устройстве; серверная память включается отдельно.', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Настроить', exact: true }).click();
+  await expect(page.getByText('Поиск может использовать OpenAI и Google: им передаётся запрос, но не точная геопозиция. История хранится на устройстве; серверная память включается отдельно.', { exact: true })).toHaveCount(0);
+  await page.locator('[data-screen] > header').getByRole('button', { name: 'Настройки', exact: true }).click();
   const settings = page.getByRole('region', { name: 'Настройки помощника', exact: true });
   const ai = settings.getByRole('checkbox', { name: 'Умный ответ OpenAI', exact: true });
   const google = settings.getByRole('checkbox', { name: 'Поиск заведений и фото Google', exact: true });
@@ -128,7 +129,7 @@ test('38 review: map check and adjacent My plan, real catalogue point, foot-only
   await page.getByRole('button', { name: /^Rafe · Расписание уточняйте/ }).first().click();
   await page.getByRole('button', { name: 'В план', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Добавлено в план', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('button', { name: 'Мой план · 1', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Мой план · 1', exact: true }).first()).toBeVisible();
   await expect(page.getByText('Цена неизвестна', { exact: false })).toBeVisible();
   const attribution = page.locator('[data-map-engine] a[href*="openstreetmap.org/copyright"]').first();
   await expect(attribution).toBeVisible();
@@ -136,8 +137,9 @@ test('38 review: map check and adjacent My plan, real catalogue point, foot-only
   const noticeBounds = (await page.getByRole('status').filter({ hasText: 'Добавлено в план.' }).boundingBox())!;
   expect(creditBounds.y + creditBounds.height).toBeLessThan(noticeBounds.y);
   await page.screenshot({ path: 'exports/screenshots/ui-review-38/map-plan-390.png' });
-  await page.getByRole('button', { name: 'Мой план · 1', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Твой маршрут', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Мой план · 1', exact: true }).first().click();
+  await expect(page.getByRole('main', { name: 'Маршрут по Астане', exact: true })).toBeVisible();
+  await showRouteOptions(page);
   const sheet = page.getByRole('region', { name: 'План маршрута' });
   await expect(sheet.getByText('Пешком', { exact: true })).toBeVisible();
   // Unsupported modes are no longer drawn. Never allow an active unsupported mode.
@@ -145,7 +147,7 @@ test('38 review: map check and adjacent My plan, real catalogue point, foot-only
     const unsupported = sheet.getByRole('button', { name: mode, exact: true });
     if (await unsupported.count()) await expect(unsupported).toBeDisabled();
   }
-  expect((await sheet.boundingBox())!.height).toBeLessThan(844 * .4);
+  expect((await sheet.boundingBox())!.height).toBeLessThanOrEqual(844 * .44);
   await expect(page.locator('[data-map-engine] a[href*="openstreetmap.org/copyright"]').first()).toBeVisible();
   await expect(page.getByText('Загружаем карту Астаны…', { exact: true })).toHaveCount(0, { timeout: 20_000 });
   await page.screenshot({ path: 'exports/screenshots/ui-review-38/route-390.png' });

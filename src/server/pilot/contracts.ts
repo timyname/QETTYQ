@@ -32,7 +32,7 @@ export const chatInputSchema = z.object({
 }).strict();
 
 export const planInputSchema = z.object({
-  placeIds: z.array(z.string().min(1).max(128)).min(1).max(5),
+  placeIds: z.array(z.string().min(1).max(256)).min(1).max(5),
   context: pilotContextSchema,
 }).strict();
 

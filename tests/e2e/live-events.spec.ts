@@ -48,7 +48,8 @@ test('synthetic_test: афиша фильтрует сегодня, сохран
   await expect(feed.getByRole('heading', { name: today.name, exact: true })).toBeVisible();
   await expect(feed.getByRole('heading', { name: tomorrow.name, exact: true })).toHaveCount(0);
   await expect(feed.getByText('Стоимость уточняйте', { exact: true })).toBeVisible();
-  await expect(feed.getByText('Иллюстрация категории, не фото события', { exact: true })).toBeVisible();
+  await expect(feed.getByRole('img', { name: 'Афиша пока не добавлена', exact: true })).toBeVisible();
+  await expect(feed.locator('img[src*="event-"]')).toHaveCount(0);
   await expect(feed.getByRole('link', { name: 'Афиша: Давай Сходим ↗' })).toHaveAttribute('href', today.requiredCredit.url);
 
   await feed.getByRole('button', { name: 'Сохранить событие', exact: true }).click();
@@ -80,4 +81,34 @@ test('synthetic_test: афиша фильтрует сегодня, сохран
   await expect(page.locator('[data-screen="saved"]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Сохранённое', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: new RegExp(today.name) })).toBeVisible();
+});
+
+test('synthetic geocoded event is selectable on the map and routable without invented duration or generated photo', async ({ page }) => {
+  await installOfflineTestGuards(page);
+  const event = { ...today, lat: 51.1282, lon: 71.4304 };
+  // Isolate the event marker instead of asserting that a 749-POI cluster is an
+  // individual marker before zoom. Clustering is separately tested by MapCanvas.
+  await page.route('**/api/catalog?**', route => route.fulfill({ json: { items: [], dataMode: 'synthetic_test' } }));
+  await page.route('**/api/events', route => route.fulfill({ json: { items: [event], dataMode: 'snapshot', freshness: 'stale', fetchedAt: NOW } }));
+  await page.route('**/api/plans', route => {
+    expect(route.request().postDataJSON().placeIds).toEqual([event.id]);
+    return route.fulfill({ json: { plan: { id: 'synthetic-event-unknown-duration', stops: [{ ...event, durationState: 'unknown', price: null }], totalMinutes: null, travelMinutes: null, visitMinutes: null, remainingMinutes: null, distanceKm: null, budget: { min: null, max: null }, feasibility: 'uncertain', warnings: ['DURATION_UNKNOWN'], legs: [] } } });
+  });
+  await page.route('**/api/routing', route => route.fulfill({ json: { available: false, provider: 'fossgis_foot', label: 'SYNTHETIC disabled', reason: 'QA_DISABLED', localDemo: false } }));
+  await openRussianApp(page);
+  await page.getByRole('button', { name: 'QETTYQ — на главную', exact: true }).click();
+  await page.getByRole('navigation').getByRole('button', { name: 'Карта', exact: true }).click();
+  const marker = page.getByRole('button', { name: new RegExp('SYNTHETIC TEST — событие сегодня') }).first();
+  await expect(marker).toBeVisible({ timeout: 20_000 });
+  await marker.click();
+  await expect(page.getByRole('heading', { name: event.name, exact: true })).toBeVisible();
+  await expect(page.getByText('Продолжительность и время окончания не указаны.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Афиша пока не добавлена', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Оценить путь', exact: true }).click();
+  await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click();
+  const sheet = page.getByRole('region', { name: 'План маршрута', exact: true });
+  await expect(sheet).toContainText('Длительность уточняется');
+  await expect(sheet).not.toContainText(/посещение [≈]?0 мин/);
+  await expect(sheet.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveAttribute('href', /2gis\.ru\/directions\/tab\/pedestrian\/points\/\|71\.4304,51\.1282/);
+  await page.screenshot({ path: 'output/playwright/qa-route-refresh/event-unknown-duration.png' });
 });

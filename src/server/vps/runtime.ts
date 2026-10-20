@@ -3,6 +3,7 @@ import { isAbsolute } from "node:path";
 import baselinePlaces from "../../../data/places.json";
 import addressIndex from "../../../data/astana-address-index.json";
 import { createAddressMatcher, enrichEventAddresses, type AddressIndex } from "../ingestion/address-match";
+import { createEventVenueMatcher } from "../ingestion/event-geo-media";
 import baselineEvents from "../../../data/livedata/sxodim-astana-2026-10-20.json";
 import sourceRegistry from "../../../data/source-registry.json";
 import sourceCandidates from "../../../data/event-source-candidates.json";
@@ -115,11 +116,12 @@ export function initializeVpsRuntime(options: {
     let closed = false;
     const mergedEvents = dataHub ? createHubEventsBridge({ baseGet: events.get, hubGet: () => dataHub.getFeed({ cityId: "astana" }), now: options.now }) : events;
     const matchAddress = createAddressMatcher(addressIndex as AddressIndex, options.now ?? Date.now);
+    const matchVenue = createEventVenueMatcher(baselinePlaces, matchAddress, options.now ?? Date.now);
     const runtime: VpsRuntime = {
       ai, dataHub, events: { async get() {
         const result = await mergedEvents.get();
         // Independent derived OSM evidence; raw publisher snapshot stays unchanged.
-        return { ...result, items: enrichEventAddresses(result.items, matchAddress) };
+        return { ...result, items: enrichEventAddresses(result.items, matchAddress, matchVenue) };
       }, canSendToLlm(sourceId) {
         try { return Boolean(db.prepare("SELECT 1 FROM data_sources WHERE id=? AND allow_persist=1 AND allow_display=1 AND allow_llm=1").get(sourceId)); }
         catch { return false; }

@@ -6,3 +6,6 @@
 .catalogCredit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .fullCredit { margin: 14px 0; padding: 12px 0; color: #47625e; font-size: 12px; line-height: 1.55; }
 .fullCredit a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.catalogEmpty { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding:22% 20px 20px;background:#163f35;color:#d2e6d9; }
+.catalogEmpty span { font-size:14px;line-height:1.4;text-align:center; }
+.catalogEmpty[data-mini=true] {padding:0;justify-content:center;background:#dce9df;color:#1b5747;}

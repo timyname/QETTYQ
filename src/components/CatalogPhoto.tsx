@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Localize } from '../client/i18n';
+import { MapPin } from 'lucide-react';
+import { Localize, translateText, useI18n } from '../client/i18n';
 import type { PlaceMedia } from '../server/media/commons-place-media';
 import css from './place-photo.module.css';
 
@@ -10,10 +11,11 @@ export function hasRealPhoto(media?: PlaceMedia): media is Extract<PlaceMedia, {
   return media?.kind === 'real_place_photo' && /^\/assets\/places\/[a-z0-9-]+\.jpg$/.test(media.src);
 }
 
-export function CatalogPhoto({ media, fallback, category, mini = false, label = true, labelClassName }: { media?: PlaceMedia; fallback: string; category: string; mini?: boolean; label?: boolean; labelClassName?: string }) {
+export function CatalogPhoto({ media, category, mini = false, label = true, labelClassName }: { media?: PlaceMedia; fallback: string; category: string; mini?: boolean; label?: boolean; labelClassName?: string }) {
+  const { language } = useI18n();
   const [failed, setFailed] = useState<string | null>(null);
   const real = hasRealPhoto(media) && failed !== media.src;
-  return <Localize><Image src={real ? media.src : fallback} fill sizes={mini ? '64px' : '430px'} alt={real ? media.alt : mini ? '' : `Иллюстрация категории: ${category}`} onError={real ? () => setFailed(media.src) : undefined} />{(label || failed === media?.src) && <small className={labelClassName ?? (real ? css.catalogCredit : undefined)}>{real ? <span translate="no">{media.author} · {media.license}</span> : mini ? 'Иллюстрация' : 'Иллюстрация категории, не фото места'}</small>}</Localize>;
+  return <Localize>{real ? <Image src={media.src} fill sizes={mini ? '64px' : '430px'} alt={media.alt} onError={() => setFailed(media.src)} /> : <div className={css.catalogEmpty} data-mini={mini} role="img" aria-label={`${translateText('Фото пока нет', language)}: ${category}`}><MapPin size={mini ? 24 : 44} strokeWidth={1.3} />{!mini && <span>{category}</span>}</div>}{(label || failed === media?.src) && <small className={labelClassName ?? (real ? css.catalogCredit : undefined)}>{real ? <span translate="no">{media.author} · {media.license}</span> : mini ? 'Без фото' : 'Фото пока нет'}</small>}</Localize>;
 }
 
 export function CatalogPhotoCredit({ media }: { media?: PlaceMedia }) {

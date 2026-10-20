@@ -1,3 +1,4 @@
+import { showRouteOptions } from './route-ui-helpers';
 import { expect, test, type Page } from '@playwright/test';
 import { createServer } from 'node:http';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -31,7 +32,7 @@ async function chooseRussian(page: Page) {
 }
 async function capture(page: Page, width: number, name: string, language?: string) {
   await screen(page, name.startsWith('organizer-') ? 'organizer' : name === 'delete' ? 'settings' : name === 'error' ? 'conditions' : name);
-  await page.waitForFunction(() => [...document.images].filter(image => { const box = image.getBoundingClientRect(); return box.width > 0 && box.height > 0 && box.top < innerHeight && box.bottom > 0; }).every(image => image.complete && image.naturalWidth > 0));
+  await page.waitForFunction(() => [...document.images].filter(image => { const box = image.getBoundingClientRect(); return box.width > 0 && box.height > 0 && box.top < innerHeight && box.bottom > 0; }).every(image => image.complete && image.naturalWidth > 0), undefined, { timeout: 20_000 });
   await page.screenshot({ path: `output/playwright/qa-locales-memory-${stamp}/${width}-${language ? `${language}-` : ''}${name}.png` });
   expect.soft(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `${width} ${name}: document horizontal overflow`).toBe(true);
   const app = await screens(page).boundingBox();
@@ -106,7 +107,7 @@ for (const viewport of [{ width: 360, height: 800 }, { width: 390, height: 844 }
       await page.getByRole('button', { name: 'Оценить путь', exact: true }).click();
       await screen(page, 'plan');
       const sheet = page.getByRole('region', { name: 'План маршрута' });
-      await page.getByRole('button', { name: 'Развернуть план маршрута' }).click();
+      await page.getByRole('button', { name: 'Развернуть план маршрута' }).click(); await showRouteOptions(page);
       for (const name of ['Авто', 'Такси', 'Автобус']) {
         const unsupported = sheet.getByRole('button', { name, exact: true });
         if (await unsupported.count()) await expect(unsupported).toBeDisabled();
@@ -114,20 +115,22 @@ for (const viewport of [{ width: 360, height: 800 }, { width: 390, height: 844 }
       await expect(sheet.getByText(/На карте — точки плана, не линия дороги/)).toBeVisible();
       await expect(sheet.getByText('Запас времени 108 мин', { exact: true })).toBeVisible();
       await capture(page, viewport.width, 'plan');
-      await sheet.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта' }).check();
+      await sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
       await sheet.getByRole('button', { name: 'Рассчитать путь по улицам', exact: true }).click();
-      await expect(sheet.getByText(/Пеший маршрут рассчитан SYNTHETIC QA/)).toBeVisible();
+      await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toBeVisible();
       await page.screenshot({ path: `output/playwright/qa-locales-memory-${stamp}/${viewport.width}-plan-street-SYNTHETIC.png` });
       const actionBox = await page.getByRole('link', { name: 'Начать маршрут', exact: true }).boundingBox();
       const dockBox = await page.getByRole('navigation', { name: 'Основная навигация' }).boundingBox();
       expect.soft(Boolean(actionBox && dockBox && actionBox.y + actionBox.height <= dockBox.y), `${viewport.width}: route action overlaps dock`).toBe(true);
       await sheet.getByRole('button', { name: 'Убрать дорожный расчёт', exact: true }).click();
       await expect(sheet.getByText(/На карте — точки плана, не линия дороги/)).toBeVisible();
-      await expect(sheet.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта' })).not.toBeChecked();
+      await expect(sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' })).toBeChecked();
       await page.getByRole('button', { name: 'На карту', exact: true }).click();
-      await expect(page.locator('.maplibregl-canvas, .leaflet-container').first()).toBeVisible();
+      await expect(page.locator('.maplibregl-canvas, .leaflet-container').first()).toBeVisible({ timeout: 20_000 });
       // Keep required attribution visible; no hiding CSS or removed credits in tests.
-      await expect(page.locator('.maplibregl-ctrl-attrib, .leaflet-control-attribution').first()).toBeVisible();
+      // Style fetch has an 8s timeout before the documented Leaflet fallback.
+      // Require the same visible mandatory credit after readiness, not an empty loading control.
+      await expect(page.locator('.maplibregl-ctrl-attrib:visible, .leaflet-control-attribution:visible').first()).toBeVisible({ timeout: 20_000 });
       await expect(page.getByText('Загружаем карту Астаны…', { exact: true })).toHaveCount(0, { timeout: 20_000 });
       await capture(page, viewport.width, 'map');
       await nav(page, 'Для тебя').click();
@@ -152,7 +155,7 @@ for (const viewport of [{ width: 360, height: 800 }, { width: 390, height: 844 }
       await capture(page, viewport.width, 'profile');
       await page.getByRole('button', { name: /Сохранённые места/ }).click();
       await capture(page, viewport.width, 'saved');
-      await expect(page.getByText('Иллюстрация', { exact: true }).first()).toBeVisible();
+      await expect(page.getByText('Без фото', { exact: true }).first()).toBeVisible();
       await nav(page, 'Профиль').click();
       await page.getByRole('button', { name: 'Моё событие', exact: true }).click();
       await capture(page, viewport.width, 'organizer-cabinet');
@@ -234,27 +237,27 @@ test('route invalidation: adding a stop and shortening time cannot retain an ear
   await page.getByRole('button', { name: 'В мой план', exact: true }).click();
   await page.getByRole('button', { name: /Открыть план · 1 мест/ }).click();
   const sheet = page.getByRole('region', { name: 'План маршрута' });
-  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click();
-  await sheet.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта' }).check();
+  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click(); await showRouteOptions(page);
+  await sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
   await sheet.getByRole('button', { name: 'Рассчитать путь по улицам', exact: true }).click();
-  await expect(sheet.getByText(/Пеший маршрут рассчитан SYNTHETIC QA/)).toBeVisible();
+  await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toBeVisible();
   await page.getByRole('button', { name: 'На карту', exact: true }).click();
   await nav(page, 'Для тебя').click();
   await page.getByRole('article').nth(1).getByRole('button', { name: 'Подробнее', exact: true }).click();
   await page.getByRole('button', { name: 'В мой план', exact: true }).click();
   await page.getByRole('button', { name: /Открыть план · 2 мест/ }).click();
-  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click();
-  await expect(sheet.getByText(/Пеший маршрут рассчитан SYNTHETIC QA/)).toHaveCount(0);
-  await expect(sheet.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта' })).not.toBeChecked();
-  await expect(sheet.getByRole('listitem')).toHaveCount(3);
+  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click(); await showRouteOptions(page);
+  await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toHaveCount(0);
+  await expect(sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' })).toBeChecked();
+  await expect(sheet.locator('#route-details > ol > li')).toHaveCount(3);
   await sheet.getByRole('button', { name: 'Изменить условия', exact: true }).click();
   await page.getByLabel('Свободное время', { exact: true }).fill('20');
   await page.getByRole('button', { name: 'Показать подборку', exact: true }).click();
   await nav(page, 'Карта').click();
   await page.getByRole('button', { name: /Мой план · 2/ }).click();
-  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click();
+  await expect(sheet).toBeVisible(); await showRouteOptions(page);
   await expect(sheet.getByText(/Этот план превышает выбранные ограничения/)).toBeVisible();
-  await expect(sheet.getByText(/Пеший маршрут рассчитан SYNTHETIC QA/)).toHaveCount(0);
+  await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toHaveCount(0);
   await page.screenshot({ path: `output/playwright/qa-locales-memory-${stamp}/390-plan-after-time-edit.png` });
 });
 
@@ -296,7 +299,7 @@ for (const language of ['kk', 'en'] as const) for (const viewport of [{ width: 3
       await expect(page.getByRole('heading', { name: originalPlace, exact: true })).toBeVisible();
       await snap('detail');
       await button('Оценить путь').click();
-      await button('Развернуть план маршрута').click();
+      await button('Развернуть план маршрута').click(); await showRouteOptions(page);
       const routeSheet = page.getByRole('region', { name: L('План маршрута'), exact: true });
       await expect(routeSheet.getByText(`${L('Запас времени')} 108 ${L('мин')}`, { exact: true })).toBeVisible();
       if (language === 'kk') {
@@ -304,9 +307,9 @@ for (const language of ['kk', 'en'] as const) for (const viewport of [{ width: 3
         await expect(routeSheet).not.toContainText(/\bM\d{1,2}\b/u);
       }
       await snap('plan');
-      await expect(page.locator('.maplibregl-ctrl-attrib, .leaflet-control-attribution').first()).toBeVisible();
+      await expect(page.locator('.maplibregl-ctrl-attrib, .leaflet-control-attribution').first()).toBeVisible({ timeout: 20_000 });
       await button('На карту').click();
-      await expect(page.locator('.maplibregl-canvas, .leaflet-container').first()).toBeVisible();
+      await expect(page.locator('.maplibregl-canvas, .leaflet-container').first()).toBeVisible({ timeout: 20_000 });
       await snap('map');
       await tab('Для тебя').click();
       await button('О событии').first().click();
@@ -315,7 +318,7 @@ for (const language of ['kk', 'en'] as const) for (const viewport of [{ width: 3
       await snap('event');
       await button('Назад').click();
       await tab('Поиск').click();
-      await expect(page.getByText(L('Поиск может использовать OpenAI и Google: им передаётся запрос, но не точная геопозиция. История хранится на устройстве; серверная память включается отдельно.'), { exact: true })).toBeVisible();
+      await expect(page.getByText(L('Поиск может использовать OpenAI и Google: им передаётся запрос, но не точная геопозиция. История хранится на устройстве; серверная память включается отдельно.'), { exact: true })).toHaveCount(0);
       const userText = 'QA: кофе, K-pop и «Балет» — таңдау';
       await page.getByRole('textbox', { name: L('Сообщение помощнику') }).fill(userText);
       const chatRequest = page.waitForRequest(request => request.url().endsWith('/api/chat') && request.method() === 'POST');
@@ -331,7 +334,7 @@ for (const language of ['kk', 'en'] as const) for (const viewport of [{ width: 3
       await snap('profile');
       await page.getByRole('button', { name: new RegExp(L('Сохранённые места')) }).click();
       await snap('saved');
-      await expect(page.getByText(L('Иллюстрация'), { exact: true }).first()).toBeVisible();
+      await expect(page.getByText(L('Без фото'), { exact: true }).first()).toBeVisible();
       await tab('Профиль').click();
       await button('Моё событие').click();
       await snap('organizer-cabinet');

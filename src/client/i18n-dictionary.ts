@@ -443,6 +443,37 @@ English|Ағылшынша|English
 Начало:|Басталуы:|Starts:
 Время Астаны|Астана уақыты|Astana time
 Расписание и цены уточняйте перед посещением.|Бармас бұрын кесте мен бағаларды нақтыла.|Check schedules and prices before visiting.
+Длительность уточняется|Ұзақтығын нақтылаңыз|Duration needs checking
+— оценка посещения|— келу ұзақтығының бағасы|— estimated visit
+Время нужно уточнить|Уақытты нақтылау керек|Time needs checking
+Время и параметры|Уақыт пен параметрлер|Time and options
+Источник:|Дереккөз:|Source:
+. Время остаётся оценкой.|. Уақыт әлі де болжамды.|. Time remains an estimate.
+Дорожный расчёт выбранных точек|Таңдалған нүктелердің жол есебі|Road calculation for selected stops
+Дорожный провайдер не подключён. Навигация откроется в 2ГИС.|Жол провайдері қосылмаған. Навигация 2GIS-те ашылады.|Road provider unavailable. Navigation opens in 2GIS.
+Выбранные точки передаются провайдеру только при расчёте или открытии навигации. Поддержка промежуточных точек зависит от приложения 2ГИС: на iPhone проверь остановки после открытия.|Таңдалған нүктелер провайдерге есептеу не навигация кезінде ғана жіберіледі. Аралық нүктелерді қолдау 2GIS қолданбасына байланысты: iPhone-да аялдамаларды тексер.|Selected stops are sent only when calculating or opening navigation. Intermediate-stop support depends on the 2GIS app: check stops after opening on iPhone.
+Афиша пока не добавлена|Афиша әлі қосылмаған|Poster not added yet
+Без фото|Фотосыз|No photo
+Фото пока нет|Фото әзірге жоқ|No photo yet
+Маршрут в 2ГИС|2GIS-тегі маршрут|Route in 2GIS
+Карта 2ГИС недоступна. Резервный режим OpenStreetMap.|2GIS картасы қолжетімсіз. OpenStreetMap резервтік режимі.|2GIS map unavailable. Using OpenStreetMap fallback.
+Не удалось сохранить посещение. Повтори попытку.|Баруды сақтау мүмкін болмады. Қайталап көр.|Could not save your visit. Try again.
+После маршрута|Маршруттан кейін|After your route
+Предлагать подтвердить посещение|Баруды растауды ұсыну|Suggest confirming a visit
+Необязательно. Включи память посещений и доступ к геолокации. При возвращении проверим близость к одной остановке, только с уже выданным доступом. В фоне не отслеживаем; посещение сохраняется лишь после твоего подтверждения.|Міндетті емес. Бару жадын және геолокацияны қос. Қайтып келгенде тек берілген рұқсатпен бір аялдамаға жақындықты тексереміз. Фонда бақыламаймыз; бару тек сен растағаннан кейін сақталады.|Optional. Enable visit memory and location access. On return, we check proximity to one stop only with existing permission. No background tracking; a visit is saved only after you confirm.
+Подтверждение посещения|Баруды растау|Confirm a visit
+Ты здесь был?|Осы жерге бардың ба?|Did you visit here?
+Близость к месту не подтверждает посещение.|Жақын жерде болу баруды растамайды.|Being nearby does not prove a visit.
+Да, был здесь|Иә, бардым|Yes, I visited
+Не сохранять|Сақтамау|Do not save
+По расчёту прибудешь после начала события. Измени время старта или порядок остановок.|Есеп бойынша іс-шара басталғаннан кейін келесің. Басталу уақытын немесе аялдамалар ретін өзгерт.|You may arrive after the event starts. Change departure time or stop order.
+Изменить точку старта|Бастау нүктесін өзгерту|Change starting point
+Выбрать точку старта|Бастау нүктесін таңдау|Choose starting point
+Точка старта|Бастау нүктесі|Starting point
+Выбери старт для оценки дороги|Жолды бағалау үшін бастау нүктесін таңда|Choose a starting point to estimate travel
+До начала: ≈|Басталуына дейін: ≈|Until start: ≈
+мин ожидания|мин күту|min waiting
+Опоздание по расчёту: ≈|Есеп бойынша кешігу: ≈|Estimated lateness: ≈
 `;
 
 export const UI_TRANSLATIONS: Record<string, readonly [string, string]> = { ...ORGANIZER_TRANSLATIONS, ...POLICY_TRANSLATIONS, ...ROUTE_TRANSLATIONS, ...Object.fromEntries(rows.trim().split('\n').map(row => { const [ru, kk, en] = row.split('|'); if (!ru || !kk || !en) throw new Error(`Invalid UI dictionary row: ${ru}`); return [ru, [kk, en]]; })) };

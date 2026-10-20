@@ -19,18 +19,49 @@ export function parseAstanaDateInput(value: string) {
   return astanaDateInput(instant.toISOString()) === value ? instant.toISOString() : null;
 }
 
-export function arrivalLabels(departure: string, originKnown: boolean, visits: number[], legs: Array<{ estimatedMinutes: number }> = []) {
+type TimelineStop = { durationMinutes: number | null; eventStartsAt?: string | null };
+export type RouteTimelineStop = { arrival: string | null; visitStart: string | null; departure: string | null; waitMinutes: number | null; lateMinutes: number | null };
+
+/** Deterministic timing only: provider/estimated legs, supplied durations and
+ * source event start. Missing duration never erases the known current arrival,
+ * but prevents every subsequent arrival and total from being invented. */
+export function buildRouteTimeline(departure: string, originKnown: boolean, stops: TimelineStop[], legs: Array<{ estimatedMinutes: number }> = []) {
   let elapsed = 0;
+  let waiting = 0;
   const epoch = Date.parse(departure);
   let known = originKnown && Number.isFinite(epoch);
-  return visits.map((visit, index) => {
+  const empty = (): RouteTimelineStop => ({ arrival: null, visitStart: null, departure: null, waitMinutes: null, lateMinutes: null });
+  const result = stops.map((stop, index): RouteTimelineStop => {
+    const visit = stop.durationMinutes;
     const leg = legs[index];
-    if (!known || !leg || !Number.isFinite(leg.estimatedMinutes) || leg.estimatedMinutes < 0 || !Number.isFinite(visit) || visit < 0) { known = false; return null; }
+    if (!known || !leg || !Number.isFinite(leg.estimatedMinutes) || leg.estimatedMinutes < 0 || visit !== null && (!Number.isFinite(visit) || visit < 0)) { known = false; return empty(); }
     elapsed += leg.estimatedMinutes;
-    const arrival = new Date(epoch + elapsed * 60000).toISOString();
+    const arrivalEpoch = epoch + elapsed * 60000;
+    if (!Number.isFinite(new Date(arrivalEpoch).getTime())) { known = false; return empty(); }
+    const arrival = new Date(arrivalEpoch).toISOString();
+    const scheduled = stop.eventStartsAt ? Date.parse(stop.eventStartsAt) : null;
+    if (scheduled !== null && !Number.isFinite(scheduled)) { known = false; return { ...empty(), arrival }; }
+    const waitMinutes = scheduled === null ? 0 : Math.max(0, (scheduled - arrivalEpoch) / 60000);
+    const lateMinutes = scheduled === null ? 0 : Math.max(0, (arrivalEpoch - scheduled) / 60000);
+    waiting += waitMinutes;
+    elapsed += waitMinutes;
+    const visitStart = new Date(epoch + elapsed * 60000).toISOString();
+    if (visit === null) { known = false; return { arrival, visitStart, departure: null, waitMinutes, lateMinutes }; }
     elapsed += visit;
-    return arrival;
+    if (!Number.isFinite(new Date(epoch + elapsed * 60000).getTime())) { known = false; return { arrival, visitStart, departure: null, waitMinutes, lateMinutes }; }
+    return { arrival, visitStart, departure: new Date(epoch + elapsed * 60000).toISOString(), waitMinutes, lateMinutes };
   });
+  // An explicit final destination/return leg is part of total time, not a stop.
+  if (known) for (const leg of legs.slice(stops.length)) {
+    if (!leg || !Number.isFinite(leg.estimatedMinutes) || leg.estimatedMinutes < 0) { known = false; break; }
+    elapsed += leg.estimatedMinutes;
+    if (!Number.isFinite(new Date(epoch + elapsed * 60000).getTime())) { known = false; break; }
+  }
+  return { stops: result, waitMinutes: known ? waiting : null, totalMinutes: known ? elapsed : null, lateStopIndices: result.flatMap((stop, index) => stop.lateMinutes !== null && stop.lateMinutes > 0 ? [index] : []) };
+}
+
+export function arrivalLabels(departure: string, originKnown: boolean, visits: (number | null)[], legs: Array<{ estimatedMinutes: number }> = []) {
+  return buildRouteTimeline(departure, originKnown, visits.map(durationMinutes => ({ durationMinutes })), legs).stops.map(stop => stop.arrival);
 }
 
 type Point = { lat: number; lon: number };

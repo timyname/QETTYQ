@@ -61,3 +61,51 @@
   .map :global(.maplibregl-ctrl-bottom-left) {left:max(16px,var(--qettyq-safe-area-left,env(safe-area-inset-left,0px)));right:16px;max-width:calc(100% - 32px);}
 }
 @media(prefers-reduced-motion:reduce) {.screen button,.begin {transition:none;}}
+
+/* Compact plan: map first, one floating control, sheet rising from the dock. */
+.map,.map[data-panel-expanded=true]{right:0;--map-fit-top:calc(var(--device-top) + 160px);--map-fit-bottom-ratio:0;--map-fit-bottom-offset:calc(var(--device-bottom) + 130px);--map-controls-top:calc(var(--device-top) + 160px);}
+.map[data-panel-expanded=true]{--map-fit-bottom-ratio:.42;--map-fit-bottom-offset:calc(var(--device-bottom) + 108px);}
+.top{right:auto;top:calc(var(--device-top) + 100px);border:0;padding:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;}
+.back{padding:0 14px;border:1px solid #ffffffce;border-radius:22px;background:var(--qettyq-glass-fill,#ffffffc9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);}
+.planBubble{position:absolute;right:18px;bottom:calc(var(--device-bottom) + 120px);z-index:6;width:56px;height:56px;display:grid;place-items:center;border:1px solid #fff;border-radius:50%;background:var(--qettyq-glass-fill,#ffffffe0);box-shadow:inset 0 1px 0 white,0 6px 22px #153c2530;color:#0b332d;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+.planBubble span{position:absolute;top:-3px;right:-3px;display:grid;place-items:center;min-width:22px;height:22px;border-radius:50%;background:#cffc55;border:2px solid #fff;font-size:11px;font-weight:800;}
+.sheet,.sheet[data-expanded=true]{left:14px;right:14px;top:auto;bottom:calc(var(--device-bottom) + 102px);height:auto;max-height:min(44%,440px);display:flex;overflow:hidden;border-radius:26px;animation:planRise .2s ease-out;}
+.sheet[hidden]{display:none;}
+.summary{padding:12px 14px 8px;}
+.heading h2{font-size:20px!important;margin:3px 0 6px!important;}
+.summaryNote{font-size:10px!important;margin-top:4px!important;}
+.scroll{overflow:auto;min-height:0;padding:0 14px 6px;scroll-padding-block:10px;}
+.sheet .scroll{overflow:auto;min-height:0;}
+.timeline{margin-top:4px;}
+.timeline li{padding-bottom:12px;gap:8px;}
+.timeline li[data-dragged=true]{background:#dff6bf;border-radius:14px;outline:1px solid #90b958;}
+.stopTitle{min-height:44px;align-items:center;}
+.reorderActions{display:flex;gap:2px;margin:3px 0 0;}
+.reorderActions button,.dragHandle{display:grid;place-items:center;width:44px;height:44px;flex:none;padding:0;border:0;background:transparent;color:#42645b;border-radius:14px;}
+.dragHandle{touch-action:none;cursor:grab;}
+.dragHandle:active{cursor:grabbing;}
+.remove{width:44px;min-height:44px;}
+.options{margin:2px 0 4px;border-top:1px solid #fff;}
+.options>summary{min-height:44px;display:flex;align-items:center;color:#0b6e5d;font-size:11px;font-weight:700;cursor:pointer;list-style:none;}
+.options>summary::after{content:'+';margin-left:auto;font-size:20px;font-weight:400;}
+.options[open]>summary::after{content:'−';}
+.editConditions{gap:6px;}
+.stopParameters{display:grid;gap:10px;margin:12px 0;padding-left:20px;color:#42645b;font-size:11px;}
+.stopParameters small{display:block;font-size:10px;line-height:1.5;}
+.actions,.sheet .actions{position:static;padding:8px 14px 10px;flex:none;}
+.begin{min-height:46px;}
+.screen button:focus-visible,.options>summary:focus-visible{outline:3px solid #0b6e5d;outline-offset:2px;}
+@keyframes planRise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:375px){.sheet,.sheet[data-expanded=true]{left:10px;right:10px}.timeline li{gap:4px}.dragHandle{width:44px}.scroll{padding-inline:10px}.dot{width:26px;height:26px}.timeline li:before{left:12px}}
+@media(min-width:600px){.sheet,.sheet[data-expanded=true]{left:auto;width:min(420px,calc(100% - 28px));max-height:min(52%,460px)}}
+@media(max-height:600px){.sheet,.sheet[data-expanded=true]{max-height:calc(100% - var(--device-top) - var(--device-bottom) - 188px);width:min(420px,calc(100% - 28px));left:auto;right:14px}.map{right:0}.top{left:14px;right:auto}.summaryFacts{font-size:9px}.heading h2{font-size:17px!important}.summary{padding-block:8px 4px}}
+@media(prefers-reduced-motion:reduce){.sheet{animation:none}.planBubble{transition:none}}
+
+/* Copyright stays on the exposed map, never behind the compact plan sheet.
+   Leaflet defaults to bottom-right; explicitly anchor its credit container left. */
+.map :global(.leaflet-bottom.leaflet-right){left:16px;right:auto;width:auto;max-width:calc(100% - 32px);}
+.map :global(.leaflet-control-attribution){float:left;max-width:100%;margin-inline:0;}
+@media(min-width:600px) and (max-height:600px){
+  .map :global(.leaflet-bottom.leaflet-right),.map :global(.maplibregl-ctrl-bottom-left){left:max(16px,var(--qettyq-safe-area-left,env(safe-area-inset-left,0px)));right:auto;max-width:calc(100% - 476px);}
+  .map[data-panel-expanded=true]{--route-credit-top:calc(var(--device-top) + 154px);}
+}

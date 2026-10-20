@@ -272,7 +272,7 @@ describe("events API", () => {
     const fixture = snap(); fixture.items[0].category = "Театр";
     vi.spyOn(liveEventsService, "get").mockResolvedValue({ ...fixture, dataMode: "live", freshness: "fresh", cacheStatus: "hit", warnings: [] });
     const body = await (await GET(new Request("https://qettyq.example/api/events"))).json();
-    expect(body.items[0].media.kind).toBe("category_illustration");
+    expect(body.items[0].media.kind).toBe("none");
     expect(body.items[0].image).toBeNull();
     expect(body.items[0].requiredCredit.text).toBe("Давай Сходим");
     expect(fixture.items[0]).not.toHaveProperty("media");
@@ -289,6 +289,6 @@ describe("events API", () => {
     vi.spyOn(liveEventsService, "get").mockResolvedValue({ ...fixture, dataMode: "snapshot", freshness: "stale", cacheStatus: "stale-fallback", warnings: ["SOURCE_HTTP_503"] });
     const body = await (await GET(new Request("https://qettyq.example/api/events"))).json();
     expect(body.dataMode).toBe("snapshot"); expect(body.freshness).toBe("stale");
-    expect(body.items[0].media.kind).toBe("category_illustration");
+    expect(body.items[0].media.kind).toBe("none");
   });
 });

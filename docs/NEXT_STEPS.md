@@ -1,5 +1,13 @@
 # Следующие шаги
 
+## Приёмка маршрута и 2ГИС · 21.10.2026
+
+1. Web unit572/572, TypeScript, immutable production build и E2E61/61+landscape1/1PASS; публичные проверки релиза8 — TEST_REPORT. Физический iPhone keyboard/2GIS multipoint остаётся отдельным тестом существующего native sync процесса, установка ещё не подтверждена.
+2. По отдельному решению владельца настроить отдельный браузерный MapGL key с нужными API/domain restrictions и demo-only квотой. Не публиковать существующий server key. Адаптер подготовлен, approval=false сохраняет OSM.
+3. Получить индивидуальные poster/photo grants Sxodim/организаторов: четыре прежних письма не являются разрешениями. До ответа — нейтральный блок вместо выдуманного фото; локальных Commons фото2.
+4. Расширять reviewed venue correspondences с exact address/conflict tests, не объявлять любой адрес100%правдой. Текущие unresolvedHAS SANAT14-Д/Garage требуют независимого доказательства.
+5. Return prompt работает только при возвращении на foreground с отдельными согласиями, не в фоне/после выгрузки приложения. Для фонового geofencing нужны отдельный native design, permissions и privacy review; близость сама по себе не визит.
+
 ## Фото и диалог · 21 октября 2026
 
 1. Web приёмка: 493 unit/integration и 56 E2E PASS, immutable linux/amd64 build готов. Публичные результаты релиза7 — TEST_REPORT. Не включать платные циклические тесты; единственный Google-photo probe уже успешен.

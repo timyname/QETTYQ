@@ -7,6 +7,7 @@ export const SESSION_HEADER = "x-qettyq-session";
 export const MAX_JSON_BYTES = 16 * 1024;
 
 export type ApiErrorCode =
+  | "PROVIDER_UNAVAILABLE"
   | "VALIDATION_ERROR"
   | "PAYLOAD_TOO_LARGE"
   | "SESSION_REQUIRED"

@@ -1,3 +1,4 @@
+import { showRouteOptions } from './route-ui-helpers';
 import { expect, type Page, test } from "@playwright/test";
 import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
 
@@ -43,7 +44,7 @@ test("основной путь: 15 реакций → условия → реа
 
   const first = page.getByRole("article").first();
   await expect(first).toBeVisible();
-  await expect(first.getByText("Иллюстрация категории, не фото места", { exact: true })).toBeVisible();
+  await expect(first.getByText("Фото пока нет", { exact: true })).toBeVisible();
   await page.screenshot({ path: 'exports/screenshots/ui-review-38/feed-390.png' });
   await first.getByRole("button", { name: "Сохранить", exact: true }).click();
   await expect(first.getByRole("button", { name: "Убрать из сохранённых" })).toHaveAttribute("aria-pressed", "true");
@@ -53,13 +54,12 @@ test("основной путь: 15 реакций → условия → реа
   await expect(page.getByText(/Расписание, язык и наличие мест не подтверждены/)).toBeVisible();
   await page.screenshot({ path: 'exports/screenshots/ui-review-38/place-detail-390.png' });
   await page.getByRole("button", { name: "Оценить путь", exact: true }).click();
-  await expect(page.getByRole("heading", { name: /Твой маршрут/ })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Нужна точка старта" })).toBeVisible();
-  await page.getByRole("button", { name: "Развернуть план маршрута" }).click();
+  await expect(page.getByRole('main', { name: 'Маршрут по Астане', exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Развернуть план маршрута" }).click(); await showRouteOptions(page);
   await expect(page.getByText("Оставшееся свободное время неизвестно.")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Google Maps ↗" }).first()).toHaveAttribute("href", /destination=51\./);
-  await expect(page.getByRole("link", { name: "2ГИС ↗", exact: true }).first()).toHaveAttribute("href", /^dgis:\/\/2gis.ru\/routeSearch\/rsType\/pedestrian\/to\//);
-  await expect(page.getByRole("link", { name: "2ГИС в браузере ↗", exact: true }).first()).toHaveAttribute("href", /^https:\/\/2gis.kz\/astana\/search\//);
+  await expect(page.getByRole('heading', { name: 'Нужна точка старта', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveAttribute('href', /^https:\/\/2gis.ru\/directions\/tab\/pedestrian\/points\/\|71\.[^,]+,51\./);
+  await expect(page.getByRole('link', { name: /Google Maps|Apple Maps|2ГИС ↗/ })).toHaveCount(0);
   await page.getByRole("button", { name: "QETTYQ — на главную" }).click();
 
   const dock = page.getByRole("navigation", { name: "Основная навигация" });

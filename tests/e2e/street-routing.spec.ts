@@ -1,3 +1,4 @@
+import { showRouteOptions } from './route-ui-helpers';
 import { expect, test, type Page, type BrowserContext } from '@playwright/test';
 import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
 
@@ -24,7 +25,7 @@ async function routeScreen(page: Page, context: BrowserContext) {
   await page.getByRole('button', { name: 'Показать подборку' }).click();
   await page.getByRole('article').first().getByRole('button', { name: 'Подробнее', exact: true }).click();
   await page.getByRole('button', { name: 'Оценить путь', exact: true }).click();
-  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click();
+  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click(); await showRouteOptions(page);
   await page.getByRole('region', { name: 'Расчёт пути по улицам' }).scrollIntoViewIfNeeded();
 }
 
@@ -42,28 +43,29 @@ test('улицы: явное согласие, одна 401-сессия, мет
   });
   await routeScreen(page, context);
   const button = page.getByRole('button', { name: 'Рассчитать путь по улицам', exact: true });
-  await expect(button).toBeDisabled(); expect(calls).toBe(0);
-  await expect(page.getByText(/координаты старта и всех остановок получит FOSSGIS/)).toBeVisible();
-  await page.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта' }).check();
+  await expect(button).toBeEnabled(); expect(calls).toBe(0);
+  const consent = page.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' });
+  await expect(consent).toBeChecked(); await consent.uncheck(); await expect(button).toBeDisabled();
+  await page.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
   await button.click();
-  await expect(page.getByText('1,0 км по улицам', { exact: true })).toBeVisible();
-  await expect(page.getByText(/12 мин · 1,0 км по улицам/)).toBeVisible();
-  await expect(page.locator('[data-map-engine="maplibre"][data-route-quality="street"]')).toBeVisible();
-  await expect(page.locator('.maplibregl-canvas')).toBeVisible();
+  await expect(page.getByText('1,0 км по улицам', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('≈12 мин по улицам', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-map-engine][data-route-quality="street"]')).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('.maplibregl-canvas:visible, .leaflet-container:visible').first()).toBeVisible({ timeout: 20_000 });
   expect(calls).toBe(2);
   await expect(page.getByRole('link', { name: 'Исправить карту', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Свернуть план маршрута' }).click();
   for (const width of [360, 390, 430]) {
     await page.setViewportSize({ width, height: 932 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
-    const action = await page.getByRole('link', { name: 'Начать маршрут', exact: true }).boundingBox();
+    const action = await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).boundingBox();
     const dock = await page.getByRole('navigation', { name: 'Основная навигация' }).boundingBox();
     expect(action!.y + action!.height).toBeLessThanOrEqual(dock!.y);
     await page.screenshot({ path: `exports/screenshots/routing-synthetic/foot-${width}.png` });
   }
-  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click();
+  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click(); await showRouteOptions(page);
   await page.getByRole('button', { name: 'Убрать дорожный расчёт' }).click();
-  await expect(button).toBeDisabled();
+  await expect(button).toBeEnabled();
   await expect(page.locator('[data-route-quality="street"]')).toHaveCount(0);
   const dock = page.getByRole('navigation', { name: 'Основная навигация' });
   await dock.getByRole('button', { name: 'Профиль', exact: true }).click();
@@ -83,7 +85,7 @@ test('отказ провайдера не рисует линию и не по�
     calls++; await r.fulfill({ status: 503, json: { route: null, error: 'ROUTING_TIMEOUT' } });
   });
   await routeScreen(page, context);
-  await page.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта' }).check();
+  await page.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
   await page.getByRole('button', { name: 'Рассчитать путь по улицам', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Путь по улицам сейчас недоступен.' })).toBeVisible();
   await expect(page.locator('[data-route-quality="street"]')).toHaveCount(0);

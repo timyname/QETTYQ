@@ -1,3 +1,4 @@
+import { showRouteOptions } from './route-ui-helpers';
 import { expect, test, type Page } from '@playwright/test';
 import { pilotPlaces, publicPlace } from '../../src/server/pilot/catalog';
 import { translateText, type Language } from '../../src/client/i18n';
@@ -71,39 +72,41 @@ for (const [language, native] of [['ru', 'Русский'], ['kk', 'Қазақш
     const sheet = page.getByRole('region', { name: t('План маршрута'), exact: true });
     await expect(route).toBeVisible();
     await expect(page.getByLabel(t('Дата и время начала маршрута'), { exact: true })).toBeHidden();
-    await expect(sheet.getByText(t('Стоимость уточняется.'), { exact: false })).toBeVisible();
-    await expect(page.getByRole('link', { name: t('Начать маршрут'), exact: true })).toHaveAttribute('href', /travelmode=walking/);
+    await expect(sheet).toHaveCount(0);
+    const bubble = page.getByRole('button', { name: t('Развернуть план маршрута'), exact: true });
     for (const [width, height] of [[360, 800], [390, 844], [430, 932], [1440, 900]]) {
       await page.setViewportSize({ width, height });
-      await expect.poll(async () => (await sheet.boundingBox())!.height).toBeLessThan(height * .4);
+      await expect.poll(async () => (await bubble.boundingBox())!.height).toBeLessThan(height * .4);
       expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
       // visualViewport and fixed dock settle on separate resize frames.
       // Keep the exact non-overlap invariant, polling the settled pair.
       await expect.poll(async () => {
         const dock = await page.getByRole('navigation').boundingBox();
-        const panel = await sheet.boundingBox();
+        const panel = await bubble.boundingBox();
         return Boolean(dock && panel && panel.y + panel.height <= dock.y);
       }).toBe(true);
       await expect(route.getByRole('link', { name: 'OpenFreeMap', exact: true })).toBeVisible();
       await page.screenshot({ path: `output/playwright/compact-route/${language}-collapsed-${width}.png` });
     }
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('button', { name: t('Развернуть план маршрута'), exact: true }).click();
+    await page.getByRole('button', { name: t('Развернуть план маршрута'), exact: true }).click(); await showRouteOptions(page);
+    await expect(sheet.getByText(t('Стоимость уточняется.'), { exact: false })).toBeVisible();
+    await expect(page.getByRole('link', { name: t('Начать маршрут'), exact: true })).toHaveAttribute('href', /2gis\.ru\/directions\/tab\/pedestrian\/points\/71\.4304,51\.1282\|/);
     await expect(page.getByLabel(t('Дата и время начала маршрута'), { exact: true })).toBeVisible();
     await page.getByLabel(t('Дата и время начала маршрута'), { exact: true }).fill('2026-11-05T18:30');
     await sheet.getByRole('button', { name: t('Моё местоположение'), exact: true }).click();
     await expect(route).toBeVisible();
     await expect(page.getByText(t('Точка старта получена. Точная геопозиция не сохраняется в памяти браузера.'), { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: t('Развернуть план маршрута'), exact: true }).click();
+    await page.getByRole('button', { name: t('Развернуть план маршрута'), exact: true }).click(); await showRouteOptions(page);
     await expect(page.getByLabel(t('Дата и время начала маршрута'), { exact: true })).toHaveValue('2026-11-05T18:30');
-    await sheet.getByRole('button', { name: t('Изменить'), exact: true }).click();
+    await sheet.getByRole('button', { name: t('Изменить точку старта'), exact: true }).first().click();
     await page.getByRole('button', { name: t('Продолжить без изменения'), exact: true }).click();
     await expect(route).toBeVisible();
-    await page.getByRole('button', { name: t('Развернуть план маршрута'), exact: true }).click();
-    await sheet.getByRole('button', { name: t('Изменить'), exact: true }).click();
+    await page.getByRole('button', { name: t('Развернуть план маршрута'), exact: true }).click(); await showRouteOptions(page);
+    await sheet.getByRole('button', { name: t('Изменить точку старта'), exact: true }).first().click();
     await chooseMapPoint(page);
     await expect(route).toBeVisible();
-    await page.getByRole('button', { name: t('Развернуть план маршрута'), exact: true }).click();
+    await page.getByRole('button', { name: t('Развернуть план маршрута'), exact: true }).click(); await showRouteOptions(page);
     await expect(page.getByLabel(t('Дата и время начала маршрута'), { exact: true })).toHaveValue('2026-11-05T18:30');
     await page.getByRole('region', { name: t('Расчёт пути по улицам'), exact: true }).scrollIntoViewIfNeeded();
     await expect(page.getByRole('link', { name: t('Начать маршрут'), exact: true })).toBeVisible();
@@ -159,9 +162,9 @@ test('chosen departure survives GPS/manual start refresh while each refresh clea
   const sheet = page.getByRole('region', { name: 'План маршрута', exact: true });
   const date = page.getByLabel('Дата и время начала маршрута', { exact: true });
   const geometry = page.locator('[data-map-engine][data-route-quality="street"]');
-  const expand = () => page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click();
+  const expand = async () => { await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click(); await showRouteOptions(page); };
   const calculate = async () => {
-    await sheet.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта' }).check();
+    await sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
     await sheet.getByRole('button', { name: 'Рассчитать путь по улицам', exact: true }).click();
     await expect(geometry).toBeVisible();
   };
@@ -174,14 +177,14 @@ test('chosen departure survives GPS/manual start refresh while each refresh clea
   await expect(geometry).toHaveCount(0);
   await expand();
   await expect(date).toHaveValue('2026-11-05T18:30');
-  await expect(sheet.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта' })).not.toBeChecked();
+  await expect(sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' })).toBeChecked();
   await calculate();
-  await sheet.getByRole('button', { name: 'Изменить', exact: true }).click();
+  await sheet.getByRole('button', { name: 'Изменить точку старта', exact: true }).first().click();
   await chooseMapPoint(page);
   await expect(page.getByRole('button', { name: 'Развернуть план маршрута', exact: true })).toBeVisible();
   await expect(geometry).toHaveCount(0);
   await expand();
   await expect(date).toHaveValue('2026-11-05T18:30');
-  await expect(sheet.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта' })).not.toBeChecked();
+  await expect(sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' })).toBeChecked();
   expect(calls).toBe(2);
 });
