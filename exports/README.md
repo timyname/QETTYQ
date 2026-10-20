@@ -1,11 +1,13 @@
 # Экспорты QETTYQ APP
 
-## Актуально · 20 октября 2026
+## Актуально · 21 октября 2026
 
-- `QETTYQ_APP_pitch_v7.pptx` / `.pdf`: 10 слайдов, последний проверенный pitch. Он создан до заключительного подключения live-афиши; текущие возможности смотрите в STATUS/README, а не приписывайте старому слайду.
-- `QETTYQ_APP_pilot_source_v7.zip`: исходники пилота, data snapshots и презентация; 281 файл, проверена целостность и известные secret patterns. Это не подписанное iOS-приложение.
-- `qettyq-glass-mobile.png`: реальный мобильный web-интерфейс430×932 после glass QA.
-- Публичная версия v5: https://qettyq-app.ablecorgi64.chatgpt.site . Видео и отправка заявки не выполнены.
+- [`QETTYQ_pitch_v10.pptx`](QETTYQ_pitch_v10.pptx): редактируемая презентация, 10 слайдов, 16:9.
+- [`QETTYQ_pitch_v10.pdf`](QETTYQ_pitch_v10.pdf): PDF-экспорт, 10 страниц.
+- [YouTube-демо](https://youtu.be/9xqpaYvvaZo): русская версия, 1920×1080.
+- Публичное приложение: <https://qettyqapp.anamai.kz/>.
+
+Перед передачей жюри необходимо убедиться, что доступ к YouTube-видео установлен «По ссылке», а не «Ограниченный».
 
 ## Исторические материалы
 
@@ -22,5 +24,3 @@
 Команда: **QETTYQ APP**
 Контакт: Tim Asproyanidi · Qaragandy · Boostseller.kz · +7 777 836 8576
 Репозиторий: <https://github.com/timyname/QETTYQ>
-
-Публичный deploy и YouTube-видео не включены: их отсутствие нельзя подменять локальными материалами.
