@@ -1,5 +1,15 @@
 # Отчёт проверки
 
+## Data Hub / OSM expansion / compact route · 21.10.2026
+
+- Node24 `node node_modules/vitest/vitest.mjs run tests/unit tests/integration`: **388/388 PASS,38files**; `tsc --noEmit` PASS. Scoped ESLint новых server/API/UI/scripts PASS. Первый полный run поймал missing price-source translation; исправлено, новый полный run388PASS.
+- `data:validate`:749 sourced POI; все прежние80 IDs сохранены. Publisher PBF проверен osmium header/type/224644381bytes/SHA256;307 latest alias не был принят за PBF. Первичный локальный2GB extract exit137 не использован;5GB successful offline retry. Никакого Overpass обхода/повторного source download.
+- Address matcher6unitPASS + независимый adversarial review:14/14-А/14-2/142/14.2/corpus/substring street не сливаются. Реальный current feed:6 derived matches/16, остальные unknown; корпус53 ambiguous не принимается.
+- UI **44/44E2E PASS одним чистым run**, workers2,2.9мин: `playwright test --workers=2 --output=output/playwright/final-ui-20261021-clean-results`. RU/KK/EN×4widths, GPS denied, map/manual return, datepersist при origin refresh, street geometry+consent invalidation, SQLite memory/PWA regressions. Старые network readiness assertions ждут тот же visible map/credit до20s при8s provider timeout, не отключены. После роста749POI fixed click попал в реальный cluster: helper выбирает свободную точку реальным DOM hit-test безforceclick.
+- Docker immutable production build `6265e8fe` PASS (Next16.4.2/Node24/amd64). Релиз4 опубликован: healthy/HTTPS200, backupverified, внешние boostseller.kz/anamai.kz200, SSH hashunchanged. Secret provisioning: выбранный Google key и producer hash переданы stdin→QETTYQ-only atomic secret file; другие env записи сохранены, значений в логах нет.
+- Public checks PASS:749POI/265hours/16events/6derived; hub unauthorized401 + validtoken/invalidschema400 + emptyapprovedcatalog200; никаких syntheticproductionrows. `smoke-vps-release.mjs` PASS: memory opt-in/SecureHttpOnly/write/newsessionrestore/delete и Google no-consent400 безрасходаquota. Свои identity/session очищены.
+- **Один** `probe-google-public.mjs` получил HTTP503 adapter / upstreamGoogle403 (`GOOGLE_ACCESS_NOT_ENABLED`),0places. Не выдаётся за успешный поиск, повторов нет; проверить GoogleCloud Places API(New)/billing/keyrestrictions. Gmail4SENT, grants0; новых OpenAI вызовов0.
+
 ## Приоритетный проход · языки/память/контекст · 21.10.2026
 
 - `pnpm test`:356/356 PASS,34files. Новые проверки: memory identity/isolation/revoke/delete/TTL; comma/dot/plus GPS redaction всех outbound; original date/rock/price constraints; semantic retrieval до top3; Google cap100×$0.10/consent/no-key/no-retry/mapless credit; one OpenAI reservation400+800 tokens и aggregate accounting.

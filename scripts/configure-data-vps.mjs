@@ -25,7 +25,7 @@ const updates = { GOOGLE_MAPS_SERVER_API_KEY: key, QETTYQ_GOOGLE_PLACES_ENABLED:
 // The current app image supplies Node; this utility mounts ONLY QETTYQ secrets.
 const remote = `const fs=require('node:fs');let raw='';process.stdin.setEncoding('utf8');process.stdin.on('data',x=>{raw+=x;if(raw.length>4096)process.exit(2)});process.stdin.on('end',()=>{const u=JSON.parse(raw);const allowed=['GOOGLE_MAPS_SERVER_API_KEY','QETTYQ_GOOGLE_PLACES_ENABLED','QETTYQ_GOOGLE_BUDGET_APPROVED','QETTYQ_HUB_THREADS_TOKEN_SHA256'];if(Object.keys(u).length!==4||allowed.some(k=>typeof u[k]!=='string'||/[\\r\\n]/.test(u[k])))process.exit(2);const p='/run/qettyq-secrets/runtime.env';const s=fs.lstatSync(p);if(!s.isFile()||s.isSymbolicLink()||s.size>32768)process.exit(2);const old=fs.readFileSync(p,'utf8').split(/\\r?\\n/).filter(l=>!allowed.some(k=>l.startsWith(k+'=')));const content=old.filter(Boolean).concat(allowed.map(k=>k+'='+u[k])).join('\\n')+'\\n';const t=p+'.data-update';const fd=fs.openSync(t,'wx',0o600);try{fs.writeFileSync(fd,content);fs.fchownSync(fd,10001,10001);fs.fsyncSync(fd)}finally{fs.closeSync(fd)}fs.renameSync(t,p);});`;
 const command = `docker run --rm -i --network none --read-only --user 0:0 --mount type=bind,source=/opt/qettyq/secrets,target=/run/qettyq-secrets --entrypoint node qettyq:vps-20261021-3 -e '${remote}'`;
-// Single-quote quoting would corrupt embedded code; reject it before dispatch.
+// Shell-quote the fixed writer code; credential data travels only on stdin.
 const quoted = remote.replaceAll("'", "'\\''");
 try {
   execFileSync('ssh', ['-i', identity, '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes',

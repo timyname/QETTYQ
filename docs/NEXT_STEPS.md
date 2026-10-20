@@ -1,8 +1,17 @@
 # Следующие шаги
 
+## После подключения Data Hub · 21.10.2026
+
+1. Release4 опубликован и healthy; Google отклонил один запрос403. Проверить Places API(New), billing и ограничения выбранного ключа для server46.224.184.192; ключ не ротировать, ledger$10 не сбрасывать, повторных paid запросов до выяснения причины не делать. SSH оставлен.
+2. Передать `docs/DATA_HUB.md` второму ПК. Отдельный ignored0600 `.sites-runtime/threads-analyzer.env` содержит producer credential; переносить приватно, не в Git/чат. До согласования прав Threads получает metadata-only quarantine, не опубликованный пост.
+3. Дождаться ответов четырёх площадок и отдельно проверить scope/правообладателя/fees. Молчание не согласие. Для фото с private-storage разрешением нужен отдельный private-media endpoint: текущий public asset resolver не подменять разрешением на publicGit.
+4. Hub events уже соединены с картой/чатом; hub places+hours ещё требуют объединения с POI pool/маршрутами с повторной проверкой source policy и expiry. Дополнить producer реальными публичными данными только после проверки прав.
+5. POI bulk snapshot обновлять на выделенном producer с>=5GB RAM, не текущем занятом VPS. Часовой Sxodim job уже работает независимо от посетителей; новые автоматические источники включать по разрешённому интервалу.
+6. Для будущей mixed-source RAG выдачи добавить per-card freshness и независимый offer citation в `event-evidence`/`smart-assistant` с expiry/revoke regression. Сейчас UI сохраняет отдельную ссылку цены, RAG использует консервативную общую snapshot/stale метку; числовые claims в generated prose ограничены. Непроверенный поздний hunk в релиз не включён.
+
 ## После релиза языков и памяти · 21.10.2026
 
-1. Заменить Google-ключ, попавший в чат. Новый серверный ключ сохранить в `.env.local` как `GOOGLE_MAPS_SERVER_API_KEY`, не отправлять в переписку. Затем разрешённый setup на VPS, IP/API restrictions и один bounded pilot smoke; cap до$10 не сбрасывать.
+1. По новому явному решению владельца Google-ключ **не ротировать**. Он сохранён через `.env.local`, передан серверу; проверить доступ Places API и restrictions, cap до$10 не сбрасывать.
 2. Проверить следующий автоматический Sxodim refresh после истечения прежнего shared lease: новый предел24pages/50occurrences не означает такое фактическое число. Команды `systemctl status qettyq-events-refresh.timer` и journal своего service; не сбрасывать lease ради принудительного импорта.
 3. Для новых реальных event pins нужен разрешённый геоисточник/проверенное сопоставление площадок, не выдуманная точка по названию. Для часов — наблюдаемые значения. Приоритетный кандидат data.egov sports №730 требует проверки реальных API rows/access/версии; музейный feed — согласования. Overpass502/406 не обходить.
 4. На физическом iPhone проверить RU/KK/EN, свайп, denied location, внешнюю навигацию, доступность и память после закрытия браузера. Chromium emulation237screens этого не заменяет.

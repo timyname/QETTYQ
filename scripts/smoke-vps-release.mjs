@@ -37,9 +37,11 @@ try {
   result = await call('/api/memory');
   check(result.status === 200 && result.data.profile?.locale === 'kk', 'MEMORY_RESTORE_FAILED');
   console.log('memory: opt-in / Secure HttpOnly cookie / profile / new-session restore PASS');
-  const google = await call('/api/places/search', 'POST', { query: 'рамен', language: 'en', consent: true });
+  // Default smoke must never spend Google quota after server-key activation.
+  // The separately authorized one-shot probe is scripts/probe-google-public.mjs.
+  const google = await call('/api/places/search', 'POST', { query: 'рамен', language: 'en', consent: false });
   console.log('google:', google.status, google.data.status, google.data.reason);
-  check(google.status === 503 && google.data.reason === 'GOOGLE_SERVER_KEY_REQUIRED', 'GOOGLE_EXPECTED_DISABLED');
+  check(google.status === 400 && google.data.reason === 'GOOGLE_CONSENT_REQUIRED', 'GOOGLE_CONSENT_GATE_FAILED');
   if (process.argv.includes('--ai')) {
     const status = await call('/api/assistant/status');
     check(status.data.available === true, `AI_UNAVAILABLE_${status.data.reason}`);

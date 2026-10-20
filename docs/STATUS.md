@@ -1,5 +1,20 @@
 # Статус QETTYQ
 
+## Data Hub, реальные места и компактный маршрут · 21.10.2026
+
+Опубликован `qettyq:vps-20261021-4`, code commit `f550e6b`; build source tree `6265e8fe` имеет те же build-input файлы. Docker image `sha256:0dd09b60148380c1370fcb3baf3570357f09229c7b9b3c21391daeed0821a0f5`,107216202bytes. HTTPS/health200, контейнер healthy. Чужие iOS/PWA изменения не включены; boostseller.kz/anamai.kz200, соседние контейнеры не перезапускались. Предрелизный SQLite backup проверен, SSH ключ сохранён и authorized_keys digest не изменился.
+
+- Данные: 749 OSM POI вместо80;265 raw opening_hours,223 поддерживает conservative parser,42 остаются unknown;222 cuisine,118 адресов. Snapshot OSM на19.10.2026 20:21UTC, не live.
+- Афиша: реальный серверный refresh вернул16 будущих событий20.10 20:18UTC. Часовой systemd timer и пользовательские запросы используют общий durable source lease. Это не полное покрытие города.
+- Адреса:29517 OSM records, observed multilingual street aliases. Строгое офлайн-сопоставление полного адреса, с отказом на корпусах/неоднозначности/устаревании;6 из16 событий получили derived building/address point. Сырой publisher snapshot не переписывается, вход не обещается.
+- Data Hub: отдельный hash-only producer Threads, bounded M2M batches, dedup/revisions/quarantine/TTL. Без прав Threads payload не сохраняется; принятые разрешённые события соединены с афишей карты/чата. Новые hub places доступны в rich `/api/data-hub/catalog`, ещё не объединены со статическим POI pool планировщика.
+- UI: компактный collapsed route sheet; GPS не уводит в conditions; ручной picker возвращает на invoking screen; дата сохраняется, stale geometry/consent сбрасываются.
+- Google: выбранный владельцем ключ сохранён без ротации и активирован на сервере; прежний cap$10/100reservations сохранён. Один реальный запрос получил Google403 / `GOOGLE_ACCESS_NOT_ENABLED`; это не работающий live поиск. Проверить Places API(New), billing и API/IP restrictions Google Cloud, не менять ключ без нового решения владельца. Автоповторов нет.
+- Public smoke: `/api/catalog`749/265часов; `/api/events`16/6derived; Hub401безключа/400приправильномключе+невернойschema, пустой publichub200. Искусственных записей в production не создавали. Memory opt-in/SecureHttpOnly cookie/write/newsessionrestore/deletePASS; свои тестовые identity/session удалены.
+- Ledger проверен после smoke: OpenAI9×$0.50=$4.50 прежних резервов без изменений; Google1×$0.10 консервативный резерв (не подтверждённый расход Google), cap$10 не сброшен. Hub1enabled producer,0inbox records. Ключ producer локально только в ignored0600 `.sites-runtime/threads-analyzer.env`.
+- Права:4 письма Gmail SENT — Sxodim, Нацмузей, Astana Ballet, Ticketon. Разрешений на фото пока0; чужие изображения не скачаны. Отчёты: `DATA_SOURCE_ACCESS_20261021.md`, `SOURCE_OUTREACH_20261021.md`, интеграция `DATA_HUB.md`.
+- AI/долговременная память/пеший routing: существующая реализация сохранена, новый платный OpenAI вызов в этом проходе не нужен. Презентация/видео/заявка этим релизом не обновлялись.
+
 ## Приоритетный релиз · RU/KK/EN, память и контекстный поиск · 21.10.2026
 
 Сервис опубликован на https://qettyqapp.anamai.kz/ : `qettyq:vps-20261021-3`, Git `703d893`, immutable source tree `c3ba9306`. Параллельные незавершённые iOS/PWA изменения не включены в образ. Существующие данные, секреты, OpenAI approval и резервы сохранены. HTTPS работает; boostseller.kz и anamai.kz проверяются отдельно.
