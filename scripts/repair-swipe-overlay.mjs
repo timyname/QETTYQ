@@ -1,0 +1,5 @@
+import {connect,execute} from './penpot-mcp.mjs';
+await connect();
+const ids=await execute(`return Object.entries(storage.q.boards).filter(([id,b])=>penpotUtils.findShape(s=>s.name.replaceAll(' / ','/')==='action/continue',b)).map(([id])=>id);`);
+for(let i=0;i<ids.length;i+=8)console.log(await execute(`let count=0;for(const id of ${JSON.stringify(ids)}.slice(${i},${i+8})){const b=storage.q.boards[id],right=storage.ui.find(b,'action/continue');for(const h of [right,...penpotUtils.findShapes(()=>true,right)]){for(const it of [...h.interactions])h.removeInteraction(it);h.addInteraction('click',{type:'open-overlay',destination:storage.q.boards['05.continue'],relativeTo:right,position:'bottom-right',closeWhenClickOutside:true,addBackgroundOverlay:false,animation:{type:'slide',way:'in',direction:'left',duration:220,easing:'ease-out'}});}count++;}return{anchored:count};`));
+console.log(await execute(`await penpot.currentFile.saveVersion('QETTYQ · swipe CTA anchored and browser checked');return{saved:true};`));

@@ -6,6 +6,11 @@ type Context = {
   budget: number | null;
   origin: { lat: number; lon: number };
   likedTags: string[];
+  destination?: { lat: number; lon: number } | null;
+  returnToOrigin?: boolean;
+  partySize?: number;
+  budgetBasis?: "person" | "group";
+  strictBudget?: boolean;
 };
 
 const toRad = (value: number) => (value * Math.PI) / 180;
@@ -29,20 +34,25 @@ export function recommend(places: Place[], context: Context): Recommendation[] {
     .map((place) => {
       const distance = distanceKm(context.origin, place);
       const travelMinutes = Math.ceil((distance / 4.5) * 60);
-      const totalMinutes = travelMinutes * 2 + place.durationMinutes + 10;
+      const destination = context.returnToOrigin ? context.origin : context.destination;
+      const onwardMinutes = destination ? Math.ceil((distanceKm(place, destination) / 4.5) * 60) : 0;
+      const totalMinutes = travelMinutes + onwardMinutes + place.durationMinutes + Math.max(10, Math.ceil(context.minutes * 0.15));
       const priceKnown = Boolean(place.price);
-      const overBudget = Boolean(place.price && context.budget !== null && place.price.min > context.budget);
+      const priceMultiplier = context.budgetBasis === "group" ? context.partySize ?? 1 : 1;
+      const overBudget = Boolean(place.price && context.budget !== null && place.price.min * priceMultiplier > context.budget);
       const overTime = totalMinutes > context.minutes;
       const goalMatch = place.tags.some((tag) => wanted.includes(tag));
       const interestMatch = place.tags.filter((tag) => context.likedTags.includes(tag)).length;
       const feasibility: Recommendation["feasibility"] = overBudget || overTime
         ? "infeasible"
-        : priceKnown || context.budget === null
-          ? "feasible"
-          : "uncertain";
+        : "uncertain";
       const unknowns = [];
       if (!priceKnown) unknowns.push("Стоимость не указана в источнике");
       unknowns.push("Пеший путь оценён по прямому расстоянию");
+      unknowns.push("Длительность посещения — оценка, часы работы и наличие мест не подтверждены");
+      if (place.price && context.budget !== null && place.price.max * priceMultiplier > context.budget) {
+        unknowns.push("Верхняя граница цены превышает выбранный бюджет");
+      }
       return {
         ...place,
         distanceKm: distance,
@@ -50,17 +60,19 @@ export function recommend(places: Place[], context: Context): Recommendation[] {
         totalMinutes,
         feasibility,
         reason: interestMatch
-          ? "Совпадает с отмеченными интересами и находится в пределах выбранного радиуса."
-          : "Подходит по категории и рассчитанному времени.",
+          ? "Совпадает с отмеченными интересами; время и условия посещения нужно уточнить."
+          : "Совпадает с выбранной категорией; расчёт времени приблизительный.",
         unknowns,
-        _score: (goalMatch ? 4 : 0) + interestMatch * 2 - distance - (feasibility === "feasible" ? 0 : 2),
+        _score: (goalMatch ? 4 : 0) + interestMatch * 2 - distance - 2,
+        _goalMatch: goalMatch,
       };
     })
-    .filter((item) => item.feasibility !== "infeasible")
+    .filter((item) => item.feasibility !== "infeasible" && item._goalMatch && !(context.strictBudget && context.budget !== null && (!item.price || item.price.max * (context.budgetBasis === "group" ? context.partySize ?? 1 : 1) > context.budget)))
     .sort((a, b) => b._score - a._score)
     .slice(0, 12)
-    .map(({ _score, ...item }) => {
+    .map(({ _score, _goalMatch, ...item }) => {
       void _score;
+      void _goalMatch;
       return item;
     });
 }

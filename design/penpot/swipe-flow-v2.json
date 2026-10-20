@@ -1,0 +1,712 @@
+{
+  "version": 2,
+  "status": "native-design-prototype-not-runtime-drag",
+  "cards": [
+    {
+      "id": "05",
+      "title": "Культура и история"
+    },
+    {
+      "id": "05.02",
+      "title": "Рок и живая музыка"
+    },
+    {
+      "id": "05.03",
+      "title": "Балет и театр"
+    },
+    {
+      "id": "05.04",
+      "title": "Бачата и танцы"
+    },
+    {
+      "id": "05.05",
+      "title": "Барабаны и ритм"
+    },
+    {
+      "id": "05.06",
+      "title": "Армрестлинг и сила"
+    },
+    {
+      "id": "05.07",
+      "title": "Активный отдых"
+    },
+    {
+      "id": "05.08",
+      "title": "Баня и загородный отдых"
+    },
+    {
+      "id": "05.09",
+      "title": "Шашлык и компания"
+    },
+    {
+      "id": "05.10",
+      "title": "Fine dining"
+    },
+    {
+      "id": "05.11",
+      "title": "Кофе и спокойный вечер"
+    },
+    {
+      "id": "05.12",
+      "title": "Современное искусство"
+    },
+    {
+      "id": "05.13",
+      "title": "Кино"
+    },
+    {
+      "id": "05.14",
+      "title": "Мастер-класс и творчество"
+    },
+    {
+      "id": "05.15",
+      "title": "Прогулка и архитектура"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "05",
+      "control": "swipe-right",
+      "to": "06",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05",
+      "control": "swipe-left",
+      "to": "07",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "06",
+      "control": "feedback-complete",
+      "to": "05.02",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "07",
+      "control": "feedback-complete",
+      "to": "05.02",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05",
+      "control": "undo",
+      "to": null,
+      "disabled": true
+    },
+    {
+      "from": "05.02",
+      "control": "swipe-right",
+      "to": "05.02.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.02",
+      "control": "swipe-left",
+      "to": "05.02.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.02.right",
+      "control": "feedback-complete",
+      "to": "05.03",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.02.left",
+      "control": "feedback-complete",
+      "to": "05.03",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.02",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.02",
+      "control": "undo",
+      "to": "05",
+      "disabled": false
+    },
+    {
+      "from": "05.03",
+      "control": "swipe-right",
+      "to": "05.03.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.03",
+      "control": "swipe-left",
+      "to": "05.03.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.03.right",
+      "control": "feedback-complete",
+      "to": "05.04",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.03.left",
+      "control": "feedback-complete",
+      "to": "05.04",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.03",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.03",
+      "control": "undo",
+      "to": "05.02",
+      "disabled": false
+    },
+    {
+      "from": "05.04",
+      "control": "swipe-right",
+      "to": "05.04.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.04",
+      "control": "swipe-left",
+      "to": "05.04.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.04.right",
+      "control": "feedback-complete",
+      "to": "05.05",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.04.left",
+      "control": "feedback-complete",
+      "to": "05.05",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.04",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.04",
+      "control": "undo",
+      "to": "05.03",
+      "disabled": false
+    },
+    {
+      "from": "05.05",
+      "control": "swipe-right",
+      "to": "05.05.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.05",
+      "control": "swipe-left",
+      "to": "05.05.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.05.right",
+      "control": "feedback-complete",
+      "to": "05.06",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.05.left",
+      "control": "feedback-complete",
+      "to": "05.06",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.05",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.05",
+      "control": "undo",
+      "to": "05.04",
+      "disabled": false
+    },
+    {
+      "from": "05.06",
+      "control": "swipe-right",
+      "to": "05.06.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.06",
+      "control": "swipe-left",
+      "to": "05.06.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.06.right",
+      "control": "feedback-complete",
+      "to": "05.07",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.06.left",
+      "control": "feedback-complete",
+      "to": "05.07",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.06",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.06",
+      "control": "undo",
+      "to": "05.05",
+      "disabled": false
+    },
+    {
+      "from": "05.07",
+      "control": "swipe-right",
+      "to": "05.07.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.07",
+      "control": "swipe-left",
+      "to": "05.07.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.07.right",
+      "control": "feedback-complete",
+      "to": "05.08",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.07.left",
+      "control": "feedback-complete",
+      "to": "05.08",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.07",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.07",
+      "control": "undo",
+      "to": "05.06",
+      "disabled": false
+    },
+    {
+      "from": "05.08",
+      "control": "swipe-right",
+      "to": "05.08.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.08",
+      "control": "swipe-left",
+      "to": "05.08.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.08.right",
+      "control": "feedback-complete",
+      "to": "05.09",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.08.left",
+      "control": "feedback-complete",
+      "to": "05.09",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.08",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.08",
+      "control": "undo",
+      "to": "05.07",
+      "disabled": false
+    },
+    {
+      "from": "05.09",
+      "control": "swipe-right",
+      "to": "05.09.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.09",
+      "control": "swipe-left",
+      "to": "05.09.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.09.right",
+      "control": "feedback-complete",
+      "to": "05.10",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.09.left",
+      "control": "feedback-complete",
+      "to": "05.10",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.09",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.09",
+      "control": "undo",
+      "to": "05.08",
+      "disabled": false
+    },
+    {
+      "from": "05.10",
+      "control": "swipe-right",
+      "to": "05.10.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.10",
+      "control": "swipe-left",
+      "to": "05.10.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.10.right",
+      "control": "feedback-complete",
+      "to": "05.11",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.10.left",
+      "control": "feedback-complete",
+      "to": "05.11",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.10",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.10",
+      "control": "undo",
+      "to": "05.09",
+      "disabled": false
+    },
+    {
+      "from": "05.11",
+      "control": "swipe-right",
+      "to": "05.11.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.11",
+      "control": "swipe-left",
+      "to": "05.11.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.11.right",
+      "control": "feedback-complete",
+      "to": "05.12",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.11.left",
+      "control": "feedback-complete",
+      "to": "05.12",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.11",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.11",
+      "control": "undo",
+      "to": "05.10",
+      "disabled": false
+    },
+    {
+      "from": "05.12",
+      "control": "swipe-right",
+      "to": "05.12.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.12",
+      "control": "swipe-left",
+      "to": "05.12.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.12.right",
+      "control": "feedback-complete",
+      "to": "05.13",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.12.left",
+      "control": "feedback-complete",
+      "to": "05.13",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.12",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.12",
+      "control": "undo",
+      "to": "05.11",
+      "disabled": false
+    },
+    {
+      "from": "05.13",
+      "control": "swipe-right",
+      "to": "05.13.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.13",
+      "control": "swipe-left",
+      "to": "05.13.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.13.right",
+      "control": "feedback-complete",
+      "to": "05.14",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.13.left",
+      "control": "feedback-complete",
+      "to": "05.14",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.13",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.13",
+      "control": "undo",
+      "to": "05.12",
+      "disabled": false
+    },
+    {
+      "from": "05.14",
+      "control": "swipe-right",
+      "to": "05.14.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.14",
+      "control": "swipe-left",
+      "to": "05.14.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.14.right",
+      "control": "feedback-complete",
+      "to": "05.15",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.14.left",
+      "control": "feedback-complete",
+      "to": "05.15",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.14",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.14",
+      "control": "undo",
+      "to": "05.13",
+      "disabled": false
+    },
+    {
+      "from": "05.15",
+      "control": "swipe-right",
+      "to": "05.15.right",
+      "runtimeReaction": "like",
+      "prototypeTrigger": "click-right-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.15",
+      "control": "swipe-left",
+      "to": "05.15.left",
+      "runtimeReaction": "skip",
+      "prototypeTrigger": "click-left-review-zone",
+      "prototypePersistence": false
+    },
+    {
+      "from": "05.15.right",
+      "control": "feedback-complete",
+      "to": "05.done",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.15.left",
+      "control": "feedback-complete",
+      "to": "05.done",
+      "prototypeDelayMs": 700
+    },
+    {
+      "from": "05.15",
+      "control": "continue-circle",
+      "to": "05.continue",
+      "kind": "anchored-overlay",
+      "position": "bottom-right-relative-to-circle"
+    },
+    {
+      "from": "05.15",
+      "control": "undo",
+      "to": "05.14",
+      "disabled": false
+    },
+    {
+      "from": "05.continue",
+      "control": "confirm-second-press",
+      "to": "08"
+    },
+    {
+      "from": "05",
+      "control": "idle-no-choice",
+      "to": "05.hint",
+      "delayMs": 3500
+    },
+    {
+      "from": "05.hint",
+      "control": "hint-no-choice",
+      "to": "05.hint-left",
+      "delayMs": 800
+    },
+    {
+      "from": "05.hint-left",
+      "control": "hint-no-choice",
+      "to": "05.ready",
+      "delayMs": 800
+    },
+    {
+      "from": "05.done",
+      "control": "undo-last",
+      "to": "05.15"
+    }
+  ],
+  "unseenPolicy": "No reaction for unviewed or uncommitted cards"
+}

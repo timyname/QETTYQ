@@ -1,0 +1,1 @@
+{"code":"const b=penpotUtils.findShape(s=>s.getPluginData('screenId')==='05.02',penpot.root);return b?penpotUtils.shapeStructure(b,2):{missing:true};"}

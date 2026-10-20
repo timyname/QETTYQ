@@ -1,0 +1,212 @@
+{
+  "applied": true,
+  "savedVersionLabel": "QETTYQ · 32 swipe feedback states · plain heart and text",
+  "changedBoards": 32,
+  "feedbackStyle": "plain-heart-and-text-no-frame",
+  "nonFeedbackViolations": [],
+  "boards": [
+    {
+      "screenId": "06",
+      "boardId": "dece5f48-f581-80ff-8008-d16689bf8686",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "07",
+      "boardId": "dece5f48-f581-80ff-8008-d1668a2830bf",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.02.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f64ae20b7",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.02.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f668949ff",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.03.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f6aa0ddba",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.03.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f6c809ac3",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.04.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f709f9f1b",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.04.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f72856595",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.05.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f76d516ab",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.05.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f78d4ee85",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.06.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f7d8c9b4f",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.06.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f7f99cf0c",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.07.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f84009e57",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.07.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f85f15e6f",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.08.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f8a5975c7",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.08.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f8c767dfb",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.09.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f9125e2cd",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.09.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f934a5fcf",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.10.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f980bea30",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.10.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f9a2da801",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.11.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16f9f23610a",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.11.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16fa154053b",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.12.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16fa69b8c1e",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.12.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16fa8d678a0",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.13.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16faddbc877",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.13.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16fb020a0d7",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.14.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16fb546d40a",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.14.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16fb789e49a",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.15.right",
+      "boardId": "2c07ed36-b525-80bc-8008-d16fbce030cf",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.15.left",
+      "boardId": "2c07ed36-b525-80bc-8008-d16fbf41a1c1",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.hint",
+      "boardId": "2c07ed36-b525-80bc-8008-d16fc2583480",
+      "linksBefore": 6,
+      "linksAfter": 6
+    },
+    {
+      "screenId": "05.hint-left",
+      "boardId": "2c07ed36-b525-80bc-8008-d1700b8bcb73",
+      "linksBefore": 6,
+      "linksAfter": 6
+    }
+  ],
+  "serverVersionVerified": {
+    "fileId": "b7ada7fc-31ac-8106-8008-d0c87d4f6af8",
+    "revision": 40,
+    "saved": [
+      {
+        "label": "QETTYQ · 32 swipe feedback states · plain heart and text",
+        "createdAt": "Tue Oct 20 2026 15:50:31 GMT+0500 (Казахстан)",
+        "isAutosave": false
+      }
+    ]
+  }
+}

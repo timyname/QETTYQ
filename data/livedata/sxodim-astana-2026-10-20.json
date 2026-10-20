@@ -1,0 +1,342 @@
+{
+  "source": {
+    "id": "sxodim-astana-noncommercial",
+    "name": "Давай Сходим",
+    "url": "https://sxodim.com/astana",
+    "termsUrl": "https://sxodim.com/polzovatelskoe-soglashenie",
+    "reuse": "noncommercial_with_credit",
+    "mediaCopied": false
+  },
+  "fetchedAt": "2026-10-20T11:02:28.509Z",
+  "expiresAt": "2026-10-20T12:02:28.509Z",
+  "items": [
+    {
+      "id": "sxodim:77801:2026-10-22T12:00:00.000Z",
+      "name": "Встреча с Канатом Нуровым «Управленческие решения — открытый разбор бизнес-кейсов»",
+      "cityId": "astana",
+      "category": "Бизнес",
+      "venueName": "Abu Dhabi Plaza",
+      "address": "Abu Dhabi Plaza, ул. Сыганак, 60/4, 26-й этаж, Practic Office",
+      "lat": null,
+      "lon": null,
+      "startsAt": "2026-10-22T12:00:00.000Z",
+      "endsAt": null,
+      "timeZone": "Asia/Almaty",
+      "durationMinutes": null,
+      "contentLanguage": "und",
+      "priceFromKzt": 9900,
+      "price": {
+        "kind": "exact",
+        "minMinor": 990000,
+        "currency": "KZT",
+        "basis": "unknown"
+      },
+      "status": "scheduled",
+      "availability": "unknown",
+      "bookingUrl": "https://sxodim.com/astana/business/vstrecha-s-kanatom-nurovym-upravlencheskie-resheniya-otkrytyy-razbor-biznes-keysov/tickets",
+      "contactUrl": "https://sxodim.com/astana/event/vstrecha-s-kanatom-nurovym-upravlencheskie-resheniya-otkrytyy-razbor-biznes-keysov",
+      "image": null,
+      "requiredCredit": {
+        "text": "Давай Сходим",
+        "url": "https://sxodim.com/astana/event/vstrecha-s-kanatom-nurovym-upravlencheskie-resheniya-otkrytyy-razbor-biznes-keysov"
+      },
+      "fetchedAt": "2026-10-20T11:02:28.509Z",
+      "provenance": {
+        "sourceId": "sxodim-astana-noncommercial",
+        "sourceUrl": "https://sxodim.com/astana/event/vstrecha-s-kanatom-nurovym-upravlencheskie-resheniya-otkrytyy-razbor-biznes-keysov",
+        "parserVersion": "sxodim-jsonld-v1",
+        "scheduleQuality": "observed",
+        "priceQuality": "observed"
+      },
+      "warnings": [
+        "COORDINATES_UNKNOWN",
+        "DURATION_UNKNOWN",
+        "AVAILABILITY_CONFIRM_WITH_ORGANIZER",
+        "CONTENT_LANGUAGE_UNKNOWN",
+        "TICKET_FEES_MAY_APPLY"
+      ]
+    },
+    {
+      "id": "sxodim:77770:2026-10-23T13:30:00.000Z",
+      "name": "Лекция Дархана Жагипарова в Өnergy Creative Hub: «Через тои к Apple»",
+      "cityId": "astana",
+      "category": "Образование",
+      "venueName": "Өnergy Creative Hub",
+      "address": "Өnergy Creative Hub, студия Content & Production, пр. Кабанбай батыра, 53, блок 32",
+      "lat": null,
+      "lon": null,
+      "startsAt": "2026-10-23T13:30:00.000Z",
+      "endsAt": null,
+      "timeZone": "Asia/Almaty",
+      "durationMinutes": null,
+      "contentLanguage": "und",
+      "priceFromKzt": 0,
+      "price": {
+        "kind": "exact",
+        "minMinor": 0,
+        "currency": "KZT",
+        "basis": "unknown"
+      },
+      "status": "scheduled",
+      "availability": "unknown",
+      "bookingUrl": null,
+      "contactUrl": "https://sxodim.com/astana/event/lekciya-darhana-zhagiparova-v-nergy-creative-hub-cherez-toi-k-apple",
+      "image": null,
+      "requiredCredit": {
+        "text": "Давай Сходим",
+        "url": "https://sxodim.com/astana/event/lekciya-darhana-zhagiparova-v-nergy-creative-hub-cherez-toi-k-apple"
+      },
+      "fetchedAt": "2026-10-20T11:02:28.509Z",
+      "provenance": {
+        "sourceId": "sxodim-astana-noncommercial",
+        "sourceUrl": "https://sxodim.com/astana/event/lekciya-darhana-zhagiparova-v-nergy-creative-hub-cherez-toi-k-apple",
+        "parserVersion": "sxodim-jsonld-v1",
+        "scheduleQuality": "observed",
+        "priceQuality": "observed"
+      },
+      "warnings": [
+        "COORDINATES_UNKNOWN",
+        "DURATION_UNKNOWN",
+        "AVAILABILITY_CONFIRM_WITH_ORGANIZER",
+        "CONTENT_LANGUAGE_UNKNOWN"
+      ]
+    },
+    {
+      "id": "sxodim:77397:2026-10-29T13:00:00.000Z",
+      "name": "«Мама!» спектаклі",
+      "cityId": "astana",
+      "category": "«JAN» театрының қойылымдары",
+      "venueName": "Астана қаласы",
+      "address": "Астана қаласы, Жастар театры, к. Илияс Есенберлина, 10",
+      "lat": null,
+      "lon": null,
+      "startsAt": "2026-10-29T13:00:00.000Z",
+      "endsAt": null,
+      "timeZone": "Asia/Almaty",
+      "durationMinutes": null,
+      "contentLanguage": "und",
+      "priceFromKzt": null,
+      "price": {
+        "kind": "unknown",
+        "minMinor": null,
+        "currency": null,
+        "basis": "unknown"
+      },
+      "status": "scheduled",
+      "availability": "unknown",
+      "bookingUrl": "https://sxodim.com/astana/jan-theatre-spektakli/mama-spektakli/tickets",
+      "contactUrl": "https://sxodim.com/astana/event/mama-spektakli",
+      "image": null,
+      "requiredCredit": {
+        "text": "Давай Сходим",
+        "url": "https://sxodim.com/astana/event/mama-spektakli"
+      },
+      "fetchedAt": "2026-10-20T11:02:28.509Z",
+      "provenance": {
+        "sourceId": "sxodim-astana-noncommercial",
+        "sourceUrl": "https://sxodim.com/astana/event/mama-spektakli",
+        "parserVersion": "sxodim-jsonld-v1",
+        "scheduleQuality": "observed",
+        "priceQuality": "conflicting"
+      },
+      "warnings": [
+        "COORDINATES_UNKNOWN",
+        "DURATION_UNKNOWN",
+        "AVAILABILITY_CONFIRM_WITH_ORGANIZER",
+        "CONTENT_LANGUAGE_UNKNOWN",
+        "PRICE_CONFLICT"
+      ]
+    },
+    {
+      "id": "sxodim:58585:2026-10-29T15:30:00.000Z",
+      "name": "«Өліара» спектаклі",
+      "cityId": "astana",
+      "category": "«JAN» театрының қойылымдары",
+      "venueName": "Астана қаласы",
+      "address": "Астана қаласы, Жастар театры, к. Илияс Есенберлина, 10",
+      "lat": null,
+      "lon": null,
+      "startsAt": "2026-10-29T15:30:00.000Z",
+      "endsAt": null,
+      "timeZone": "Asia/Almaty",
+      "durationMinutes": null,
+      "contentLanguage": "und",
+      "priceFromKzt": null,
+      "price": {
+        "kind": "unknown",
+        "minMinor": null,
+        "currency": null,
+        "basis": "unknown"
+      },
+      "status": "scheduled",
+      "availability": "unknown",
+      "bookingUrl": "https://sxodim.com/astana/jan-theatre-spektakli/liara-spektakli/tickets",
+      "contactUrl": "https://sxodim.com/astana/event/liara-spektakli",
+      "image": null,
+      "requiredCredit": {
+        "text": "Давай Сходим",
+        "url": "https://sxodim.com/astana/event/liara-spektakli"
+      },
+      "fetchedAt": "2026-10-20T11:02:28.509Z",
+      "provenance": {
+        "sourceId": "sxodim-astana-noncommercial",
+        "sourceUrl": "https://sxodim.com/astana/event/liara-spektakli",
+        "parserVersion": "sxodim-jsonld-v1",
+        "scheduleQuality": "observed",
+        "priceQuality": "conflicting"
+      },
+      "warnings": [
+        "COORDINATES_UNKNOWN",
+        "DURATION_UNKNOWN",
+        "AVAILABILITY_CONFIRM_WITH_ORGANIZER",
+        "CONTENT_LANGUAGE_UNKNOWN",
+        "PRICE_CONFLICT"
+      ]
+    },
+    {
+      "id": "sxodim:77765:2026-10-31T17:00:00.000Z",
+      "name": "Вечеринка Dizngo carnival",
+      "cityId": "astana",
+      "category": "Вечеринки",
+      "venueName": "Ресторан Piligrim",
+      "address": "Ресторан Piligrim, мкр. Самал, 12",
+      "lat": null,
+      "lon": null,
+      "startsAt": "2026-10-31T17:00:00.000Z",
+      "endsAt": null,
+      "timeZone": "Asia/Almaty",
+      "durationMinutes": null,
+      "contentLanguage": "und",
+      "priceFromKzt": 5000,
+      "price": {
+        "kind": "from",
+        "minMinor": 500000,
+        "currency": "KZT",
+        "basis": "unknown"
+      },
+      "status": "scheduled",
+      "availability": "unknown",
+      "bookingUrl": "https://sxodim.com/astana/vecherinki/vecherinka-dizngo-carnival/tickets",
+      "contactUrl": "https://sxodim.com/astana/event/vecherinka-dizngo-carnival",
+      "image": null,
+      "requiredCredit": {
+        "text": "Давай Сходим",
+        "url": "https://sxodim.com/astana/event/vecherinka-dizngo-carnival"
+      },
+      "fetchedAt": "2026-10-20T11:02:28.509Z",
+      "provenance": {
+        "sourceId": "sxodim-astana-noncommercial",
+        "sourceUrl": "https://sxodim.com/astana/event/vecherinka-dizngo-carnival",
+        "parserVersion": "sxodim-jsonld-v1",
+        "scheduleQuality": "observed",
+        "priceQuality": "observed"
+      },
+      "warnings": [
+        "COORDINATES_UNKNOWN",
+        "DURATION_UNKNOWN",
+        "AVAILABILITY_CONFIRM_WITH_ORGANIZER",
+        "CONTENT_LANGUAGE_UNKNOWN",
+        "TICKET_FEES_MAY_APPLY"
+      ]
+    },
+    {
+      "id": "sxodim:77443:2026-11-07T14:00:00.000Z",
+      "name": "Шоу «Комики решают проблемы» в Астане",
+      "cityId": "astana",
+      "category": "Stand up",
+      "venueName": "The Bus",
+      "address": "The Bus, шоссе Коргалжын, 3",
+      "lat": null,
+      "lon": null,
+      "startsAt": "2026-11-07T14:00:00.000Z",
+      "endsAt": null,
+      "timeZone": "Asia/Almaty",
+      "durationMinutes": null,
+      "contentLanguage": "und",
+      "priceFromKzt": 13000,
+      "price": {
+        "kind": "from",
+        "minMinor": 1300000,
+        "currency": "KZT",
+        "basis": "unknown"
+      },
+      "status": "scheduled",
+      "availability": "unknown",
+      "bookingUrl": "https://sxodim.com/astana/stand-up/shou-komiki-reshayut-problemy-v-astane/tickets",
+      "contactUrl": "https://sxodim.com/astana/event/shou-komiki-reshayut-problemy-v-astane",
+      "image": null,
+      "requiredCredit": {
+        "text": "Давай Сходим",
+        "url": "https://sxodim.com/astana/event/shou-komiki-reshayut-problemy-v-astane"
+      },
+      "fetchedAt": "2026-10-20T11:02:28.509Z",
+      "provenance": {
+        "sourceId": "sxodim-astana-noncommercial",
+        "sourceUrl": "https://sxodim.com/astana/event/shou-komiki-reshayut-problemy-v-astane",
+        "parserVersion": "sxodim-jsonld-v1",
+        "scheduleQuality": "observed",
+        "priceQuality": "observed"
+      },
+      "warnings": [
+        "COORDINATES_UNKNOWN",
+        "DURATION_UNKNOWN",
+        "AVAILABILITY_CONFIRM_WITH_ORGANIZER",
+        "CONTENT_LANGUAGE_UNKNOWN",
+        "TICKET_FEES_MAY_APPLY"
+      ]
+    },
+    {
+      "id": "sxodim:77486:2026-12-13T13:00:00.000Z",
+      "name": "Сольный концерт IntroVert в Астане",
+      "cityId": "astana",
+      "category": "Концерты",
+      "venueName": "The Bus Music Pub",
+      "address": "The Bus Music Pub, Коргалжынское шоссе, 3",
+      "lat": null,
+      "lon": null,
+      "startsAt": "2026-12-13T13:00:00.000Z",
+      "endsAt": null,
+      "timeZone": "Asia/Almaty",
+      "durationMinutes": null,
+      "contentLanguage": "und",
+      "priceFromKzt": 6990,
+      "price": {
+        "kind": "from",
+        "minMinor": 699000,
+        "currency": "KZT",
+        "basis": "unknown"
+      },
+      "status": "scheduled",
+      "availability": "unknown",
+      "bookingUrl": "https://sxodim.com/astana/kontserty/solnyy-koncert-introvert-v-astane/tickets",
+      "contactUrl": "https://sxodim.com/astana/event/solnyy-koncert-introvert-v-astane",
+      "image": null,
+      "requiredCredit": {
+        "text": "Давай Сходим",
+        "url": "https://sxodim.com/astana/event/solnyy-koncert-introvert-v-astane"
+      },
+      "fetchedAt": "2026-10-20T11:02:28.509Z",
+      "provenance": {
+        "sourceId": "sxodim-astana-noncommercial",
+        "sourceUrl": "https://sxodim.com/astana/event/solnyy-koncert-introvert-v-astane",
+        "parserVersion": "sxodim-jsonld-v1",
+        "scheduleQuality": "observed",
+        "priceQuality": "observed"
+      },
+      "warnings": [
+        "COORDINATES_UNKNOWN",
+        "DURATION_UNKNOWN",
+        "AVAILABILITY_CONFIRM_WITH_ORGANIZER",
+        "CONTENT_LANGUAGE_UNKNOWN",
+        "TICKET_FEES_MAY_APPLY"
+      ]
+    }
+  ],
+  "coverage": {
+    "indexCandidates": 25,
+    "detailPagesRequested": 8,
+    "importedOccurrences": 7,
+    "rejected": 1,
+    "scope": "First eight explicitly timed public listings; not a complete city calendar. No photographs copied."
+  }
+}

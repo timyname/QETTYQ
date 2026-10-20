@@ -1,128 +1,180 @@
 import { expect, type Page, test } from "@playwright/test";
 
-type Reaction = "Интересно" | "Не сейчас";
+// Provider failures are deterministic here; real-source smoke is recorded separately.
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/events', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [], dataMode: 'unavailable', freshness: 'unavailable', fetchedAt: null }) }));
+});
 
-async function openDiscovery(
-  page: Page,
-  options: { goal?: string; minutes?: number; budget?: number } = {},
-) {
+async function openSwipes(page: Page) {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /2 минуты на выбор/ })).toBeVisible();
-
-  await page.getByRole("button", { name: options.goal ?? "Попробовать новое" }).click();
-  await expect(page.getByRole("heading", { name: /Сколько времени/ })).toBeVisible();
-
-  if (options.minutes !== undefined) {
-    await page.locator('input[type="range"]').fill(String(options.minutes));
-  }
-  if (options.budget !== undefined) {
-    await page.getByLabel("Бюджет на человека").fill(String(options.budget));
-  }
-
-  await page.getByRole("button", { name: /Перейти к 15 свайпам/ }).click();
+  await expect(page.getByRole("heading", { name: /Город ближе/ })).toBeVisible();
+  await page.getByRole("button", { name: "Выбрать свой вайб" }).click();
   await expect(page.getByText("1/15", { exact: true })).toBeVisible();
 }
 
-async function reactFifteenTimes(page: Page, reactions: Reaction[]) {
-  expect(reactions).toHaveLength(15);
-  for (let index = 0; index < reactions.length; index += 1) {
+async function finishSwipes(page: Page) {
+  for (let index = 0; index < 15; index++) {
     await expect(page.getByText(`${index + 1}/15`, { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: reactions[index], exact: true }).click();
+    await page.getByTestId("swipe-card").press(index % 3 === 0 ? "ArrowRight" : "ArrowLeft");
   }
+  await expect(page.getByRole("heading", { name: /Сколько времени/ })).toBeVisible();
 }
 
-test("основной путь: цель → ограничения → 15 реакций → результаты со snapshot-источниками", async ({ page }) => {
-  await openDiscovery(page, { minutes: 120, budget: 5_000 });
+async function skipToConditions(page: Page) {
+  await openSwipes(page);
+  await page.getByRole("button", { name: "Пропустить подбор интересов", exact: true }).click();
+  await page.getByRole("button", { name: "К условиям подборки", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /Сколько времени/ })).toBeVisible();
+}
 
-  const recommendationRequest = page.waitForRequest((request) =>
-    request.url().endsWith("/api/recommendations") && request.method() === "POST",
-  );
-  await reactFifteenTimes(page, Array.from({ length: 15 }, (_, index) => (index % 3 === 0 ? "Интересно" : "Не сейчас") as Reaction));
+test("основной путь: 15 реакций → условия → реальные карточки → детали → план и навигация", async ({ page }) => {
+  await openSwipes(page);
+  await finishSwipes(page);
+  await page.getByLabel("Свободное время", { exact: true }).fill("120");
+  await page.getByLabel("Бюджет на человека, ₸", { exact: true }).fill("5000");
+  await page.getByLabel("Как провести время", { exact: true }).selectOption("activity");
+  const requestPromise = page.waitForRequest(request => request.url().endsWith("/api/chat") && request.method() === "POST");
+  await page.getByRole("button", { name: "Показать подборку" }).click();
+  expect((await requestPromise).postDataJSON().context).toMatchObject({ goal: "activity", minutes: 120, budget: 5000, origin: null });
+  await expect(page.getByRole("heading", { name: "Для тебя", exact: true })).toBeVisible();
+  await expect(page.getByText("События ближайших дат — в афише. Места под твои условия — ниже.")).toBeVisible();
 
-  const request = await recommendationRequest;
-  expect(request.postDataJSON()).toMatchObject({
-    goal: "new",
-    minutes: 120,
-    budget: 5_000,
-  });
-
-  await expect(page.getByRole("heading", { name: "Для тебя" })).toBeVisible();
-
-  const hero = page.locator(".feed-hero");
-  await expect(hero).toBeVisible();
-  await expect(hero.getByText("Иллюстрация категории", { exact: true })).toBeVisible();
-  await expect(hero.getByRole("link", { name: /Источник: OpenStreetMap contributors/ })).toHaveAttribute(
-    "href",
-    /^https:\/\/www\.openstreetmap\.org\//,
-  );
-  await expect(hero.getByRole("button", { name: "Подробнее" })).toBeVisible();
-  const save = hero.getByRole("button", { name: "Сохранить" });
-  await save.click();
-  await expect(hero.getByRole("button", { name: "Убрать из сохранённых" })).toHaveAttribute("aria-pressed", "true");
+  const first = page.getByRole("article").first();
+  await expect(first).toBeVisible();
+  await expect(first.getByText("Иллюстрация категории, не фото места", { exact: true })).toBeVisible();
+  await first.getByRole("button", { name: "Сохранить", exact: true }).click();
+  await expect(first.getByRole("button", { name: "Убрать из сохранённых" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("link", { name: /OpenStreetMap contributors/ })).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
+  await first.getByRole("button", { name: "Подробнее", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Перед тем как идти" })).toBeVisible();
+  await expect(page.getByText(/Расписание, язык и наличие мест не подтверждены/)).toBeVisible();
+  await page.getByRole("button", { name: "Оценить путь", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /Твой путь/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Нужна точка старта" })).toBeVisible();
+  await expect(page.getByText("Оставшееся свободное время неизвестно.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Google Maps ↗" }).first()).toHaveAttribute("href", /destination=51\./);
+  await expect(page.getByRole("link", { name: "2ГИС ↗", exact: true }).first()).toHaveAttribute("href", /^dgis:\/\/2gis.ru\/routeSearch\/rsType\/pedestrian\/to\//);
+  await expect(page.getByRole("link", { name: "2ГИС в браузере ↗", exact: true }).first()).toHaveAttribute("href", /^https:\/\/2gis.kz\/astana\/search\//);
+  await page.getByRole("button", { name: "QETTYQ — на главную" }).click();
 
   const dock = page.getByRole("navigation", { name: "Основная навигация" });
   await expect(dock.getByRole("button")).toHaveCount(4);
-  await expect(dock.getByRole("button", { name: "Для тебя" })).toHaveAttribute("aria-current", "page");
-  await dock.getByRole("button", { name: "Поиск" }).click();
+  await expect(dock.getByRole("button", { name: "Для тебя", exact: true })).toHaveAttribute("aria-current", "page");
+  await dock.getByRole("button", { name: "Поиск", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Что ищем?" })).toBeVisible();
-  await expect(dock.getByRole("button", { name: "Поиск" })).toHaveAttribute("aria-current", "page");
+  await expect(dock.getByRole("button", { name: "Поиск", exact: true })).toHaveAttribute("aria-current", "page");
+  await dock.getByRole("button", { name: "Карта", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Город на карте" })).toBeVisible();
+  await expect(page.locator(".city-map")).toHaveClass(/leaflet-container/);
+  await dock.getByRole("button", { name: "Профиль", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Твой QETTYQ" })).toBeVisible();
+  await page.getByRole("button", { name: "QETTYQ — на главную" }).click();
+  await expect(page.getByRole("heading", { name: "Для тебя", exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('article')).toHaveCount(3);
+  await expect(page.getByRole('navigation').getByRole('button', { name: 'Для тебя', exact: true })).toHaveAttribute('aria-current', 'page');
 });
 
-test("жёсткое ограничение времени даёт честную пустую выдачу без автоматического ослабления", async ({ page }) => {
-  await openDiscovery(page, { goal: "Погулять", minutes: 30, budget: 0 });
-  await reactFifteenTimes(page, Array.from({ length: 15 }, () => "Не сейчас" as Reaction));
-
+test("строгий нулевой бюджет: честная пустая выдача, ограничения не ослабляются", async ({ page }) => {
+  await skipToConditions(page);
+  await page.getByLabel("Как провести время").selectOption("walk");
+  await page.getByLabel("Свободное время", { exact: true }).fill("30");
+  await page.getByLabel("Бюджет на человека, ₸", { exact: true }).fill("0");
+  await expect(page.getByRole("checkbox", { name: "Не предлагать варианты с неизвестной ценой" })).toBeChecked();
+  await page.getByRole("button", { name: "Показать подборку" }).click();
   await expect(page.getByRole("heading", { name: "По этим условиям вариантов не нашли" })).toBeVisible();
   await expect(page.getByText(/Ограничения не были ослаблены автоматически/)).toBeVisible();
-  await expect(page.locator(".empty").getByRole("button", { name: "Изменить условия" })).toBeVisible();
-  await expect(page.locator(".feed-hero")).toHaveCount(0);
+  await expect(page.getByRole("article")).toHaveCount(0);
+  await page.getByRole("button", { name: "Изменить условия", exact: true }).last().click();
+  await expect(page.getByLabel("Бюджет на человека, ₸", { exact: true })).toHaveValue("0");
 });
 
-test("отказ recommendation API остаётся явной ошибкой и не маскируется результатами", async ({ page }) => {
-  await page.route("**/api/recommendations", async (route) => {
-    await route.fulfill({
-      status: 503,
-      contentType: "application/json",
-      body: JSON.stringify({ code: "PROVIDER_UNAVAILABLE" }),
-    });
-  });
-
-  await openDiscovery(page);
-  await reactFifteenTimes(page, Array.from({ length: 15 }, (_, index) => (index === 14 ? "Интересно" : "Не сейчас") as Reaction));
-
-  await expect(page.getByText("Не удалось получить варианты", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Для тебя" })).toHaveCount(0);
-  await expect(page.getByText("15/15", { exact: true })).toBeVisible();
+test("отказ chat API 503 не маскируется выдачей, условия и повтор доступны", async ({ page }) => {
+  await page.route("**/api/chat", route => route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: { code: "PROVIDER_UNAVAILABLE" } }) }));
+  await skipToConditions(page);
+  await page.getByRole("button", { name: "Показать подборку" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Сервис не ответил. Попробуйте ещё раз." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Сколько времени/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Для тебя", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Показать подборку" })).toBeEnabled();
 });
 
-test("mobile viewport и reduced motion: управление доступно кнопками без горизонтального overflow", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByRole("button", { name: "Попробовать новое" })).toBeVisible();
+test("drag: переход через порог не выбирает до отпускания; возврат отменяет, undo возвращает", async ({ page }) => {
+  await openSwipes(page);
+  const box = await page.getByTestId("swipe-card").boundingBox();
+  expect(box).not.toBeNull();
+  const start = { x: box!.x + 110, y: box!.y + 300 };
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x + 140, start.y, { steps: 10 });
+  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
+  await page.mouse.move(start.x + 12, start.y, { steps: 10 });
+  await page.mouse.up();
+  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Отменить выбор" })).toBeDisabled();
+  // A fresh gesture releases beyond 104px (the 390px viewport threshold is 93.6px).
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x + 110, start.y, { steps: 10 });
+  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
+  await page.mouse.up();
+  await expect(page.getByText("2/15", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Отменить выбор" }).click();
+  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("swipe-card")).toHaveAccessibleName(/Культура и история, 1 из 15/);
+});
 
-  await page.getByRole("button", { name: "Настройки" }).click();
-  const settings = page.getByRole("dialog", { name: "Настройки" });
-  await expect(settings).toBeVisible();
-  await expect(settings.getByRole("button", { name: "RU" })).toHaveAttribute("aria-pressed", "true");
-  await settings.getByRole("button", { name: "Закрыть" }).click();
-  await expect(settings).toBeHidden();
+test("mobile и reduced motion: полноширинная карточка, доступная клавиатура, нет overflow", async ({ page }) => {
+  await openSwipes(page);
+  expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
+  for (const width of [360, 390, 430]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect.poll(async () => {
+      const bounds = await page.getByTestId("swipe-card").boundingBox();
+      return Math.round(bounds?.width ?? 0);
+    }).toBe(width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
+  }
+  const accessibleLike = page.getByRole("button", { name: "Интересно", exact: true });
+  await accessibleLike.focus();
+  await expect(accessibleLike).toBeVisible();
+  await accessibleLike.press("Enter");
+  await expect(page.getByText("2/15", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Отменить выбор" }).click();
+  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Пропустить подбор интересов", exact: true }).click();
+  await expect(page.getByRole("button", { name: "К условиям подборки", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "К условиям подборки", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Показать подборку" })).toBeVisible();
+  const maximumTransitionMs = await page.getByRole("button", { name: "Показать подборку" }).evaluate(element => Math.max(...getComputedStyle(element).transitionDuration.split(",").map(part => Number.parseFloat(part) * (part.trim().endsWith("ms") ? 1 : 1000))));
+  expect(maximumTransitionMs).toBeLessThanOrEqual(1);
+});
 
-  const reducedMotion = await page.locator(".quick-intents button").first().evaluate((element) => {
-    const duration = getComputedStyle(element).transitionDuration
-      .split(",")
-      .map((part) => Number.parseFloat(part) * (part.includes("ms") ? 1 : 1_000));
-    return Math.max(...duration);
-  });
-  expect(reducedMotion).toBeLessThanOrEqual(1);
-
-  const hasHorizontalOverflow = await page.evaluate(
-    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-  );
-  expect(hasHorizontalOverflow).toBe(false);
-
-  await page.getByRole("button", { name: "Попробовать новое" }).click();
-  await page.getByRole("button", { name: /Перейти к 15 свайпам/ }).scrollIntoViewIfNeeded();
-  await expect(page.getByRole("button", { name: /Перейти к 15 свайпам/ })).toBeVisible();
-  await page.getByRole("button", { name: /Перейти к 15 свайпам/ }).click();
-  await expect(page.getByRole("button", { name: "Не сейчас" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Интересно" })).toBeVisible();
+test('организатор: локальный черновик проходит форму и не отправляется на публикацию', async ({ page }) => {
+  const mutations: string[] = [];
+  page.on('request', request => { if (/organizer|moderation|publish/.test(request.url()) && request.method() === 'POST') mutations.push(request.url()); });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'QETTYQ — на главную' }).click();
+  await page.getByRole('navigation').getByRole('button', { name: 'Профиль', exact: true }).click();
+  await page.getByRole('button', { name: 'Моё событие', exact: true }).click();
+  await page.getByRole('button', { name: 'Создать событие', exact: true }).click();
+  await page.getByLabel(/Название события/).fill('Тестовый черновик — не публиковать');
+  await page.getByLabel('Категория', { exact: true }).selectOption('community');
+  await page.getByLabel('Организатор', { exact: true }).fill('Synthetic test');
+  await page.getByRole('button', { name: 'Дальше', exact: true }).click();
+  await page.getByLabel('Дата', { exact: true }).fill(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
+  await page.getByLabel('Начало', { exact: true }).fill('18:00');
+  await page.getByLabel('Или длительность', { exact: true }).fill('60');
+  await page.getByLabel('Место проведения', { exact: true }).fill('Тестовая площадка — не публиковать');
+  await page.getByRole('button', { name: 'Дальше', exact: true }).click();
+  await page.getByRole('button', { name: 'Бесплатно', exact: true }).click();
+  await page.getByRole('button', { name: 'Русский', exact: true }).click();
+  await page.getByLabel('Ссылка', { exact: true }).fill('https://example.com');
+  await page.getByRole('button', { name: 'Дальше', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Проверьте перед сохранением' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Отправить на проверку', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Сохранить черновик', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Мои события', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('qettyq.organizer.v2') ?? 'null').title)).toBe('Тестовый черновик — не публиковать');
+  expect(mutations).toEqual([]);
 });

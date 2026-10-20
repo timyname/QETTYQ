@@ -1,0 +1,60 @@
+import { describe, expect, it } from "vitest";
+import { clusterMapPoints, clusterMarkerSize, createClusterLabel, createMapTooltip } from "../../src/components/CityMap";
+
+describe("CityMap tooltip DOM", () => {
+  it("keeps untrusted title and date as text rather than HTML", () => {
+    type TestNode = { tag: string; textContent: string | null; children: TestNode[]; append: (...nodes: TestNode[]) => void };
+    const created: TestNode[] = [];
+    const document = { createElement(tag: string) {
+      const node: TestNode = { tag, textContent: null, children: [], append(...nodes) { this.children.push(...nodes); } };
+      created.push(node);
+      return node;
+    } } as unknown as Document;
+    const title = '<img src=x onerror="alert(1)">';
+    const dateLabel = "<script>untrusted()</script>";
+    const tooltip = createMapTooltip({ title, dateLabel }, document) as unknown as TestNode;
+    expect(created.map((node) => node.tag)).toEqual(["div", "strong", "span", "br"]);
+    expect(tooltip.children[0].textContent).toBe(title);
+    expect(tooltip.children[2].textContent).toBe(dateLabel);
+    expect(created.some((node) => "innerHTML" in node)).toBe(false);
+  });
+});
+
+describe("CityMap screen-space clusters", () => {
+  const point = (id: string, x: number, y: number) => ({ id, lat: y, lon: x, title: id, dateLabel: "Уточните расписание", category: "cafe" });
+  const project = (value: { lat: number; lon: number }) => ({ x: value.lon, y: value.lat });
+  const viewport = { width: 390, height: 400 };
+
+  it("merges nearby points even across a 52px cell boundary and excludes offscreen points", () => {
+    const result = clusterMapPoints([point("a", 49, 20), point("b", 53, 20), point("far", 220, 220), point("outside", 500, 200), point("invalid", Number.NaN, 20)], project, viewport);
+    expect(result).toHaveLength(2);
+    expect(result[0].points.map(value => value.id)).toEqual(["a", "b"]);
+    expect(result[0].x).toBe(51);
+    expect(result[1].points.map(value => value.id)).toEqual(["far"]);
+  });
+
+  it("always keeps the active visible point as an individual marker", () => {
+    const result = clusterMapPoints([point("active", 50, 50), point("b", 51, 51), point("c", 52, 52)], project, viewport, "active");
+    expect(result).toHaveLength(2);
+    expect(result.find(group => group.points.some(value => value.id === "active"))?.points).toHaveLength(1);
+    expect(result.find(group => group.points.length === 2)?.points.map(value => value.id)).toEqual(["b", "c"]);
+  });
+
+  it("recalculates grouping from projected pixels when zoom changes", () => {
+    const points = [point("a", 10, 10), point("b", 30, 10)];
+    expect(clusterMapPoints(points, project, viewport)).toHaveLength(1);
+    expect(clusterMapPoints(points, value => ({ x: value.lon * 4, y: value.lat * 4 }), viewport)).toHaveLength(2);
+  });
+
+  it("builds a bounded count circle with DOM text, not generated HTML", () => {
+    const node = { style: {}, className: "", textContent: null as string | null };
+    const document = { createElement(tag: string) { expect(tag).toBe("span"); return node; } } as unknown as Document;
+    createClusterLabel(17, document);
+    expect(node.textContent).toBe("17");
+    expect(node.className).toBe("qettyq-map-cluster");
+    expect(node.style).toMatchObject({ width: "42px", height: "42px", borderRadius: "50%" });
+    expect(node).not.toHaveProperty("innerHTML");
+    expect(clusterMarkerSize(1)).toBe(34);
+    expect(clusterMarkerSize(1_000_000)).toBe(46);
+  });
+});

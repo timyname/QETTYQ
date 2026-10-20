@@ -32,7 +32,7 @@ describe("browser-local memory", () => {
       exactLocation: { lat: 51.1, lon: 71.4 },
       dialogue: [],
     }));
-    expect(memory.profile).toEqual({ locale: "kk", goal: "walk", minutes: 360, budget: 0, likedTags: ["park"] });
+    expect(memory.profile).toEqual({ locale: "kk", goal: "walk", minutes: 720, budget: 0, likedTags: ["park"] });
     expect(memory).not.toHaveProperty("exactLocation");
   });
 
@@ -46,5 +46,14 @@ describe("browser-local memory", () => {
     expect(loadLocalMemory(storage).dialogue).toHaveLength(MAX_CHAT_MESSAGES);
     clearLocalMemory(storage);
     expect(storage.getItem(LOCAL_MEMORY_KEY)).toBeNull();
+  });
+
+  it('preserves strict and unknown budget preferences without storing GPS', () => {
+    const storage = new MemoryStorage();
+    const memory = createDefaultLocalMemory();
+    memory.profile = { ...memory.profile, minutes: 720, strictBudget: true, budgetUnknown: true };
+    saveLocalMemory(storage, memory);
+    expect(loadLocalMemory(storage).profile).toMatchObject({ minutes: 720, strictBudget: true, budgetUnknown: true });
+    expect(storage.getItem(LOCAL_MEMORY_KEY)).not.toContain('origin');
   });
 });

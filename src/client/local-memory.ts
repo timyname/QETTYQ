@@ -22,6 +22,8 @@ export type LocalPreferenceProfile = {
   minutes: number;
   budget: number;
   likedTags: string[];
+  strictBudget?: boolean;
+  budgetUnknown?: boolean;
 };
 
 export type LocalMemory = {
@@ -108,9 +110,11 @@ export function parseLocalMemory(raw: string | null, now = new Date()): LocalMem
       profile: {
         locale: typeof profile.locale === "string" && locales.has(profile.locale as Locale) ? profile.locale as Locale : fallback.profile.locale,
         goal: typeof profile.goal === "string" && goals.has(profile.goal as Goal) ? profile.goal as Goal : fallback.profile.goal,
-        minutes: clampInteger(profile.minutes, fallback.profile.minutes, 30, 360),
+        minutes: clampInteger(profile.minutes, fallback.profile.minutes, 20, 720),
         budget: clampInteger(profile.budget, fallback.profile.budget, 0, 1_000_000),
         likedTags: safeTags(profile.likedTags),
+        ...(typeof profile.strictBudget === 'boolean' ? { strictBudget: profile.strictBudget } : {}),
+        ...(typeof profile.budgetUnknown === 'boolean' ? { budgetUnknown: profile.budgetUnknown } : {}),
       },
       dialogue,
     };

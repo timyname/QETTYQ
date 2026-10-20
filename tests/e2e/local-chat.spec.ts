@@ -1,26 +1,47 @@
 import { expect, test } from "@playwright/test";
 
-test("локальный чат извлекает контекст, переживает reload и удаляется без provider request", async ({ page }) => {
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/events', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [], dataMode: 'unavailable', freshness: 'unavailable', fetchedAt: null }) }));
+});
+
+test("чат предлагает контекст, хранит диалог после reload и удаляет только после подтверждения", async ({ page }) => {
   const providerRequests: string[] = [];
-  page.on("request", (request) => {
-    if (/openai|anthropic|gemini|chat\/completions|\/responses/i.test(request.url())) providerRequests.push(request.url());
+  page.on("request", request => {
+    if (/api\.openai|anthropic|generativelanguage|chat\/completions|\/responses/i.test(request.url())) providerRequests.push(request.url());
   });
-
   await page.goto("/");
-  const input = page.getByLabel("Сообщение помощнику");
-  await input.fill("Хочу погулять 90 минут до 3 000 ₸");
-  await page.getByRole("button", { name: "Отправить" }).click();
-
-  await expect(page.getByText(/Понял контекст: погулять, 90 мин, до 3.000 ₸/)).toBeVisible();
-  await expect(page.getByText(/90 мин · до 3.000 ₸/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Выбрать свой вайб" })).toBeEnabled();
+  await page.getByRole("button", { name: "QETTYQ — на главную" }).click();
+  await page.getByRole("navigation", { name: "Основная навигация" }).getByRole("button", { name: "Поиск", exact: true }).click();
+  const message = "Хочу погулять 90 минут до 3 000 ₸";
+  await page.getByLabel("Сообщение помощнику").fill(message);
+  await page.getByRole("button", { name: "Отправить сообщение" }).click();
+  await expect(page.getByText(message, { exact: true })).toBeVisible();
+  await expect(page.getByText(/Из запроса: 90 мин · 3.000 ₸. Применить эти условия/)).toBeVisible();
+  await page.getByRole("button", { name: "Применить условия" }).click();
+  await expect(page.getByRole("status")).toContainText("Условия обновлены.");
   expect(providerRequests).toEqual([]);
 
   await page.reload();
-  await expect(page.getByText("Хочу погулять 90 минут до 3 000 ₸", { exact: true })).toBeVisible();
-  await expect(page.getByText(/Понял контекст: погулять, 90 мин, до 3.000 ₸/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Выбрать свой вайб" })).toBeEnabled();
+  await page.getByRole("button", { name: "QETTYQ — на главную" }).click();
+  await page.getByRole("navigation", { name: "Основная навигация" }).getByRole("button", { name: "Поиск", exact: true }).click();
+  await expect(page.getByText(message, { exact: true })).toBeVisible();
+  await expect(page.getByText("QETTYQ · поиск по каталогу", { exact: true })).toBeVisible();
+  const restored = await page.evaluate(() => JSON.parse(localStorage.getItem("qettyq.local-memory.v1") ?? "null"));
+  expect(restored.profile).toMatchObject({ goal: "walk", minutes: 90, budget: 3000 });
+  expect(restored).not.toHaveProperty("origin");
+  expect(restored.profile).not.toHaveProperty("origin");
 
-  await page.getByRole("button", { name: /Очистить память/ }).click();
-  await expect(page.getByText(/Опишите план своими словами/)).toBeVisible();
-  const persisted = await page.evaluate(() => window.localStorage.getItem("qettyq.local-memory.v1"));
-  expect(persisted).toBeNull();
+  await page.getByRole("button", { name: "Настройки", exact: true }).click();
+  await page.getByRole("button", { name: "Удалить мои данные", exact: true }).click();
+  const confirmation = page.getByRole("dialog", { name: "Удалить память QETTYQ?" });
+  await expect(confirmation).toBeVisible();
+  await confirmation.getByRole("button", { name: "Оставить данные" }).click();
+  expect(await page.evaluate(() => localStorage.getItem("qettyq.local-memory.v1"))).toContain(message);
+  await page.getByRole("button", { name: "Удалить мои данные", exact: true }).click();
+  await confirmation.getByRole("button", { name: "Да, удалить данные" }).click();
+  await expect(page.getByRole("heading", { name: /Город ближе/ })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("qettyq.local-memory.v1"))).toBeNull();
+  expect(providerRequests).toEqual([]);
 });

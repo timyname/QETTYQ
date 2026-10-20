@@ -1,4 +1,6 @@
 import type { ReactionInput } from "./schemas";
+import type { PilotContext } from "../pilot/contracts";
+import type { StoredPlan } from "../pilot/plans";
 
 export const SESSION_TTL_SECONDS = 24 * 60 * 60;
 const MAX_SESSIONS = 10_000;
@@ -31,6 +33,9 @@ export type SessionRecord = {
   profile: PreferenceProfile;
   idempotency: Map<string, StoredResult>;
   retiredIdempotencyKeys: Set<string>;
+  context: PilotContext | null;
+  plans: StoredPlan[];
+  chatRequestTimes: number[];
 };
 
 export type ReactionMutationResult = {
@@ -150,6 +155,9 @@ export function createSession(now = Date.now()): SessionRecord {
     profile: { weights: {}, version: 0 },
     idempotency: new Map(),
     retiredIdempotencyKeys: new Set(),
+    context: null,
+    plans: [],
+    chatRequestTimes: [],
   };
   state.sessions.set(id, session);
   return session;
@@ -162,6 +170,10 @@ export function getSession(id: string, now = Date.now()): SessionRecord | null {
     state.sessions.delete(id);
     return null;
   }
+  // Keep existing development sessions readable across a hot reload that adds pilot fields.
+  session.context ??= null;
+  session.plans ??= [];
+  session.chatRequestTimes ??= [];
   session.lastSeenAt = nowIso(now);
   return session;
 }
@@ -263,10 +275,13 @@ export function deleteSessionData(session: SessionRecord) {
   const removed = {
     reactions: session.reactions.length,
     preferenceTags: Object.keys(session.profile.weights).length,
-    plans: 0,
+    plans: session.plans.length,
   };
   session.reactions = [];
   session.profile = { weights: {}, version: 0 };
+  session.context = null;
+  session.plans = [];
+  session.chatRequestTimes = [];
   session.nextSequence = 1;
   for (const key of session.idempotency.keys()) session.retiredIdempotencyKeys.add(key);
   session.idempotency.clear();

@@ -1,24 +1,21 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
 import places from "../../../../data/places.json";
 import { recommend } from "@/domain/recommend";
 import type { Place } from "@/domain/types";
 import { createLLMProvider, DeterministicProvider } from "@/server/providers/llm";
-
-const schema = z.object({
-  goal: z.enum(["food", "walk", "activity", "new"]),
-  minutes: z.number().int().min(20).max(360),
-  budget: z.number().int().min(0).max(1_000_000).nullable(),
-  origin: z.object({ lat: z.number().min(-90).max(90), lon: z.number().min(-180).max(180) }),
-  likedTags: z.array(z.string()).max(30).default([]),
-});
+import { pilotContextSchema } from "@/server/pilot/contracts";
+import { apiError, blockCrossSiteMutation, jsonResponse, readJson } from "@/server/session/http";
 
 export async function POST(request: Request) {
-  const parsed = schema.safeParse(await request.json().catch(() => null));
+  const blocked = blockCrossSiteMutation(request);
+  if (blocked) return blocked;
+  const body = await readJson(request);
+  if (!body.ok) return body.response;
+  const parsed = pilotContextSchema.safeParse(body.value);
   if (!parsed.success) {
-    return NextResponse.json({ code: "VALIDATION_ERROR", issues: parsed.error.issues }, { status: 400 });
+    return apiError("VALIDATION_ERROR", 400, parsed.error.issues);
   }
-  const items = recommend(places as Place[], parsed.data);
+  if (!parsed.data.origin) return apiError("VALIDATION_ERROR", 400, [{ message: "Для расчёта пути нужна выбранная точка старта." }]);
+  const items = recommend(places as Place[], { ...parsed.data, origin: parsed.data.origin });
   const selected = items.slice(0, 3);
   const provider = createLLMProvider();
   let explanations;
@@ -29,7 +26,7 @@ export async function POST(request: Request) {
     explanations.warning = "AI-провайдер недоступен — использован детерминированный fallback.";
   }
   const explanationById = new Map(explanations.items.map((item) => [item.candidateId, item]));
-  return NextResponse.json({
+  return jsonResponse({
     requestId: crypto.randomUUID(),
     dataMode: "snapshot",
     generationMode: explanations.mode,

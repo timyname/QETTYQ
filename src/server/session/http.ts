@@ -129,7 +129,13 @@ export function blockCrossSiteMutation(request: Request): Response | null {
   const origin = request.headers.get("origin");
   if (!origin) return null;
   try {
-    if (new URL(origin).origin !== new URL(request.url).origin) {
+    const requestUrl = new URL(request.url);
+    const host = request.headers.get("host");
+    // Next may normalize Request.url to localhost while the browser connected to
+    // 127.0.0.1. Trust only the actual HTTP Host authority, never forwarded hosts.
+    if (host && /[\s\\/@?#]/u.test(host)) return apiError("CROSS_SITE_REQUEST_BLOCKED", 403);
+    const expectedOrigin = host ? new URL(`${requestUrl.protocol}//${host}`).origin : requestUrl.origin;
+    if (new URL(origin).origin !== expectedOrigin) {
       return apiError("CROSS_SITE_REQUEST_BLOCKED", 403);
     }
   } catch {

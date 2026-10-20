@@ -1,0 +1,18 @@
+{
+  "id": "synthetic-owned-test-only",
+  "name": "Synthetic fixture owner, not a partner",
+  "status": "approved_for_scope",
+  "evidenceUrl": "https://organizer.example/synthetic-fixture-license",
+  "allowedUrls": ["https://organizer.example/events/test"],
+  "allowFetch": false,
+  "allowPersist": true,
+  "allowDisplay": true,
+  "allowDescription": false,
+  "allowMediaDisplay": false,
+  "allowMediaDownload": false,
+  "mediaLicense": null,
+  "requiredCredit": null,
+  "robotsReviewedAt": null,
+  "minimumRefreshMinutes": 60,
+  "maxAgeMinutes": 1440
+}

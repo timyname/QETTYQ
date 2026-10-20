@@ -1,0 +1,319 @@
+'use client';
+
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
+import { ArrowLeft, ArrowRight, Bookmark, ChevronLeft, ChevronRight, Clock3, Heart, House, Map as MapIcon, MapPin, Plus, Search, Send, Settings, Share2, Sparkles, Undo2, UserRound, X } from 'lucide-react';
+import { appendLocalMessage, clearLocalMemory, createDefaultLocalMemory, loadLocalMemory, saveLocalMemory, type LocalMemory } from '@/client/local-memory';
+import { reactionOpacity, swipeChoice, type SwipeChoice } from '@/client/swipe';
+import type { PilotContext } from '@/server/pilot/contracts';
+import { OrganizerFlow, type OrganizerDraft, type OrganizerScreen } from './screens/OrganizerFlow';
+import { EventDetail, EventPreview, LiveEvents, type LiveFeed } from './LiveEvents';
+import type { LiveAstanaEvent } from '@/server/ingestion/sxodim-live';
+import s from './PilotApp.module.css';
+
+const CityMap = dynamic(() => import('./CityMap').then(module => module.CityMap), { ssr: false, loading: () => <p>Загружаем карту…</p> });
+type Screen = 'welcome' | 'swipe' | 'conditions' | 'feed' | 'chat' | 'map' | 'detail' | 'event' | 'plan' | 'profile' | 'saved' | 'settings' | 'organizer';
+type Point = { lat: number; lon: number };
+type Card = { id: string; name: string; category: string; lat: number; lon: number; address: string | null; tags: string[]; price: { min: number; max: number } | null; durationMinutes: number; reason?: string; distanceKm?: number | null; travelMinutes?: number | null };
+type Plan = { id: string; stops: Card[]; totalMinutes: number | null; travelMinutes: number | null; visitMinutes: number; remainingMinutes: number | null; distanceKm: number | null; budget: { min: number | null; max: number | null }; warnings: string[]; feasibility: string };
+const INTERESTS = [
+  ['Культура и история', '01-culture-history.jpg', ['culture', 'museum']],
+  ['Живая музыка', '02-rock-live-music.jpg', ['rock', 'live_music']],
+  ['Театр и балет', '03-ballet-theatre.jpg', ['theatre', 'ballet']],
+  ['Танцы и новые знакомства', '04-bachata-social-dance.jpg', ['dance', 'bachata']],
+  ['Музыка своими руками', '05-drums-hand-music.jpg', ['drums', 'workshop']],
+  ['Спорт и характер', '06-armwrestling-strength.jpg', ['sport', 'armwrestling']],
+  ['Активный отдых', '07-active-leisure.jpg', ['sport', 'active']],
+  ['Баня и загородный отдых', '08-banya-country-retreat.jpg', ['sauna', 'country']],
+  ['Шашлык с друзьями', '09-shashlik-friends.jpg', ['shashlik', 'friends']],
+  ['Новый вкус', '10-fine-dining.jpg', ['restaurant', 'food']],
+  ['Кофе и тихий вечер', '11-coffee-quiet-evening.jpg', ['cafe', 'coffee']],
+  ['Современное искусство', '12-exhibition-contemporary-art.jpg', ['arts_centre', 'culture']],
+  ['Кино на большом экране', '13-cinema.jpg', ['cinema']],
+  ['Сделать что-то своими руками', '14-workshop-creativity.jpg', ['workshop']],
+  ['Прогулки и архитектура', '15-walk-architecture.jpg', ['park', 'garden', 'viewpoint']],
+] as const;
+const initialContext: PilotContext = { cityId: 'astana', goal: 'new', minutes: 120, budget: 5000, origin: null, destination: null, returnToOrigin: false, likedTags: [], partySize: 1, budgetBasis: 'person', strictBudget: false };
+const credit = <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a>;
+const money = (value: number | null) => value === null ? 'Уточните стоимость' : `${value.toLocaleString('ru-RU')} ₸`;
+function illustration(card: Card) {
+  const interest = card.tags.includes('cafe') ? INTERESTS[10] : card.tags.some(t => ['food', 'restaurant', 'fast_food'].includes(t)) ? INTERESTS[9] : card.tags.some(t => ['park', 'garden', 'viewpoint'].includes(t)) ? INTERESTS[14] : card.tags.includes('theatre') ? INTERESTS[2] : INTERESTS[0];
+  return `/assets/ideas/${interest[1]}`;
+}
+async function api<T>(url: string, body?: unknown, method = 'POST'): Promise<T> {
+  const options = { method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined };
+  let response = await fetch(url, options);
+  // Ephemeral Worker sessions may expire between requests. The device retains preferences.
+  if (response.status === 401 && url !== '/api/session') {
+    const session = await fetch('/api/session', { method: 'POST' });
+    if (session.ok) response = await fetch(url, options);
+  }
+  if (!response.ok) throw new Error(response.status === 429 ? 'Слишком много запросов. Попробуйте через минуту.' : 'Сервис не ответил. Попробуйте ещё раз.');
+  return response.json();
+}
+
+function SwipeDeck({ onFinish, onBack, choices, setChoices }: { onFinish: (tags: string[]) => void; onBack: () => void; choices: SwipeChoice[]; setChoices: (choices: SwipeChoice[]) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const [committing, setCommitting] = useState(false);
+  const x = useMotionValue(0);
+  const rotate = useTransform(x, [-430, 0, 430], [-5, 0, 5]);
+  const likeOpacity = useTransform(x, value => reactionOpacity(value, 1));
+  const skipOpacity = useTransform(x, value => reactionOpacity(value, -1));
+  const reduced = useReducedMotion();
+  const width = useRef<HTMLDivElement>(null);
+  const pointerCancelled = useRef(false);
+  const commitLock = useRef(false);
+  const interacted = useRef(false);
+  const hintShown = useRef(false);
+  const index = choices.length;
+  const interest = INTERESTS[Math.min(index, 14)];
+  useEffect(() => {
+    const cancel = () => { pointerCancelled.current = true; x.stop(); x.set(0); };
+    window.addEventListener('blur', cancel);
+    if (reduced || index > 0 || hintShown.current) return () => window.removeEventListener('blur', cancel);
+    let stopped = false;
+    const timer = window.setTimeout(async () => {
+      if (interacted.current || stopped) return;
+      hintShown.current = true;
+      for (const target of [64, 0, -64, 0]) {
+        if (interacted.current || stopped) return;
+        await animate(x, target, { duration: 0.36, ease: 'easeInOut' });
+      }
+    }, 3500);
+    return () => { stopped = true; clearTimeout(timer); window.removeEventListener('blur', cancel); };
+  }, [index, reduced, x]);
+  function finish(next: SwipeChoice[]) {
+    const tags = [...new Set(next.flatMap((choice, i) => choice === 'like' ? [...INTERESTS[i][2]] : []))];
+    onFinish(tags);
+  }
+  async function commit(choice: SwipeChoice) {
+    if (commitLock.current || choices.length >= 15) return;
+    commitLock.current = true;
+    interacted.current = true;
+    setCommitting(true);
+    await animate(x, choice === 'like' ? 550 : -550, { duration: reduced ? 0 : 0.18 });
+    const next = [...choices, choice];
+    x.set(0);
+    setChoices(next);
+    setCommitting(false);
+    commitLock.current = false;
+    setExpanded(false);
+    if (next.length === 15) finish(next);
+  }
+  return <section className={s.swipe} aria-label="Выбор интересов" ref={width} onPointerDownCapture={() => { if (!interacted.current) { x.stop(); x.set(0); } interacted.current = true; }}>
+    {index < 14 && <div className={s.swipeNext} aria-hidden="true"><Image src={`/assets/ideas/${INTERESTS[index + 1][1]}`} fill sizes="430px" alt="" /></div>}
+    <motion.div className={s.swipePhoto} key={index} style={{ x, rotate }} drag={committing || index >= 15 ? false : 'x'} dragMomentum={false} dragElastic={0.5}
+      onPointerDown={() => { pointerCancelled.current = false; }}
+      onPointerCancel={() => { pointerCancelled.current = true; x.stop(); x.set(0); }}
+      onDragEnd={(_, info) => { const choice = pointerCancelled.current ? null : swipeChoice(info.offset.x, width.current?.clientWidth ?? 430); if (choice) void commit(choice); else void animate(x, 0, { duration: reduced ? 0 : 0.2 }); }}
+      data-testid="swipe-card" tabIndex={0} role="group" aria-label={`${interest[0]}, ${Math.min(index + 1, 15)} из 15. Стрелка вправо — интересно, влево — не сейчас.`}
+      onKeyDown={event => { if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); void commit(event.key === 'ArrowRight' ? 'like' : 'skip'); } }}>
+      <Image src={`/assets/ideas/${interest[1]}`} fill priority sizes="430px" alt={interest[0]} draggable={false} />
+      <div className={s.photoShade} />
+      <motion.div className={`${s.reaction} ${s.reactionLike}`} style={{ opacity: likeOpacity }} aria-hidden="true"><Heart fill="currentColor" /><span>Интересно</span></motion.div>
+      <motion.div className={`${s.reaction} ${s.reactionSkip}`} style={{ opacity: skipOpacity }} aria-hidden="true"><span>Не сейчас</span></motion.div>
+      <div className={s.swipeTitle}><small>ВЫБЕРИ, ЧТО ТЕБЕ ПО ДУШЕ</small><h1>{interest[0]}</h1><p>События по вайбу твоих предпочтений.</p><small>Иллюстрация категории</small></div>
+    </motion.div>
+    <div className={s.swipeTop}><button className={s.round} onClick={onBack} aria-label="Вернуться"><ArrowLeft /></button><span>{Math.min(index + 1, 15)}/15</span></div>
+    <div className={s.swipeBottom}><button className={s.round} disabled={!choices.length || committing} aria-label="Отменить выбор" onClick={() => { x.set(0); setChoices(choices.slice(0, -1)); }}><Undo2 /></button>
+      <span className={s.gestureHint}>← не сейчас · интересно →</span>
+      <button className={`${s.round} ${expanded ? s.expanded : ''}`} aria-label={expanded ? 'К условиям подборки' : 'Пропустить подбор интересов'} onClick={() => expanded ? finish(choices) : setExpanded(true)}>{expanded && <span>К условиям подборки</span>}<ArrowRight /></button></div>
+    <div className={s.accessibleActions}><button onClick={() => void commit('skip')}>Не сейчас</button><button onClick={() => void commit('like')}>Интересно</button></div>
+  </section>;
+}
+
+export function PilotApp() {
+  const [screen, setScreen] = useState<Screen>('welcome');
+  const [ready, setReady] = useState(false);
+  const [memory, setMemory] = useState<LocalMemory>(createDefaultLocalMemory);
+  const [context, setContext] = useState<PilotContext>(initialContext);
+  const [catalog, setCatalog] = useState<Card[]>([]);
+  const [cards, setCards] = useState<Card[]>([]);
+  const [hasDiscovered, setHasDiscovered] = useState(false);
+  const [swipeChoices, setSwipeChoices] = useState<SwipeChoice[]>([]);
+  const [selected, setSelected] = useState<Card | null>(null);
+  const [liveFeed, setLiveFeed] = useState<LiveFeed | null>(null);
+  const [liveLoading, setLiveLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<LiveAstanaEvent | null>(null);
+  const [eventBack, setEventBack] = useState<Screen>('feed');
+  const [saved, setSaved] = useState<string[]>([]);
+  const [planIds, setPlanIds] = useState<string[]>([]);
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [text, setText] = useState('');
+  const [chatCards, setChatCards] = useState<Card[]>([]);
+  const [chatEvents, setChatEvents] = useState<LiveAstanaEvent[]>([]);
+  const [proposed, setProposed] = useState<PilotContext | null>(null);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [pickingOrigin, setPickingOrigin] = useState(false);
+  const [pickingVenue, setPickingVenue] = useState(false);
+  const venueDraft = useRef<OrganizerDraft | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [organizerScreen, setOrganizerScreen] = useState<OrganizerScreen>('eligibility');
+  const [draft, setDraft] = useState<Partial<OrganizerDraft>>({});
+  const [detailBack, setDetailBack] = useState<Screen>('feed');
+  const [feedIndex, setFeedIndex] = useState(0);
+  const rail = useRef<HTMLDivElement>(null);
+  const chatEnd = useRef<HTMLDivElement>(null);
+  const skipPersist = useRef(false);
+
+  const loadEvents = useCallback(async () => {
+    setLiveLoading(true);
+    try { setLiveFeed(await api<LiveFeed>('/api/events', undefined, 'GET')); }
+    catch { setLiveFeed({ items: [], dataMode: 'unavailable', freshness: 'unavailable', fetchedAt: null }); }
+    finally { setLiveLoading(false); }
+  }, []);
+  useEffect(() => { let cancelled = false; void Promise.resolve().then(() => { if (!cancelled) void loadEvents(); }); return () => { cancelled = true; }; }, [loadEvents]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let restoredContext = initialContext;
+    let restoreFeed = false;
+    // Read the browser-owned external store after hydration, not during SSR.
+    void Promise.resolve().then(() => { if (cancelled) return; try {
+      const loaded = loadLocalMemory(localStorage);
+      setMemory(loaded);
+      const { goal, minutes, budget: knownBudget, likedTags, strictBudget, budgetUnknown } = loaded.profile;
+      const budget = budgetUnknown ? null : knownBudget;
+      restoredContext = { ...initialContext, goal, minutes, budget, likedTags, strictBudget: strictBudget ?? budget === 0 };
+      setContext(restoredContext);
+      const ids: unknown = JSON.parse(localStorage.getItem('qettyq.saved.v2') ?? '[]');
+      if (Array.isArray(ids)) setSaved(ids.filter((id): id is string => typeof id === 'string').slice(0, 100));
+      const rawDraft = JSON.parse(localStorage.getItem('qettyq.organizer.v2') ?? '{}');
+      if (rawDraft && typeof rawDraft === 'object' && !Array.isArray(rawDraft)) setDraft(rawDraft);
+      if (localStorage.getItem('qettyq.onboarding.v2') === 'complete') { restoreFeed = true; setScreen('feed'); }
+    } catch { setNotice('Хранилище браузера недоступно. Изменения сохранятся только до закрытия страницы.'); } });
+    Promise.all([api('/api/session'), api<{ items: Card[] }>('/api/catalog?cityId=astana', undefined, 'GET')]).then(async ([, result]) => {
+      if (cancelled) return;
+      setCatalog(result.items);
+      if (restoreFeed) {
+        const restored = await api<{ items: Card[] }>('/api/chat', { text: 'Подбери места по моим условиям', context: restoredContext });
+        if (cancelled) return;
+        setCards(restored.items); setHasDiscovered(true);
+      }
+      setReady(true);
+    }).catch(e => { if (!cancelled) { setError(e.message); setReady(true); } });
+    return () => { cancelled = true; };
+  }, []);
+  useEffect(() => {
+    if (!ready) return;
+    if (skipPersist.current) { skipPersist.current = false; return; }
+    try { saveLocalMemory(localStorage, memory); localStorage.setItem('qettyq.saved.v2', JSON.stringify(saved)); } catch { /* Memory still works during this visit. */ }
+  }, [memory, saved, ready]);
+  useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'auto', block: 'nearest' }); }, [memory.dialogue.length, busy]);
+  const filtered = useMemo(() => catalog.filter(c => (filter === 'all' || c.tags.includes(filter)) && (!search || `${c.name} ${c.address ?? ''}`.toLocaleLowerCase('ru').includes(search.toLocaleLowerCase('ru')))), [catalog, filter, search]);
+  const shown = hasDiscovered ? cards : catalog.filter(c => c.tags.some(t => context.likedTags.includes(t))).slice(0, 3);
+  const updateContext = (patch: Partial<PilotContext>) => {
+    setContext(prev => ({ ...prev, ...patch }));
+    setMemory(prev => ({ ...prev, profile: { ...prev.profile, ...(patch.goal ? { goal: patch.goal } : {}), ...(patch.minutes !== undefined ? { minutes: patch.minutes } : {}), ...(patch.budget !== undefined ? { budgetUnknown: patch.budget === null, ...(patch.budget !== null ? { budget: patch.budget } : {}) } : {}), ...(patch.strictBudget !== undefined ? { strictBudget: patch.strictBudget } : {}), ...(patch.likedTags ? { likedTags: patch.likedTags } : {}) } }));
+  };
+  const navigate = (next: Screen) => { if (next !== 'map') setPickingVenue(false); setScreen(next); setError(''); setNotice(''); };
+  function openCard(card: Card, from: Screen) { setSelected(card); setDetailBack(from); navigate('detail'); }
+  function toggleSave(id: string) { setSaved(prev => prev.includes(id) ? prev.filter(value => value !== id) : [...prev, id]); }
+  async function discover() {
+    setBusy(true); setError('');
+    try {
+      await api('/api/context', context);
+      // Chat retrieval shares the deterministic eligibility/ranking code, without paid AI.
+      const result = await api<{ items: Card[] }>('/api/chat', { text: 'Подбери места по моим условиям', context });
+      setCards(result.items); setHasDiscovered(true); setFeedIndex(0); setScreen('feed');
+      try { localStorage.setItem('qettyq.onboarding.v2', 'complete'); } catch { /* session-only */ }
+    } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+  }
+  function locate() {
+    if (!navigator.geolocation) { setNotice('Геолокация недоступна. Выберите старт на карте.'); return; }
+    setBusy(true);
+    navigator.geolocation.getCurrentPosition(position => {
+      const point = { lat: position.coords.latitude, lon: position.coords.longitude };
+      if (point.lat < 50.8 || point.lat > 51.5 || point.lon < 70.8 || point.lon > 72) setNotice('Вы находитесь вне пилотной зоны Астаны. Выберите точку старта на карте.');
+      else { updateContext({ origin: point }); setNotice('Точка старта получена. Точная геопозиция не сохраняется в памяти браузера.'); }
+      setBusy(false);
+    }, () => { setBusy(false); setNotice('Доступ не получен. Можно выбрать старт на карте или продолжить без него.'); }, { timeout: 10000, maximumAge: 60000 });
+  }
+  const mapSelect = useCallback((id: string) => {
+    const occurrence = liveFeed?.items.find(event => event.id === id);
+    if (occurrence) { setSelectedEvent(occurrence); setEventBack('map'); setScreen('event'); return; }
+    const card = catalog.find(c => c.id === id);
+    if (!card) return;
+    if (pickingVenue && venueDraft.current) {
+      const value = { ...venueDraft.current, venueName: `${card.name}${card.address ? ` · ${card.address}` : ''}`, savedAt: new Date().toISOString() };
+      setDraft(value);
+      try { localStorage.setItem('qettyq.organizer.v2', JSON.stringify(value)); } catch { /* session-only draft */ }
+      setPickingVenue(false); setOrganizerScreen('schedule'); setScreen('organizer');
+      setNotice('Площадка выбрана. Это не подтверждает согласие организатора площадки.');
+    } else setSelected(card);
+  }, [catalog, pickingVenue, liveFeed]);
+  const pickPoint = useCallback((point: Point) => {
+    if (!pickingOrigin) return;
+    if (point.lat < 50.8 || point.lat > 51.5 || point.lon < 70.8 || point.lon > 72) { setNotice('Выберите точку в пилотной зоне Астаны.'); return; }
+    setContext(prev => ({ ...prev, origin: point })); setPickingOrigin(false); setScreen('conditions');
+  }, [pickingOrigin]);
+  async function send(event?: FormEvent, preset?: string) {
+    event?.preventDefault(); const message = (preset ?? text).trim(); if (!message || busy) return;
+    setText(''); setBusy(true); setError('');
+    const history = memory.dialogue.slice(-20).map(({ role, text }) => ({ role, text }));
+    const user = { id: crypto.randomUUID(), role: 'user' as const, text: message, mode: 'user' as const, createdAt: new Date().toISOString() };
+    setMemory(prev => appendLocalMessage(prev, user));
+    try {
+      const reply = await api<{ reply: string; items: Card[]; proposedContext: PilotContext; events?: LiveAstanaEvent[] }>('/api/chat', { text: message, context, history });
+      setMemory(prev => appendLocalMessage(prev, { id: crypto.randomUUID(), role: 'assistant', text: reply.reply, mode: 'deterministic', createdAt: new Date().toISOString() }));
+      setChatCards(reply.items); setChatEvents(reply.events ?? []); setProposed(reply.proposedContext);
+    } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+  }
+  async function buildPlan(ids = planIds) {
+    if (!ids.length) { setNotice('Добавьте хотя бы одно место.'); return; }
+    setBusy(true); setError('');
+    try { const result = await api<{ plan: Plan }>('/api/plans', { placeIds: ids, context }); setPlan(result.plan); navigate('plan'); }
+    catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+  }
+  function addToPlan(card: Card) {
+    setPlanIds(prev => prev.includes(card.id) ? prev : [...prev, card.id].slice(0, 5));
+    setNotice(planIds.includes(card.id) ? 'Место уже в плане.' : planIds.length >= 5 ? 'В одном плане до 5 мест.' : 'Добавлено в план.');
+  }
+  async function sharePlan() {
+    if (!plan) return;
+    const content = `Наш план в Астане: ${plan.stops.map(c => c.name).join(' → ')}. ${plan.totalMinutes === null ? 'Время пути пока не рассчитано.' : `Примерно ${plan.totalMinutes} мин.`} Расписание и цены уточняйте перед посещением.`;
+    try { if (navigator.share) await navigator.share({ title: 'QETTYQ · Астана', text: content }); else { await navigator.clipboard.writeText(content); setNotice('План скопирован. Личная геопозиция не включена.'); } } catch { setNotice('Отправка отменена или недоступна.'); }
+  }
+  async function erase() {
+    setBusy(true);
+    try {
+      await api('/api/session/data', undefined, 'DELETE');
+      clearLocalMemory(localStorage);
+      for (const key of ['qettyq.saved.v2', 'qettyq.organizer.v2', 'qettyq.onboarding.v2']) localStorage.removeItem(key);
+      skipPersist.current = true; setMemory(createDefaultLocalMemory()); setSaved([]); setContext(initialContext); setDraft({}); setPlan(null); setPlanIds([]); setCards([]); setChatCards([]); setChatEvents([]); setProposed(null); setConfirmDelete(false); setScreen('welcome');
+    } catch { setError('Не удалось удалить все данные. Повторите удаление.'); } finally { setBusy(false); }
+  }
+  const saveDraft = (value: OrganizerDraft) => { setDraft(value); try { localStorage.setItem('qettyq.organizer.v2', JSON.stringify(value)); } catch { setNotice('Черновик доступен только до закрытия страницы.'); } };
+  const isSetup = ['welcome', 'swipe', 'conditions'].includes(screen) || (screen === 'map' && pickingOrigin);
+  const contextTab = screen === 'event' ? eventBack : screen === 'detail' ? detailBack : screen;
+  const tab = ['plan', 'saved', 'settings', 'organizer'].includes(contextTab) ? 'profile' : contextTab;
+  const picture = (card: Card, className?: string) => <div className={`${s.picture} ${className ?? ''}`}><Image src={illustration(card)} fill sizes="430px" alt={`Иллюстрация категории: ${card.category}`} /><small>Иллюстрация категории, не фото места</small></div>;
+  const mini = (card: Card, from: Screen) => <button key={card.id} className={s.mini} onClick={() => openCard(card, from)}><div className={s.miniImage}><Image src={illustration(card)} fill sizes="64px" alt="" /></div><span><b>{card.name}</b><small>{card.address ?? 'Адрес уточните перед посещением'}</small><small>{card.price ? money(card.price.min) : 'Цена неизвестна'} · ≈{card.durationMinutes} мин на посещение</small></span><ChevronRight size={18} /></button>;
+
+  return <div className={s.app}>
+    {screen !== 'swipe' && <header className={s.header}><button disabled={!ready} className={s.logo} aria-label="QETTYQ — на главную" onClick={() => navigate('feed')}>QETTYQ<span>•</span></button><button disabled={!ready} className={s.city} onClick={() => { navigate('settings'); setNotice('Сейчас доступен пилот в Астане. Алматы — следующий город.'); }}><MapPin size={14} /> Астана</button><button disabled={!ready} className={s.round} aria-label="Настройки" onClick={() => navigate('settings')}><Settings size={20} /></button></header>}
+    {error && <div role="alert" className={s.error}>{error}<button aria-label="Закрыть ошибку" onClick={() => setError('')}><X size={16} /></button></div>}
+    {notice && <div role="status" className={s.notice}>{notice}<button aria-label="Закрыть уведомление" onClick={() => setNotice('')}><X size={16} /></button></div>}
+    {screen === 'event' && selectedEvent && <EventDetail event={selectedEvent} saved={saved.includes(selectedEvent.id)} onSave={() => toggleSave(selectedEvent.id)} onBack={() => navigate(eventBack)} />}
+    {screen === 'welcome' && <main className={s.welcome}><div className={s.welcomeArt}><Image src="/assets/ideas/15-walk-architecture.jpg" fill priority sizes="430px" alt="Иллюстрация атмосферы Астаны" /><div className={s.photoShade} /><div><small>АСТАНА · ТВОЁ СВОБОДНОЕ ВРЕМЯ</small><h1>Город ближе,<br />чем кажется.</h1><p>Выбери, что тебе по душе.<br />Мы подберём места под твой ритм.</p></div></div><section className={s.pad}><p>Сначала 15 свайпов. Затем время, бюджет и, если захочешь, точка старта.</p><button disabled={!ready} className={s.primary} onClick={() => navigate('swipe')}>Выбрать свой вайб <ArrowRight size={19} /></button><button className={s.textButton} onClick={() => navigate('map')}>Сначала посмотреть карту</button><small className={s.muted}>Пилот Астаны · события и места</small></section></main>}
+    {screen === 'swipe' && <SwipeDeck choices={swipeChoices} setChoices={setSwipeChoices} onBack={() => navigate('welcome')} onFinish={tags => { updateContext({ likedTags: tags }); navigate('conditions'); }} />}
+    {screen === 'conditions' && <main className={s.pad}><button className={s.back} onClick={() => navigate('swipe')}><ArrowLeft size={18} /> К интересам</button><small className={s.eyebrow}>ШАГ 2 ИЗ 2</small><h1>Сколько времени<br />на себя?</h1><p className={s.muted}>Учитываем твой бюджет и дорогу. Интересы можно дополнить позже.</p><section className={s.panel}><label htmlFor="minutes">Свободное время <b>{context.minutes} мин</b></label><input id="minutes" aria-label="Свободное время" type="range" min="20" max="720" step="10" value={context.minutes} onChange={e => updateContext({ minutes: +e.target.value })} /><label htmlFor="budget">Бюджет на человека, ₸</label><input id="budget" inputMode="numeric" type="number" min="0" max="1000000" value={context.budget ?? ''} placeholder="Не ограничен" onChange={e => updateContext({ budget: e.target.value === '' ? null : Math.max(0, Math.min(1000000, +e.target.value)), strictBudget: e.target.value === '0' })} /><label className={s.check}><input type="checkbox" checked={context.strictBudget} onChange={e => updateContext({ strictBudget: e.target.checked })} /> Не предлагать варианты с неизвестной ценой</label></section><section className={s.panel}><label htmlFor="goal">Как провести время</label><select id="goal" value={context.goal} onChange={e => updateContext({ goal: e.target.value as PilotContext['goal'] })}><option value="new">Попробовать новое</option><option value="walk">Погулять</option><option value="food">Поесть или выпить кофе</option><option value="activity">Культура и активности</option></select><h2>Откуда начнём?</h2><p>{context.origin ? 'Точка старта выбрана. Храним только до закрытия страницы.' : 'Без точки старта можно смотреть места, но нельзя оценить время пути.'}</p><button className={s.secondary} disabled={busy} onClick={locate}><MapPin size={18} /> Поделиться геопозицией</button><button className={s.textButton} onClick={() => { setPickingOrigin(true); navigate('map'); }}>Выбрать старт на карте</button>{context.origin && <button className={s.textButton} onClick={() => updateContext({ origin: null })}>Убрать точку старта</button>}</section><button className={s.primary} disabled={busy || !ready} onClick={() => void discover()}>{busy ? 'Проверяем условия…' : 'Показать подборку'}<ArrowRight size={18} /></button></main>}
+    {screen === 'feed' && <main className={s.pad}><div className={s.titleRow}><div><small className={s.eyebrow}>ТВОЙ РИТМ ГОРОДА</small><h1>Для тебя</h1></div><button className={s.round} aria-label="Изменить условия" onClick={() => navigate('conditions')}><Settings size={20} /></button></div><div className={s.chips}><span><Clock3 size={14} /> {context.minutes} мин</span><span>{money(context.budget)}</span><span>Астана</span></div><p className={s.muted}>События ближайших дат — в афише. Места под твои условия — ниже.</p><LiveEvents feed={liveFeed} loading={liveLoading} saved={saved} onSave={toggleSave} onOpen={event => { setSelectedEvent(event); setEventBack('feed'); navigate('event'); }} /><button className={s.textButton} disabled={liveLoading} onClick={() => void loadEvents()}>Обновить афишу</button><h2>Места под твои условия</h2>{!ready ? <p role="status">Загружаем каталог…</p> : shown.length ? <><div className={s.rail} ref={rail} onScroll={e => { const el = e.currentTarget; setFeedIndex(Math.round(el.scrollLeft / el.clientWidth)); }}>{shown.map(card => <article key={card.id} className={s.feedCard}>{picture(card)}<button className={`${s.round} ${s.save}`} aria-label={saved.includes(card.id) ? 'Убрать из сохранённых' : 'Сохранить'} aria-pressed={saved.includes(card.id)} onClick={() => toggleSave(card.id)}><Bookmark size={21} fill={saved.includes(card.id) ? 'currentColor' : 'none'} /></button><div className={s.feedCardBody}><small>{card.category}</small><h2>{card.name}</h2><p>{card.price ? money(card.price.min) : 'Стоимость нужно уточнить'} · посещение ≈{card.durationMinutes} мин</p><button className={s.primary} onClick={() => openCard(card, 'feed')}>Подробнее <ArrowRight size={18} /></button></div></article>)}</div><div className={s.sliderControls}><button className={s.round} aria-label="Предыдущее место" disabled={feedIndex <= 0} onClick={() => rail.current?.scrollBy({ left: -rail.current.clientWidth, behavior: 'smooth' })}><ChevronLeft /></button><span>{Math.min(feedIndex + 1, shown.length)} / {shown.length}</span><button className={s.round} aria-label="Следующее место" disabled={feedIndex >= shown.length - 1} onClick={() => rail.current?.scrollBy({ left: rail.current.clientWidth, behavior: 'smooth' })}><ChevronRight /></button></div></> : <section className={s.panel}><h2>По этим условиям вариантов не нашли</h2><p>Ограничения не были ослаблены автоматически. Попробуйте другую категорию или измените бюджет.</p><button className={s.secondary} onClick={() => navigate('conditions')}>Изменить условия</button></section>}<button className={s.secondary} onClick={() => navigate('chat')}><Sparkles size={19} /> Подобрать вместе с помощником</button><footer className={s.credit}>{credit}</footer></main>}
+    {screen === 'chat' && <main className={s.chat}><div className={s.pad}><small className={s.eyebrow}>ПОИСК ПО МЕСТАМ</small><h1>Что ищем?</h1><p className={s.muted}>Напиши про настроение, время и бюджет.<br />Сейчас отвечает поиск по правилам, без внешнего AI.</p></div><div className={s.messages}>{!memory.dialogue.length && <div className={s.assistant}>Кофе в тихом месте или прогулка? Помогу выбрать из каталога Астаны. Если не знаю расписание или цену — так и скажу.</div>}{memory.dialogue.map(message => <div key={message.id} className={message.role === 'user' ? s.user : s.assistant}><small>{message.role === 'user' ? 'Ты' : 'QETTYQ · поиск по каталогу'}</small><p>{message.text}</p></div>)}{busy && <div className={s.assistant} role="status">Проверяем каталог и ограничения…</div>}{chatCards.map(card => mini(card, 'chat'))}{chatEvents.map(event => <EventPreview key={event.id} event={event} onOpen={() => { setSelectedEvent(event); setEventBack('chat'); navigate('event'); }} />)}{proposed && <section className={s.panel}><p>Из запроса: {proposed.minutes} мин · {money(proposed.budget)}. Применить эти условия?</p><button className={s.secondary} onClick={() => { updateContext(proposed); setProposed(null); setNotice('Условия обновлены.'); }}>Применить условия</button></section>}<div ref={chatEnd} /></div><div className={s.composer}><div className={s.chips}>{['Кофе', 'Погулять', 'События', 'Кино'].map(value => <button key={value} disabled={busy} onClick={() => void send(undefined, value)}>{value}</button>)}</div><form onSubmit={event => void send(event)}><input maxLength={500} value={text} onChange={e => setText(e.target.value)} placeholder="Например: погулять 90 минут" aria-label="Сообщение помощнику" /><button className={s.round} aria-label="Отправить сообщение" disabled={busy || !text.trim() || !ready}><Send size={19} /></button></form><small>Расписание кино пока не подключено. <a href="https://kino.kz/" target="_blank" rel="noreferrer">Открыть Kino.kz</a></small></div></main>}
+    {screen === 'map' && <main className={s.mapScreen}><div className={s.mapToolbar}><h1>{pickingOrigin ? 'Выбери точку старта' : pickingVenue ? 'Выбери площадку' : 'Город на карте'}</h1><input aria-label="Поиск места на карте" placeholder="Место или адрес" value={search} onChange={e => setSearch(e.target.value)} /><div className={s.chips}>{[['all', 'Все места'], ['park', 'Прогулки'], ['cafe', 'Кофе'], ['theatre', 'Театры']].map(([value, label]) => <button key={value} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</div></div><div className={s.mapViewport}><CityMap points={[...filtered.map(c => ({ id: c.id, title: c.name, lat: c.lat, lon: c.lon, dateLabel: 'Расписание уточняйте', category: c.category })), ...(!pickingVenue && !pickingOrigin && filter === 'all' ? (liveFeed?.items ?? []).filter(event => event.lat !== null && event.lon !== null).map(event => ({ id: event.id, title: event.name, lat: event.lat!, lon: event.lon!, dateLabel: new Date(event.startsAt).toLocaleString('ru-RU', { timeZone: 'Asia/Almaty' }), category: event.category ?? 'Событие' })) : [])]} activeId={selected?.id ?? ''} onSelect={mapSelect} onPick={pickPoint} origin={context.origin} /></div>{pickingOrigin ? <section className={s.mapSheet}><p>Нажми на карту. Адрес не попадёт в постоянную память.</p><button className={s.secondary} onClick={() => { setPickingOrigin(false); navigate('conditions'); }}>Продолжить без изменения</button></section> : selected ? <section className={s.mapSheet}>{mini(selected, 'map')}<div className={s.twoButtons}><button className={s.secondary} onClick={() => addToPlan(selected)}><Plus size={17} /> В план</button><button className={s.primary} onClick={() => void buildPlan([selected.id])}>Оценить путь</button></div></section> : <section className={s.mapSheet}><p>{pickingVenue ? 'Нажми на маркер площадки, чтобы добавить её адрес в черновик. Или введи адрес вручную в форме.' : 'Перемещай карту и выбирай место. Здесь каталог локаций, а не подтверждённые события на сегодня.'}</p></section>}{planIds.length > 0 && !pickingOrigin && <button className={s.primary} onClick={() => void buildPlan()}>Мой план · {planIds.length} мест</button>}</main>}
+    {screen === 'detail' && selected && <main><button className={`${s.back} ${s.detailBack}`} onClick={() => navigate(detailBack)}><ArrowLeft size={18} /> Назад</button>{picture(selected, s.detailPhoto)}<section className={s.pad}><small className={s.eyebrow}>{selected.category} · АСТАНА</small><h1>{selected.name}</h1><p>{selected.address ?? 'Точный адрес уточните перед посещением'}</p><div className={s.chips}><span>≈{selected.durationMinutes} мин · оценка посещения</span><span>{selected.price ? money(selected.price.min) : 'Стоимость неизвестна'}</span></div><section className={s.panel}><h2>Перед тем как идти</h2><p>Расписание, язык и наличие мест не подтверждены. Контакт организатора в этом каталоге не указан. Мы не заменяем это выдуманными данными.</p><p>{selected.reason ?? 'Место из сохранённого каталога Астаны. Проверь, подходит ли оно твоим планам.'}</p></section><button className={s.primary} disabled={busy} onClick={() => void buildPlan([selected.id])}>Оценить путь <ArrowRight size={18} /></button><div className={s.twoButtons}><button className={s.secondary} aria-pressed={saved.includes(selected.id)} onClick={() => toggleSave(selected.id)}><Bookmark size={18} />{saved.includes(selected.id) ? 'Сохранено' : 'Сохранить'}</button><button className={s.secondary} onClick={() => addToPlan(selected)}><Plus size={18} /> В мой план</button></div>{planIds.length > 0 && <button className={s.textButton} onClick={() => void buildPlan()}>Открыть план · {planIds.length} мест</button>}</section></main>}
+    {screen === 'plan' && plan && <main className={s.pad}><button className={s.back} onClick={() => navigate('map')}><ArrowLeft size={18} /> На карту</button><small className={s.eyebrow}>ПЛАН ВЫХОДА</small><h1>Твой путь<br />по Астане</h1><section className={s.panel}><h2>{plan.totalMinutes === null ? 'Нужна точка старта' : `Примерно ${plan.totalMinutes} мин`}</h2><p>{plan.distanceKm === null ? 'Расстояние пока не рассчитано.' : `≈${plan.distanceKm.toFixed(1)} км по прямой, не длина дороги.`}</p><p>{plan.remainingMinutes === null ? 'Оставшееся свободное время неизвестно.' : `После плана: ${plan.remainingMinutes} мин свободного времени.`}</p><p>Бюджет: {plan.budget.min === null ? 'неизвестен — уточните стоимость посещений' : `от ${money(plan.budget.min)}`}</p><p className={s.muted}>Путь — грубая оценка пешком. Дорожный routing-провайдер не подключён; линию навигации не рисуем.</p>{plan.feasibility === 'infeasible' && <strong>В выбранное время не укладывается.</strong>}</section><ol className={s.stops}>{plan.stops.map(card => <li key={card.id}>{mini(card, 'plan')}<button className={s.textButton} disabled={busy || plan.stops.length === 1} onClick={() => { const next = plan.stops.filter(c => c.id !== card.id).map(c => c.id); setPlanIds(next); void buildPlan(next); }}>Убрать из плана</button></li>)}</ol><button className={s.secondary} onClick={() => navigate('conditions')}>Изменить старт и условия</button><button className={s.secondary} onClick={() => void sharePlan()}><Share2 size={18} /> Поделиться планом</button><h2>Продолжить навигацию</h2><p className={s.muted}>Откроется внешний сервис. Он уточнит путь, пробки и время. Стоимость такси здесь не рассчитывается.</p>{plan.stops.map(card => <section className={s.panel} key={card.id}><b>{card.name}</b><div className={s.externalLinks}><a target="_blank" rel="noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${card.lat},${card.lon}&travelmode=walking`}>Google Maps ↗</a><a target="_blank" rel="noreferrer" href={`dgis://2gis.ru/routeSearch/rsType/pedestrian/to/${card.lon},${card.lat}`}>2ГИС ↗</a><a target="_blank" rel="noreferrer" href={`https://2gis.kz/astana/search/${encodeURIComponent(card.name)}`}>2ГИС в браузере ↗</a><a target="_blank" rel="noreferrer" href={`https://maps.apple.com/?daddr=${card.lat},${card.lon}&dirflg=w`}>Apple Maps ↗</a></div></section>)}</main>}
+    {screen === 'profile' && <main className={s.pad}><small className={s.eyebrow}>ЛИЧНОЕ ПРОСТРАНСТВО</small><h1>Твой QETTYQ</h1><section className={s.panel}><UserRound size={32} /><h2>Без регистрации</h2><p>Предпочтения и последние сообщения хранятся в этом браузере. Геопозиция не сохраняется.</p><p>{context.likedTags.length ? `${context.likedTags.length} тегов интересов` : 'Интересы ещё не выбраны'}</p></section><button className={s.rowButton} onClick={() => navigate('saved')}><Bookmark /> Сохранённые места <span>{saved.length}</span><ChevronRight /></button><button className={s.rowButton} onClick={() => navigate('swipe')}><Heart /> Изменить интересы<ChevronRight /></button><button className={s.rowButton} onClick={() => navigate('conditions')}><Clock3 /> Условия подборки<ChevronRight /></button><button className={s.rowButton} onClick={() => { setOrganizerScreen('cabinet'); navigate('organizer'); }}><Plus /> Моё событие<ChevronRight /></button><button className={s.rowButton} onClick={() => navigate('settings')}><Settings /> Настройки и память<ChevronRight /></button></main>}
+    {screen === 'saved' && <main className={s.pad}><button className={s.back} onClick={() => navigate('profile')}><ArrowLeft size={18} /> Профиль</button><h1>Сохранённое</h1>{catalog.filter(c => saved.includes(c.id)).map(c => mini(c, 'saved'))}{liveFeed?.items.filter(event => saved.includes(event.id)).map(event => <EventPreview key={event.id} event={event} onOpen={() => { setSelectedEvent(event); setEventBack('saved'); navigate('event'); }} />)}{!saved.length && <section className={s.panel}><Bookmark /><h2>Место для будущих планов</h2><p>Сохраняй интересные локации из ленты или с карты.</p><button className={s.primary} onClick={() => navigate('map')}>Выбрать на карте</button></section>}</main>}
+    {screen === 'settings' && <main className={s.pad}><button className={s.back} onClick={() => navigate('profile')}><ArrowLeft size={18} /> Профиль</button><h1>Настройки</h1><section className={s.panel}><h2>Город</h2><p>Астана · пилот</p><p className={s.muted}>Алматы — следующий этап. Каталог пока не подключён.</p><label htmlFor="locale">Предпочитаемый язык событий</label><select id="locale" value={memory.profile.locale} onChange={e => setMemory(prev => ({ ...prev, profile: { ...prev.profile, locale: e.target.value as 'ru' | 'kk' | 'en' } }))}><option value="ru">Русский</option><option value="kk">Қазақша</option><option value="en">English</option></select><p className={s.muted}>Предпочтение сохранится. Интерфейс пилота пока на русском, языки мероприятий ещё не подтверждены.</p></section><section className={s.panel}><h2>Память и приватность</h2><p>На устройстве: интересы, до 24 сообщений, сохранённые места и локальный черновик. На сервере: временная сессия и планы до 24 часов.</p><p>Это локальная память, не полноценный генеративный RAG. Совместное редактирование с друзьями пока не подключено.</p><button className={s.danger} onClick={() => setConfirmDelete(true)}>Удалить мои данные</button></section><footer className={s.credit}>{credit}<p>Снимок каталога: 19 октября 2026. Геометрия карты загружается из OpenStreetMap.</p></footer></main>}
+    {screen === 'organizer' && <main className={s.organizer}><p className={s.muted}>Локальный черновик. Публикация и проверка организатора пока недоступны.</p><button className={s.textButton} onClick={() => setOrganizerScreen(organizerScreen === 'eligibility' ? 'cabinet' : 'eligibility')}>{organizerScreen === 'eligibility' ? 'К моим черновикам' : 'Условия публикации'}</button><OrganizerFlow localDraftOnly screen={organizerScreen} mode="demo" initialDraft={draft} eligibility="unknown" applicationEnabled={false} moderation={{ status: 'draft', mode: 'demo', comments: ['Это локальный черновик. Публикация и проверка организатора пока не подключены.'] }} onNavigate={(next, value) => { saveDraft(value); setOrganizerScreen(next); }} onDraftChange={saveDraft} onBack={current => { const previous: Partial<Record<OrganizerScreen, OrganizerScreen>> = { schedule: 'basic', details: 'schedule', preview: 'details', moderation: 'cabinet', basic: 'cabinet' }; const target = previous[current]; if (target) setOrganizerScreen(target); else navigate('profile'); }} onSubmitForReview={value => { saveDraft(value); setNotice('Черновик сохранён на устройстве. Он не опубликован и не отправлен на модерацию.'); }} onPickPlace={value => { saveDraft(value); venueDraft.current = value; setPickingVenue(true); setSelected(null); setFilter('all'); setSearch(''); navigate('map'); }} onOpenEvent={() => setOrganizerScreen('preview')} onOpenSettings={() => navigate('settings')} onEdit={() => setOrganizerScreen('basic')} /></main>}
+    {confirmDelete && <div className={s.modal} role="dialog" aria-modal="true" aria-labelledby="delete-title"><section className={s.panel}><h2 id="delete-title">Удалить память QETTYQ?</h2><p>Исчезнут интересы, диалог, сохранённые места, черновик и данные текущей серверной сессии. Это нельзя отменить.</p><button className={s.danger} disabled={busy} onClick={() => void erase()}>Да, удалить данные</button><button className={s.secondary} onClick={() => setConfirmDelete(false)}>Оставить данные</button></section></div>}
+    {!isSetup && <nav className={s.dock} aria-label="Основная навигация">{([{ id: 'feed', label: 'Для тебя', Icon: House }, { id: 'chat', label: 'Поиск', Icon: Search }, { id: 'map', label: 'Карта', Icon: MapIcon }, { id: 'profile', label: 'Профиль', Icon: UserRound }] as const).map(({ id, label, Icon }) => <button key={id} aria-current={tab === id ? 'page' : undefined} onClick={() => { setPickingOrigin(false); navigate(id); }}><Icon size={22} /><span>{label}</span></button>)}</nav>}
+  </div>;
+}

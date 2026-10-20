@@ -1,0 +1,533 @@
+[
+  {
+    "id": "01",
+    "boardId": "dece5f48-f581-80ff-8008-d166802cb57b",
+    "name": "01 · Восстановление настроек",
+    "layers": 16,
+    "textLayers": 4,
+    "interactive": 2,
+    "outside": []
+  },
+  {
+    "id": "02",
+    "boardId": "dece5f48-f581-80ff-8008-d1668862cb2c",
+    "name": "02 · Главный экран",
+    "layers": 46,
+    "textLayers": 16,
+    "interactive": 8,
+    "outside": []
+  },
+  {
+    "id": "03",
+    "boardId": "dece5f48-f581-80ff-8008-d16688d797f0",
+    "name": "03 · Выбор города",
+    "layers": 35,
+    "textLayers": 12,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "04",
+    "boardId": "dece5f48-f581-80ff-8008-d166891b72ed",
+    "name": "04 · Перед выбором интересов",
+    "layers": 44,
+    "textLayers": 10,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "05",
+    "boardId": "dece5f48-f581-80ff-8008-d16689635ffc",
+    "name": "05 · Выбор интересов",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.15",
+    "boardId": "dece5f48-f581-80ff-8008-d168b81526d5",
+    "name": "05.15 · Прогулка и архитектура",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.14",
+    "boardId": "dece5f48-f581-80ff-8008-d168b6d35767",
+    "name": "05.14 · Мастер-класс и творчество",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.13",
+    "boardId": "dece5f48-f581-80ff-8008-d168b5afd0b8",
+    "name": "05.13 · Кино",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.12",
+    "boardId": "dece5f48-f581-80ff-8008-d168b4ae605c",
+    "name": "05.12 · Современное искусство",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.11",
+    "boardId": "dece5f48-f581-80ff-8008-d168b35b6ba4",
+    "name": "05.11 · Кофе и спокойный вечер",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.10",
+    "boardId": "dece5f48-f581-80ff-8008-d168b24dc91d",
+    "name": "05.10 · Fine dining",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.09",
+    "boardId": "dece5f48-f581-80ff-8008-d168b12d1dcd",
+    "name": "05.09 · Шашлык и компания",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.08",
+    "boardId": "dece5f48-f581-80ff-8008-d168affa6239",
+    "name": "05.08 · Баня и загородный отдых",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.07",
+    "boardId": "dece5f48-f581-80ff-8008-d168aed4461d",
+    "name": "05.07 · Активный отдых",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.06",
+    "boardId": "dece5f48-f581-80ff-8008-d168adb3202b",
+    "name": "05.06 · Армрестлинг и сила",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.05",
+    "boardId": "dece5f48-f581-80ff-8008-d168ac8838a2",
+    "name": "05.05 · Барабаны и ритм",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.04",
+    "boardId": "dece5f48-f581-80ff-8008-d168ab9c27cf",
+    "name": "05.04 · Бачата и танцы",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.03",
+    "boardId": "dece5f48-f581-80ff-8008-d168aa42db99",
+    "name": "05.03 · Балет и театр",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "05.02",
+    "boardId": "dece5f48-f581-80ff-8008-d16764bb8655",
+    "name": "05.02 · Рок и живая музыка",
+    "layers": 50,
+    "textLayers": 12,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "06",
+    "boardId": "dece5f48-f581-80ff-8008-d16689bf8686",
+    "name": "06 · Свайп вправо",
+    "layers": 55,
+    "textLayers": 13,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "07",
+    "boardId": "dece5f48-f581-80ff-8008-d1668a2830bf",
+    "name": "07 · Свайп влево",
+    "layers": 56,
+    "textLayers": 13,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "08",
+    "boardId": "dece5f48-f581-80ff-8008-d1668aa028a4",
+    "name": "08 · Контекст: время",
+    "layers": 44,
+    "textLayers": 16,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "09",
+    "boardId": "dece5f48-f581-80ff-8008-d1668b1cf232",
+    "name": "09 · Контекст: бюджет",
+    "layers": 44,
+    "textLayers": 16,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "10",
+    "boardId": "dece5f48-f581-80ff-8008-d1668ba38f01",
+    "name": "10 · Контекст: география",
+    "layers": 47,
+    "textLayers": 17,
+    "interactive": 6,
+    "outside": []
+  },
+  {
+    "id": "11",
+    "boardId": "dece5f48-f581-80ff-8008-d1668c29345d",
+    "name": "11 · Разрешение геолокации",
+    "layers": 35,
+    "textLayers": 12,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "12",
+    "boardId": "dece5f48-f581-80ff-8008-d1668c9b97bc",
+    "name": "12 · Выбор точки на карте",
+    "layers": 83,
+    "textLayers": 15,
+    "interactive": 11,
+    "outside": []
+  },
+  {
+    "id": "13",
+    "boardId": "dece5f48-f581-80ff-8008-d1668d796fce",
+    "name": "13 · Подбор и проверка",
+    "layers": 52,
+    "textLayers": 12,
+    "interactive": 6,
+    "outside": []
+  },
+  {
+    "id": "14",
+    "boardId": "dece5f48-f581-80ff-8008-d1668dfbb529",
+    "name": "14 · Персональная лента",
+    "layers": 71,
+    "textLayers": 17,
+    "interactive": 20,
+    "outside": []
+  },
+  {
+    "id": "15",
+    "boardId": "dece5f48-f581-80ff-8008-d1668ecd0879",
+    "name": "15 · Вариант с неизвестными данными",
+    "layers": 75,
+    "textLayers": 17,
+    "interactive": 20,
+    "outside": []
+  },
+  {
+    "id": "16",
+    "boardId": "dece5f48-f581-80ff-8008-d1668fb8e176",
+    "name": "16 · Карта города",
+    "layers": 105,
+    "textLayers": 18,
+    "interactive": 22,
+    "outside": []
+  },
+  {
+    "id": "17",
+    "boardId": "dece5f48-f581-80ff-8008-d16690f369f7",
+    "name": "17 · Выбранная точка карты",
+    "layers": 109,
+    "textLayers": 18,
+    "interactive": 23,
+    "outside": []
+  },
+  {
+    "id": "18",
+    "boardId": "dece5f48-f581-80ff-8008-d166924616bd",
+    "name": "18 · Места списком",
+    "layers": 66,
+    "textLayers": 17,
+    "interactive": 16,
+    "outside": []
+  },
+  {
+    "id": "19",
+    "boardId": "dece5f48-f581-80ff-8008-d166936360b1",
+    "name": "19 · Фильтры карты",
+    "layers": 74,
+    "textLayers": 24,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "20",
+    "boardId": "dece5f48-f581-80ff-8008-d16694b6dbeb",
+    "name": "20 · Детали события",
+    "layers": 58,
+    "textLayers": 13,
+    "interactive": 16,
+    "outside": []
+  },
+  {
+    "id": "21",
+    "boardId": "dece5f48-f581-80ff-8008-d16695c26d8b",
+    "name": "21 · Детали места",
+    "layers": 58,
+    "textLayers": 13,
+    "interactive": 16,
+    "outside": []
+  },
+  {
+    "id": "22",
+    "boardId": "dece5f48-f581-80ff-8008-d16696cfb2a4",
+    "name": "22 · Кино: список сеансов",
+    "layers": 60,
+    "textLayers": 14,
+    "interactive": 17,
+    "outside": []
+  },
+  {
+    "id": "23",
+    "boardId": "dece5f48-f581-80ff-8008-d16697f558cb",
+    "name": "23 · Кино: данные сеанса",
+    "layers": 58,
+    "textLayers": 13,
+    "interactive": 16,
+    "outside": []
+  },
+  {
+    "id": "24",
+    "boardId": "dece5f48-f581-80ff-8008-d166991023f8",
+    "name": "24 · Конструктор маршрута",
+    "layers": 52,
+    "textLayers": 13,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "25",
+    "boardId": "dece5f48-f581-80ff-8008-d1669a4c202e",
+    "name": "25 · Приблизительный маршрут",
+    "layers": 57,
+    "textLayers": 14,
+    "interactive": 7,
+    "outside": []
+  },
+  {
+    "id": "26",
+    "boardId": "dece5f48-f581-80ff-8008-d1669b91c65f",
+    "name": "26 · Готовый план",
+    "layers": 52,
+    "textLayers": 13,
+    "interactive": 6,
+    "outside": []
+  },
+  {
+    "id": "27",
+    "boardId": "dece5f48-f581-80ff-8008-d1669cdc60b8",
+    "name": "27 · Поиск и помощник",
+    "layers": 76,
+    "textLayers": 14,
+    "interactive": 15,
+    "outside": []
+  },
+  {
+    "id": "28",
+    "boardId": "dece5f48-f581-80ff-8008-d1669e1f1fcd",
+    "name": "28 · Уточнение запроса",
+    "layers": 69,
+    "textLayers": 13,
+    "interactive": 16,
+    "outside": []
+  },
+  {
+    "id": "29",
+    "boardId": "dece5f48-f581-80ff-8008-d1669f80cb62",
+    "name": "29 · Результаты в чате",
+    "layers": 73,
+    "textLayers": 15,
+    "interactive": 17,
+    "outside": []
+  },
+  {
+    "id": "30",
+    "boardId": "dece5f48-f581-80ff-8008-d166a1106c8c",
+    "name": "30 · Сохранённые планы",
+    "layers": 63,
+    "textLayers": 17,
+    "interactive": 16,
+    "outside": []
+  },
+  {
+    "id": "31",
+    "boardId": "dece5f48-f581-80ff-8008-d166a2a57ea0",
+    "name": "31 · Поделиться маршрутом",
+    "layers": 38,
+    "textLayers": 9,
+    "interactive": 4,
+    "outside": []
+  },
+  {
+    "id": "32",
+    "boardId": "dece5f48-f581-80ff-8008-d166a3bb9586",
+    "name": "32 · Профиль и память",
+    "layers": 74,
+    "textLayers": 15,
+    "interactive": 19,
+    "outside": []
+  },
+  {
+    "id": "33",
+    "boardId": "dece5f48-f581-80ff-8008-d166a58da9e9",
+    "name": "33 · Источники данных",
+    "layers": 71,
+    "textLayers": 22,
+    "interactive": 17,
+    "outside": []
+  },
+  {
+    "id": "34",
+    "boardId": "dece5f48-f581-80ff-8008-d166a79b530a",
+    "name": "34 · Приватность и удаление",
+    "layers": 71,
+    "textLayers": 22,
+    "interactive": 17,
+    "outside": []
+  },
+  {
+    "id": "35",
+    "boardId": "dece5f48-f581-80ff-8008-d166a9b482cb",
+    "name": "35 · Стать организатором",
+    "layers": 33,
+    "textLayers": 10,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "36",
+    "boardId": "dece5f48-f581-80ff-8008-d166aae1d0e7",
+    "name": "36 · Создание события: основное",
+    "layers": 41,
+    "textLayers": 16,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "37",
+    "boardId": "dece5f48-f581-80ff-8008-d166ac747be8",
+    "name": "37 · Создание события: дата и место",
+    "layers": 44,
+    "textLayers": 18,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "38",
+    "boardId": "dece5f48-f581-80ff-8008-d166ae3db565",
+    "name": "38 · Создание события: условия",
+    "layers": 44,
+    "textLayers": 18,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "39",
+    "boardId": "dece5f48-f581-80ff-8008-d166b002177b",
+    "name": "39 · Создание события: предпросмотр",
+    "layers": 41,
+    "textLayers": 16,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "40",
+    "boardId": "dece5f48-f581-80ff-8008-d166b1ac4afe",
+    "name": "40 · Статус события",
+    "layers": 41,
+    "textLayers": 16,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "41",
+    "boardId": "dece5f48-f581-80ff-8008-d166b35cdfbc",
+    "name": "41 · Кабинет организатора",
+    "layers": 39,
+    "textLayers": 15,
+    "interactive": 4,
+    "outside": []
+  },
+  {
+    "id": "42",
+    "boardId": "dece5f48-f581-80ff-8008-d166b5038474",
+    "name": "42 · Нет подходящих результатов",
+    "layers": 35,
+    "textLayers": 9,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "43",
+    "boardId": "dece5f48-f581-80ff-8008-d166b671afe7",
+    "name": "43 · Состояния недоступных сервисов",
+    "layers": 41,
+    "textLayers": 16,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "44",
+    "boardId": "dece5f48-f581-80ff-8008-d166b83cb1ec",
+    "name": "44 · Алматы: следующий город",
+    "layers": 35,
+    "textLayers": 9,
+    "interactive": 5,
+    "outside": []
+  },
+  {
+    "id": "45",
+    "boardId": "dece5f48-f581-80ff-8008-d166d8e0f646",
+    "name": "45 · Настройки",
+    "layers": 36,
+    "textLayers": 11,
+    "interactive": 5,
+    "outside": []
+  }
+]

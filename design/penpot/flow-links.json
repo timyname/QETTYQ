@@ -1,0 +1,2658 @@
+[
+  {
+    "from": "01",
+    "control": "restore-new",
+    "target": "02",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "01",
+    "control": "restore-ready",
+    "target": "14",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "01",
+    "control": "choose-city",
+    "target": "03",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "01",
+    "control": "bypass",
+    "target": "02",
+    "kind": "replace",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "02",
+    "control": "city",
+    "target": "03",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "02",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "02",
+    "control": "composer-send",
+    "target": "27",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "02",
+    "control": "setup",
+    "target": "04",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "02",
+    "control": "map",
+    "target": "16",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "03",
+    "control": "close",
+    "target": "02",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "03",
+    "control": "astana",
+    "target": "03",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "03",
+    "control": "almaty",
+    "target": "44",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "03",
+    "control": "continue",
+    "target": "02",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "04",
+    "control": "back",
+    "target": "02",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "04",
+    "control": "skip",
+    "target": "08",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "04",
+    "control": "start",
+    "target": "05",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "04",
+    "control": "map",
+    "target": "16",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "05",
+    "control": "close",
+    "target": "04",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "05",
+    "control": "skip",
+    "target": "07",
+    "kind": "state",
+    "animation": "swipe-left",
+    "durationMs": 260
+  },
+  {
+    "from": "05",
+    "control": "undo",
+    "target": "05",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "05",
+    "control": "like",
+    "target": "06",
+    "kind": "state",
+    "animation": "swipe-right",
+    "durationMs": 260
+  },
+  {
+    "from": "05",
+    "control": "tried",
+    "target": "05",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "05",
+    "control": "early",
+    "target": "08",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "05",
+    "control": "completed",
+    "target": "08",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "06",
+    "control": "like",
+    "target": "05",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "06",
+    "control": "completed",
+    "target": "08",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "06",
+    "control": "reaction-failed",
+    "target": "05",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "07",
+    "control": "skip",
+    "target": "05",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "07",
+    "control": "completed",
+    "target": "08",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "07",
+    "control": "reaction-failed",
+    "target": "05",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "08",
+    "control": "back",
+    "target": "05",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "08",
+    "control": "now",
+    "target": "08",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "08",
+    "control": "later",
+    "target": "08",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "08",
+    "control": "next",
+    "target": "09",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "09",
+    "control": "back",
+    "target": "08",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "09",
+    "control": "unknown",
+    "target": "09",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "09",
+    "control": "free",
+    "target": "09",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "09",
+    "control": "next",
+    "target": "10",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "10",
+    "control": "back",
+    "target": "09",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "10",
+    "control": "location",
+    "target": "11",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "10",
+    "control": "manual",
+    "target": "12",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "10",
+    "control": "destination",
+    "target": "12",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "10",
+    "control": "return-to-origin",
+    "target": "10",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "10",
+    "control": "submit",
+    "target": "13",
+    "kind": "replace",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "11",
+    "control": "close",
+    "target": "10",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "11",
+    "control": "allow",
+    "target": "11",
+    "kind": "system",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "11",
+    "control": "permission-granted",
+    "target": "10",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "11",
+    "control": "permission-denied",
+    "target": "11",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "11",
+    "control": "manual",
+    "target": "12",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "12",
+    "control": "back",
+    "target": "10",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "12",
+    "control": "select-point",
+    "target": "12",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "12",
+    "control": "use",
+    "target": "10",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "13",
+    "control": "cancel",
+    "target": "10",
+    "kind": "replace",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "13",
+    "control": "retry",
+    "target": "13",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "13",
+    "control": "success",
+    "target": "14",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "13",
+    "control": "uncertain",
+    "target": "15",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "13",
+    "control": "empty",
+    "target": "42",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "13",
+    "control": "failure",
+    "target": "43",
+    "kind": "automatic",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "14",
+    "control": "city",
+    "target": "03",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "14",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "14",
+    "control": "edit",
+    "target": "08",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "14",
+    "control": "details",
+    "target": "20",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "14",
+    "control": "details-place",
+    "target": "21",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "14",
+    "control": "save",
+    "target": "14",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "14",
+    "control": "map",
+    "target": "17",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "14",
+    "control": "uncertain-candidate",
+    "target": "15",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "14",
+    "control": "cinema",
+    "target": "22",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "15",
+    "control": "back",
+    "target": "14",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "15",
+    "control": "details",
+    "target": "20",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "15",
+    "control": "details-place",
+    "target": "21",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "15",
+    "control": "edit",
+    "target": "08",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "15",
+    "control": "source",
+    "target": "33",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "15",
+    "control": "map",
+    "target": "17",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "16",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "16",
+    "control": "search",
+    "target": "27",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "16",
+    "control": "filters",
+    "target": "19",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "16",
+    "control": "marker",
+    "target": "17",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "16",
+    "control": "list",
+    "target": "18",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "16",
+    "control": "location",
+    "target": "11",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "16",
+    "control": "map-unavailable",
+    "target": "43",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "17",
+    "control": "close",
+    "target": "16",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "17",
+    "control": "details",
+    "target": "20",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "17",
+    "control": "details-place",
+    "target": "21",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "17",
+    "control": "add",
+    "target": "24",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "17",
+    "control": "add-estimated",
+    "target": "25",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "17",
+    "control": "save",
+    "target": "17",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "18",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "18",
+    "control": "map",
+    "target": "16",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "18",
+    "control": "filters",
+    "target": "19",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "18",
+    "control": "candidate",
+    "target": "20",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "18",
+    "control": "candidate-place",
+    "target": "21",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "19",
+    "control": "close",
+    "target": "16",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "19",
+    "control": "show",
+    "target": "16",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "19",
+    "control": "show-list",
+    "target": "18",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "19",
+    "control": "reset",
+    "target": "19",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "20",
+    "control": "back",
+    "target": "14",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "20",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "20",
+    "control": "save",
+    "target": "20",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "20",
+    "control": "share",
+    "target": "20",
+    "kind": "system",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "20",
+    "control": "route",
+    "target": "24",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "20",
+    "control": "route-estimated",
+    "target": "25",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "20",
+    "control": "external",
+    "target": "20",
+    "kind": "external",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "20",
+    "control": "contact",
+    "target": "20",
+    "kind": "external",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "20",
+    "control": "sources",
+    "target": "33",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "21",
+    "control": "back",
+    "target": "14",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "21",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "21",
+    "control": "route",
+    "target": "24",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "21",
+    "control": "route-estimated",
+    "target": "25",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "21",
+    "control": "site",
+    "target": "21",
+    "kind": "external",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "21",
+    "control": "phone",
+    "target": "21",
+    "kind": "external",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "21",
+    "control": "sources",
+    "target": "33",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "22",
+    "control": "back",
+    "target": "27",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "22",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "22",
+    "control": "session",
+    "target": "23",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "22",
+    "control": "date",
+    "target": "22",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "22",
+    "control": "language",
+    "target": "22",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "22",
+    "control": "empty",
+    "target": "42",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "23",
+    "control": "back",
+    "target": "22",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "23",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "23",
+    "control": "route",
+    "target": "24",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "23",
+    "control": "route-estimated",
+    "target": "25",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "23",
+    "control": "tickets",
+    "target": "23",
+    "kind": "external",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "23",
+    "control": "sources",
+    "target": "33",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "24",
+    "control": "back",
+    "target": "20",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "24",
+    "control": "save",
+    "target": "26",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "24",
+    "control": "saved-plans",
+    "target": "30",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "24",
+    "control": "navigation",
+    "target": "24",
+    "kind": "external",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "24",
+    "control": "share",
+    "target": "31",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "24",
+    "control": "add-stop",
+    "target": "16",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "24",
+    "control": "edit-origin",
+    "target": "12",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "24",
+    "control": "routing-failed",
+    "target": "25",
+    "kind": "replace",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "25",
+    "control": "back",
+    "target": "20",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "25",
+    "control": "external",
+    "target": "25",
+    "kind": "external",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "25",
+    "control": "edit",
+    "target": "25",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "25",
+    "control": "retry-routing",
+    "target": "24",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "25",
+    "control": "save",
+    "target": "26",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "25",
+    "control": "add-stop",
+    "target": "16",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "26",
+    "control": "back",
+    "target": "24",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "26",
+    "control": "navigation",
+    "target": "26",
+    "kind": "external",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "26",
+    "control": "edit",
+    "target": "24",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "26",
+    "control": "share",
+    "target": "31",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "26",
+    "control": "saved-plans",
+    "target": "30",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "26",
+    "control": "home",
+    "target": "14",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "27",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "27",
+    "control": "p1",
+    "target": "28",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "27",
+    "control": "p2",
+    "target": "28",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "27",
+    "control": "p3",
+    "target": "28",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "27",
+    "control": "send",
+    "target": "28",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "27",
+    "control": "cinema",
+    "target": "22",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "28",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "28",
+    "control": "back",
+    "target": "27",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "28",
+    "control": "answer",
+    "target": "29",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "28",
+    "control": "change",
+    "target": "08",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "28",
+    "control": "change-budget",
+    "target": "09",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "28",
+    "control": "change-location",
+    "target": "10",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "28",
+    "control": "send",
+    "target": "29",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "28",
+    "control": "cancel",
+    "target": "27",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "29",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "29",
+    "control": "back",
+    "target": "27",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "29",
+    "control": "map",
+    "target": "17",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "29",
+    "control": "route",
+    "target": "24",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "29",
+    "control": "route-estimated",
+    "target": "25",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "29",
+    "control": "source",
+    "target": "29",
+    "kind": "external",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "29",
+    "control": "details",
+    "target": "20",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "29",
+    "control": "details-place",
+    "target": "21",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "29",
+    "control": "cinema",
+    "target": "22",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "29",
+    "control": "send",
+    "target": "28",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "29",
+    "control": "empty",
+    "target": "42",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "29",
+    "control": "provider-unavailable",
+    "target": "43",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "30",
+    "control": "back",
+    "target": "32",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "30",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "30",
+    "control": "open",
+    "target": "26",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "30",
+    "control": "refresh",
+    "target": "30",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "30",
+    "control": "share",
+    "target": "31",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "30",
+    "control": "first",
+    "target": "14",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "30",
+    "control": "delete-plan",
+    "target": "30",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "31",
+    "control": "close",
+    "target": "26",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "31",
+    "control": "close-from-saved",
+    "target": "30",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "31",
+    "control": "copy",
+    "target": "31",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "31",
+    "control": "share",
+    "target": "31",
+    "kind": "system",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "31",
+    "control": "copy-unavailable",
+    "target": "31",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "32",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "32",
+    "control": "edit",
+    "target": "32",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "32",
+    "control": "reswipe",
+    "target": "04",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "32",
+    "control": "plans",
+    "target": "30",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "32",
+    "control": "sources",
+    "target": "33",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "32",
+    "control": "privacy",
+    "target": "34",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "32",
+    "control": "organizer",
+    "target": "35",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "32",
+    "control": "my-events",
+    "target": "41",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "32",
+    "control": "memory",
+    "target": "32",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "33",
+    "control": "back",
+    "target": "32",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "33",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "33",
+    "control": "open",
+    "target": "33",
+    "kind": "external",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "34",
+    "control": "back",
+    "target": "32",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "34",
+    "control": "settings",
+    "target": "45",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "34",
+    "control": "delete",
+    "target": "34",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "34",
+    "control": "cancel",
+    "target": "34",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "34",
+    "control": "confirm",
+    "target": "02",
+    "kind": "replace",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "34",
+    "control": "deletion-failed",
+    "target": "34",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "35",
+    "control": "back",
+    "target": "32",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "35",
+    "control": "apply",
+    "target": "35",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "35",
+    "control": "draft",
+    "target": "36",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "35",
+    "control": "my-events",
+    "target": "41",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "36",
+    "control": "back",
+    "target": "35",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "36",
+    "control": "next",
+    "target": "37",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "36",
+    "control": "save-draft",
+    "target": "41",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "36",
+    "control": "validation-error",
+    "target": "36",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "37",
+    "control": "back",
+    "target": "36",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "37",
+    "control": "pick-place",
+    "target": "37",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "37",
+    "control": "confirm-place",
+    "target": "37",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "37",
+    "control": "next",
+    "target": "38",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "37",
+    "control": "save-draft",
+    "target": "41",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "37",
+    "control": "validation-error",
+    "target": "37",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "38",
+    "control": "back",
+    "target": "37",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "38",
+    "control": "price-state",
+    "target": "38",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "38",
+    "control": "next",
+    "target": "39",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "38",
+    "control": "save-draft",
+    "target": "41",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "38",
+    "control": "validation-error",
+    "target": "38",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "39",
+    "control": "back",
+    "target": "38",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "39",
+    "control": "upload",
+    "target": "39",
+    "kind": "system",
+    "animation": "none",
+    "durationMs": 0
+  },
+  {
+    "from": "39",
+    "control": "submit",
+    "target": "40",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "39",
+    "control": "save-draft",
+    "target": "41",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "39",
+    "control": "validation-error",
+    "target": "39",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "40",
+    "control": "back",
+    "target": "41",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "40",
+    "control": "edit",
+    "target": "36",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "40",
+    "control": "withdraw",
+    "target": "40",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "40",
+    "control": "cancel-withdraw",
+    "target": "40",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "40",
+    "control": "confirm-withdraw",
+    "target": "41",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "40",
+    "control": "my-events",
+    "target": "41",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "41",
+    "control": "back",
+    "target": "32",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "41",
+    "control": "create",
+    "target": "36",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "41",
+    "control": "event",
+    "target": "40",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "41",
+    "control": "edit-draft",
+    "target": "36",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "41",
+    "control": "drafts",
+    "target": "41",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "41",
+    "control": "published",
+    "target": "41",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "41",
+    "control": "review",
+    "target": "41",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "41",
+    "control": "ended",
+    "target": "41",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "42",
+    "control": "back",
+    "target": "14",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "42",
+    "control": "relax",
+    "target": "13",
+    "kind": "replace",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "42",
+    "control": "edit",
+    "target": "08",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "42",
+    "control": "edit-budget",
+    "target": "09",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "42",
+    "control": "edit-location",
+    "target": "10",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "42",
+    "control": "map",
+    "target": "16",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "42",
+    "control": "search",
+    "target": "27",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "43",
+    "control": "back",
+    "target": "14",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "43",
+    "control": "list",
+    "target": "18",
+    "kind": "replace",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "43",
+    "control": "estimate",
+    "target": "25",
+    "kind": "replace",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "43",
+    "control": "results",
+    "target": "14",
+    "kind": "replace",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "43",
+    "control": "retry",
+    "target": "13",
+    "kind": "replace",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "43",
+    "control": "search",
+    "target": "27",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "44",
+    "control": "back",
+    "target": "02",
+    "kind": "replace",
+    "animation": "dissolve",
+    "durationMs": 220
+  },
+  {
+    "from": "44",
+    "control": "choose-astana",
+    "target": "03",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "44",
+    "control": "notify",
+    "target": "44",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "45",
+    "control": "close",
+    "target": "32",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "45",
+    "control": "language-ru",
+    "target": "45",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "45",
+    "control": "language-kk",
+    "target": "45",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "45",
+    "control": "language-en",
+    "target": "45",
+    "kind": "state",
+    "animation": "dissolve",
+    "durationMs": 160
+  },
+  {
+    "from": "45",
+    "control": "event-languages",
+    "target": "32",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "45",
+    "control": "interests",
+    "target": "32",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "45",
+    "control": "sources",
+    "target": "33",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "45",
+    "control": "privacy",
+    "target": "34",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "45",
+    "control": "city",
+    "target": "03",
+    "kind": "overlay",
+    "animation": "slide-up",
+    "durationMs": 220
+  },
+  {
+    "from": "45",
+    "control": "plans",
+    "target": "30",
+    "kind": "navigate",
+    "animation": "slide-left",
+    "durationMs": 220
+  },
+  {
+    "from": "14",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "14",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "14",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "14",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "15",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "15",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "15",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "15",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "16",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "16",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "16",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "16",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "17",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "17",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "17",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "17",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "18",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "18",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "18",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "18",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "20",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "20",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "20",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "20",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "21",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "21",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "21",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "21",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "22",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "22",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "22",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "22",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "23",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "23",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "23",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "23",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "27",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "27",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "27",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "27",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "28",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "28",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "28",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "28",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "29",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "29",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "29",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "29",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "30",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "30",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "30",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "30",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "32",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "32",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "32",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "32",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "33",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "33",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "33",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "33",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "34",
+    "control": "Для тебя",
+    "target": "14",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "34",
+    "control": "Поиск",
+    "target": "27",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "34",
+    "control": "Карта",
+    "target": "16",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "34",
+    "control": "Профиль",
+    "target": "32",
+    "kind": "dock",
+    "animation": "dissolve",
+    "durationMs": 180
+  },
+  {
+    "from": "12",
+    "control": "use-route-origin",
+    "target": "24",
+    "kind": "back",
+    "animation": "slide-right",
+    "durationMs": 220
+  },
+  {
+    "from": "11",
+    "control": "permission-granted-from-map",
+    "target": "16",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "45",
+    "control": "close-from-feed",
+    "target": "14",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "45",
+    "control": "close-from-search",
+    "target": "27",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  },
+  {
+    "from": "45",
+    "control": "close-from-map",
+    "target": "16",
+    "kind": "close-overlay",
+    "animation": "slide-down",
+    "durationMs": 220
+  }
+]

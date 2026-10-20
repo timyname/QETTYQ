@@ -1,0 +1,14 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {connect,execute,callTool} from './penpot-mcp.mjs';
+const root=path.resolve(import.meta.dirname,'..');
+await connect();
+const snapshot=await execute(`const file=penpot.currentFile;const version=await file.saveVersion('QETTYQ · 44 screens + settings + 15 swipe states · design review');const p=penpotUtils.getPageByName('02 · App assembly · editable');const boards=p.root.children.filter(s=>s.type==='board'&&s.getPluginData('screenId'));return {fileId:file.id,revision:file.revn,versionId:version.id,pageId:p.id,boards:boards.map(b=>({id:b.getPluginData('screenId'),boardId:b.id,name:b.name})),pages:penpotUtils.getPages()};`);
+await fs.writeFile(path.join(root,'design/penpot/checkpoint.json'),JSON.stringify(snapshot,null,2));
+console.log(JSON.stringify({versionId:snapshot.versionId,boards:snapshot.boards.length,pages:snapshot.pages},null,2));
+const main=snapshot.boards.find(b=>b.id==='14');
+console.log(await callTool('export_shape',{shapeId:main.boardId,format:'png',filePath:path.join(root,'design/penpot/previews/14.png')}));
+const swipe=snapshot.boards.find(b=>b.id==='05');
+console.log(await callTool('export_shape',{shapeId:swipe.boardId,format:'png',filePath:path.join(root,'design/penpot/previews/05.png')}));
+const flow=await execute(`const p=penpotUtils.getPageByName('05 · UX flow · four tabs');const b=penpotUtils.findShape(s=>s.name==='QETTYQ · Current interaction map',p.root);return b.id;`);
+console.log(await callTool('export_shape',{shapeId:flow,format:'png',filePath:path.join(root,'design/penpot/previews/flow.png')}));

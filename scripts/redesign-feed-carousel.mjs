@@ -1,0 +1,11 @@
+import fs from 'node:fs/promises';
+import {connect,execute} from './penpot-mcp.mjs';
+await connect();
+console.log(await execute(await fs.readFile('design/penpot/feed-carousel-native.js','utf8')));
+console.log(await execute('return storage.feedCarousel.prepare();'));
+for(let i=0;i<3;i++)console.log(await execute(`return storage.feedCarousel.render(${i});`));
+console.log(await execute('return storage.feedCarousel.render(0,true);'));
+console.log(await execute('return storage.feedCarousel.surfacePolish();'));
+for(const ids of [['14','14.dance','14.puppet','15']])console.log(await execute(`return storage.finalQA.one(${JSON.stringify(ids)});`));
+console.log(await execute('return storage.finalQA.arrange();'));
+console.log(await execute(`await penpot.currentFile.saveVersion('QETTYQ · For You carousel and surface containment');return{saved:true};`));

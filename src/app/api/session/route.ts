@@ -6,6 +6,7 @@ import {
   jsonResponse,
   responseMeta,
   sessionTokenFromRequest,
+  requireSession,
 } from "../../../server/session/http";
 import {
   SESSION_TTL_SECONDS,
@@ -13,6 +14,20 @@ import {
   createSession,
   getSession,
 } from "../../../server/session/store";
+import { publicPlan } from "../../../server/pilot/plans";
+
+export async function GET(request: Request) {
+  const auth = requireSession(request);
+  if (!auth.ok) return auth.response;
+  return jsonResponse({
+    ...responseMeta(),
+    session: { createdAt: auth.session.createdAt, expiresAt: auth.session.expiresAt },
+    context: auth.session.context,
+    profile: auth.session.profile,
+    reactions: auth.session.reactions.filter((reaction) => reaction.undoneAt === null),
+    plans: auth.session.plans.map(publicPlan),
+  });
+}
 
 export async function POST(request: Request) {
   const crossSite = blockCrossSiteMutation(request);

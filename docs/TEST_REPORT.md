@@ -1,5 +1,41 @@
 # Отчёт проверки
 
+## Финальная интеграция live-афиши и glass · 20.10.2026
+
+Имеет приоритет над числами прежних проходов ниже.
+
+- `pnpm test`: PASS, 100 тестов в 12 файлах. Без реальных платных AI-вызовов.
+- `pnpm typecheck`: PASS. `pnpm build`: PASS, включая `/api/events` и чат.
+- `pnpm lint`: PASS по exit code, 0 ошибок и 13 предупреждений старых design scripts. Generated Playwright trace/report исключены, исходники src/tests продолжают проверяться.
+- `pnpm data:validate`: PASS, 80 POI с provenance.
+- Реальный сетевой smoke `/api/events`: HTTP200, live/fresh, 7 будущих событий; повтор hit с тем же fetchedAt. Это не mock. Координаты всех 7 unknown, ложные pins отсутствуют.
+- Браузер CUA: открыты реальные афиша → детали и чат → «События» → 3 карточки, цены/язык/длительность unknown отображаются явно. Полный финальный E2E и публичный Worker smoke будут записаны после окончания.
+- Важно: первый Site E2E дал 6 PASS / 1 FAIL — ранний клик по SSR-кнопке до hydration. Кнопки header теперь disabled до готовности. Не считать этот прогон успешным; требуется повтор.
+
+Не подтверждены: генеративная модель/RAG, дорожный ETA, Google SDK, киносеансы, бронирование, production-аккаунты, реальный iPhone/Safari, совместное редактирование. Презентация v7 проверена отдельно; видео/заявка не выполнялись.
+
+## Актуальный прогон локального web app · 20.10.2026
+
+Ниже этого раздела сохранены старые отчёты; их числа не являются числом тестов текущего прохода.
+
+| Команда / проверка | Фактический результат |
+|---|---|
+| `pnpm test` | PASS: 69 тестов, 11 файлов; включая ingestion, API, Host/Origin, swipe release/opacity, clustering и localDraftOnly |
+| `pnpm test:e2e --workers=2` | PASS: 6 сценариев; 15 свайпов → условия → детали → план, drag/return/undo, 503, строгий бюджет, 4 tab/Leaflet, память/удаление, 360/390/430 и reduced motion |
+| `pnpm typecheck` | PASS после интеграции PilotApp и OrganizerFlow |
+| `pnpm build` | PASS на основной сборке PilotApp; финальный повтор после последней доводки фиксируется ниже |
+| `pnpm data:validate` | PASS: 80 snapshot POI с provenance |
+| `pnpm submission:check` | PASS: наличие обязательных документов и проверка env.example; это НЕ проверка полной готовности и не отправка заявки |
+| `pnpm lint` | Ошибок приложения не найдено; предупреждения старых design scripts учитываются отдельно, временные vendor executables исключены как generated code |
+| Browser QA через CUA | Открыты welcome/swipe/conditions/feed/map/profile. OSM-тайлы реально загружены. При визуальном осмотре найдено и исправлено перекрытие 80 pins через clustering |
+| Презентация v7 | 10 слайдов; finalizer PASS, PDF10 страниц; 8 неизменённых слайдов совпали с v6; 7/10 обновлены и перепроверены |
+
+Не проверены как live: OpenAI, дорожная маршрутизация, Google SDK, Ticketon/Kino sessions, live-event imports, booking, совместная сессия. Отдельный iPhone/Safari touch-прогон не проводился. Это не отчёт о полностью готовом production-продукте.
+
+`git diff --check` на всём dirty tree показывает ранее существовавший trailing whitespace в пользовательском `docs/PRODUCT_UI_MASTER_SPEC.md:28`; этот несвязанный текст не исправлялся и не перезаписывался.
+
+## Исторические отчёты
+
 Дата последней проверки: 20 октября 2026. Среда: macOS arm64, bundled Node.js, pnpm.
 
 | Проверка | Статус | Детали |
@@ -27,3 +63,38 @@
 Визуальный QA экранов ограничен композицией. Сгенерированный текст не принимается
 как финальный UI-copy; map-like фон не принимается как настоящая карта. Перед
 релизом каждый экран должен быть воспроизведён кодом и пройти mobile screenshot QA.
+
+## Penpot · 20.10.2026
+
+Проверки относятся к дизайну, не к сервисам приложения.
+
+| Проверка | Результат | Доказательство |
+|---|---|---|
+| Screen copy и graph spec | PASS | 44 уникальных основных ID; `flow-links.json`: 332 контрактных связи, 45 достижимых основных узлов с settings |
+| Реальные native boards | PASS | В Penpot просмотр показывает 59 фреймов: 44 + settings + 14 вариантов колоды |
+| Текст вне границ фрейма | PASS | `scripts/qa-penpot.mjs`, `visual-audit.json`: 0 выходов у 59 фреймов |
+| Медиаслои | PASS | 15 локальных JPEG импортированы отдельными image fills, не цельными UI-скриншотами |
+| Экспорт и осмотр | PASS | Native PNG 02,05,14,16,27,32,33,36,45 в `design/penpot/previews/`; визуально осмотрены 05,14,27,36 и браузерный просмотр карты/профиля/settings |
+| Gear overlay | PASS | Открыт 45 из 14, «Готово» вернуло тот же экран14 |
+| Dock hit areas | PASS после исправления | У 16 активных dock по 4 tab; в браузере проверены 14→32→27→16. Для tab добавлены явные native hit areas |
+| Публичный deployment | NOT RUN | Владелец остановил публикацию до согласования дизайна |
+
+Команды прохода: `node scripts/assemble-penpot.mjs assets`, `node scripts/build-penpot-scenes.mjs`, `node scripts/finish-penpot-design.mjs` (по результатам исправлены совместимость имён/весов шрифта/API), отдельные `assemble-penpot.mjs run design/penpot/*.js`, `node scripts/qa-penpot.mjs`. Выполнялись bundled Node 24.19 и официальный локальный Penpot MCP. Действия браузера проведены через CUA. Статический graph spec не выдаётся за реализацию всех conditional outcomes или API.
+
+## Повторная доводка Penpot · 20.10.2026
+
+| Проверка | Результат | Область доказательства |
+|---|---|---|
+| `node scripts/audit-penpot-controls.mjs` | PASS |147 native states; missing enabled control actions0, text collisions0, outside text0. Disabled undo первого шага и пустой Send исключены осмысленно |
+| Surface audit14/14.dance/14.puppet | PASS | Native clipped parent386×592; photo386×515; CTA ends574 with18px bottom padding; outside descendants0 |
+| Map containment | PASS |15 clipped map viewports; в каждом6 roads — непосредственные дети. Настоящий провайдер не проверялся |
+| Chat clipping | PASS |7 transcript rails без внутренних drop shadows; composer/dock остаются отдельными |
+| Browser chat | PASS |27 suggestion→27.draft Send→28 after-delay→29; «Другое место»→29.followup |
+| Browser logo | PASS |27 logo→14 |
+| Browser context | PASS |14 time chip→08 row→08.editor preset60→08.selected.short |
+| Browser swipe continue | PASS после ремонта anchor |05.ready right circle→видимая плашка, отдельный второй click→08. Manual overlay position раньше уводила плашку вне экрана; заменена bottom-right anchor к кругу |
+| Browser feed carousel | PASS |14→14.dance→14.puppet по next, previous→14.dance, Подробнее→21.alt, Назад→та же14.dance. Это click-проверка дизайна, не pointer-drag |
+| Реальный drag/form/AI/storage/share | NOT RUN | Native prototype не имеет runtime-интеграций; сценарный click не выдаётся за live выполнение |
+| App build/E2E/deploy | NOT RUN в этом проходе | Код приложения не менялся; прежние результаты выше не относятся к новым147 макетам |
+
+Фактически исполнены bundled Node команды `redesign-penpot-swipes.mjs`, `complete-penpot-interactions.mjs`, `run-penpot-list-repairs.mjs`, `run-penpot-editors.mjs`, `finalize-penpot-controls.mjs`, `repair-swipe-overlay.mjs`, `redesign-feed-carousel.mjs`, `clip-map-surfaces.mjs`, `audit-penpot-controls.mjs`, `export-swipe-contract.mjs`, `export-penpot-review.mjs`, а также малые official MCP вызовы по сценарию. Два больших MCP скрипта превысили30s ответного timeout, но фактическое завершение отдельно прочитано через API и затем перепроверено. После этого операции разделены на небольшие batches. Native exports просмотрены для05/08/08.editor/19.selected.culture/14/27/29/29.followup; браузерный clickflow — через CUA.
