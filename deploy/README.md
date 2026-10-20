@@ -63,6 +63,12 @@ Install only `qettyq-{cert-renew,backup}.{service,timer}` and enable these timer
 Verify one backup/integrity check and Certbot renewal dry run. No existing cron,
 systemd service or proxy certificate should be edited/restarted.
 
+`qettyq-events-refresh.{service,timer}` warms the existing `/api/events` cache
+hourly at minute20, independently of visitors. It uses the same application
+refresh lease; a fresh cache does not trigger source requests. No separate
+scraper, retry loop, Google call or AI call is introduced. Inspect its journal
+and the public freshness metadata; a stale fallback is not a live-source success.
+
 ## Rollback / recovery
 
 Before updates, retain the previous QETTYQ image and verified database backup.

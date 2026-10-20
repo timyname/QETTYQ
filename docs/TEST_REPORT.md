@@ -1,5 +1,21 @@
 # Отчёт проверки
 
+## Приоритетный проход · языки/память/контекст · 21.10.2026
+
+- `pnpm test`:356/356 PASS,34files. Новые проверки: memory identity/isolation/revoke/delete/TTL; comma/dot/plus GPS redaction всех outbound; original date/rock/price constraints; semantic retrieval до top3; Google cap100×$0.10/consent/no-key/no-retry/mapless credit; one OpenAI reservation400+800 tokens и aggregate accounting.
+- `pnpm typecheck`:PASS. Targeted ESLint `src/server src/client src/components src/app/api/{chat,memory,places} src/app/{privacy,sources} tests scripts/import-poi.ts src/instrumentation.ts src/domain/types.ts`:PASS. Временный конфликт параллельного mobile config затем исчез; проверки не отключались.
+- `pnpm test:e2e --workers=2`:38/38 PASS, zero skips; 3languages ×4viewports, main/organizer/policy, memory UI and deletion. Exact resize assertion заменён на ожидание того же точного размера, не ослаблен. Подробности и237PNG в отдельном QA отчёте.
+- `pnpm data:validate`:80 snapshot POI PASS. `pnpm data:import:poi`:502,старые файлы сохранены; read-only status endpoint406,повторного обхода не было.
+- Production build: immutable tree `c3ba9306b03472d30ad2ef918f8cadeb269cb4b7` → Docker linux/amd64 `qettyq:vps-20261021-3`, image SHA256 `7b822fe95ffa03666d99c88213e1ec6b7b2e604655f644a5fbc409422daeb46c`. Next build/TypeScript PASS. Незавершённый iOS/PWA workspace не включён.
+- Публичный HTTPS: реальный opt-in profile→restart qettyq-app→новая guest session→restore PASS; Secure/HttpOnly cookie, полный DELETE и повторный empty GET PASS. Тестовая identity очищена. Production Google503 `GOOGLE_SERVER_KEY_REQUIRED`, paid Google calls0.
+- Реальный AI: первый HTTP проход intent/retrieval нашёл2события, final prose отклонена `UNSAFE_OR_UNGROUNDED_REPLY` → deterministic fallback (не PASS генерации). Один отдельный owner-only controlled query через настоящий runtime/ledger подтвердил `openai`,1source citation; без координат/личной истории/hosted tools. Все попытки сохраняют первоначальные невозвратные резервы, ledger не сбрасывался.
+- Заключительный `node scripts/smoke-vps-release.mjs https://qettyqapp.anamai.kz --ai`: public HTTP200,mode=openai,reasoningMode=plan_retrieve_answer,model=gpt-5.5,2events/1citation PASS. Своя память и guest data удалены в finally. Никаких повторов внутри provider adapter; каждая ручная диагностическая попытка получила свой прежний durable reserve.
+- Финальный SQLite audit:9completed reserves /$4.50 из прежнего$10 application cap,0reserved/blocked,0memory_clients после cleanup,`PRAGMA quick_check=ok`. Backup после проверки Result=success; все три QETTYQ timer active. boostseller.kz200/anamai.kz200; retained SSH key digest не менялся после установки.
+- Public `/api/events`:200live/fresh,8future,0withCoordinates, fetchedAt `2026-10-20T19:17:36.068Z`; это ещё прежний свежий8-page cache. Новый24-page fetch не форсировался в обход lease. Отдельный почасовой refresh timer включён, manual service cache-hit Result=success, next planned `2026-10-20T20:20:11Z`.
+- Backup service before update Result=success; Nginx test PASS +graceful reload. Browser public language gate подтверждён, screenshot `exports/qettyq-vps-language-20261021.png`. Старый SSH-key был удалён в прошлом релизе; новый ключ сохранён по новому явному указанию владельца.
+
+Проверка реального HTTP/SQLite не равна физическому iPhone QA. UI mock paths не подтверждают live-источник или реальную дорогу; source/route limitations сохранены.
+
 ## Приоритетный проход · VPS + UI38 · 20.10.2026
 
 - `pnpm test`: **300/300 PASS**,28файлов. Ранее выявлен1старый Referer expectation после смены canonical URL; исправлен на фактический новый hostname, проверки не отключались.

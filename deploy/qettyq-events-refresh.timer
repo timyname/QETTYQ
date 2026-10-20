@@ -1,0 +1,11 @@
+[Unit]
+Description=QETTYQ hourly source refresh, shared application lease
+
+[Timer]
+OnCalendar=*-*-* *:20:00
+RandomizedDelaySec=30
+Persistent=true
+Unit=qettyq-events-refresh.service
+
+[Install]
+WantedBy=timers.target

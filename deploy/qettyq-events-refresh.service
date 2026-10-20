@@ -1,0 +1,9 @@
+[Unit]
+Description=QETTYQ bounded event-cache refresh
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+TimeoutStartSec=260
+ExecStart=/usr/bin/docker exec qettyq-app node -e "fetch('http://127.0.0.1:3000/api/events',{signal:AbortSignal.timeout(240000)}).then(async r=>{if(!r.ok)throw Error('EVENTS_HTTP');const d=await r.json();console.log(JSON.stringify({dataMode:d.dataMode,count:d.items.length,fetchedAt:d.fetchedAt}));if(d.dataMode!=='live')process.exitCode=1}).catch(()=>{console.error('EVENT_REFRESH_UNAVAILABLE');process.exitCode=1})"
