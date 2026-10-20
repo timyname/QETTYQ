@@ -84,6 +84,8 @@ The private key stays in ignored local runtime storage with mode0600; do not
 print, commit or copy it into images. Host-key pinning is mandatory. This access
 does not authorize changes to other projects. The previous release's temporary
 key was removed; do not remove the new retained key as routine cleanup.
+Read the ignored local `.sites-runtime/OPERATIONS.md` before future deployment
+for the retained key path and pinned host identity; no private key is in this repo.
 
 Runtime availability and actual release evidence are recorded in
 `../docs/STATUS.md` and `../docs/TEST_REPORT.md`, not inferred from these instructions.
