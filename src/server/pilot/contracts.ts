@@ -21,6 +21,7 @@ export const pilotContextSchema = z.object({
 
 export const chatInputSchema = z.object({
   text: z.string().trim().min(1).max(1000),
+  useAI: z.boolean().default(false),
   context: pilotContextSchema.optional(),
   history: z.array(z.object({
     role: z.enum(["user", "assistant"]),

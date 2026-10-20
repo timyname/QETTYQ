@@ -22,7 +22,9 @@ export function createMapTooltip(point: Pick<MapPoint, "title" | "dateLabel">, d
   const date = document.createElement("span");
   title.textContent = point.title;
   date.textContent = point.dateLabel;
-  tooltip.append(title, document.createElement("br"), date);
+  tooltip.appendChild(title);
+  tooltip.appendChild(document.createElement("br"));
+  tooltip.appendChild(date);
   return tooltip;
 }
 
@@ -174,7 +176,7 @@ export function CityMap({ points, activeId, onSelect, onPick, origin }: Props) {
                 button.textContent = point.title;
                 Object.assign(button.style, { display: "block", width: "100%", minHeight: "44px", border: "0", borderBottom: "1px solid #d9e5df", background: "white", color: "#0B332D", textAlign: "left", padding: "8px" });
                 button.addEventListener("click", () => { map.closePopup(); callbacks.current.onSelect?.(point.id); });
-                list.append(button);
+                list.appendChild(button);
               }
               L.popup({ maxHeight: 240 }).setLatLng(position).setContent(list).openOn(map);
             }

@@ -1,4 +1,5 @@
 import { liveEventsService } from "../../../server/ingestion/live-events";
+import { resolveEventMedia } from "../../../server/ingestion/sxodim-live";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,6 @@ export async function GET(request: Request) {
   if (city !== "astana") return Response.json({ error: { code: "UNSUPPORTED_CITY", message: "Пока поддерживается только Астана." } }, { status: 400, headers });
   if (query.length > 120 || date !== null && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(`${date}T00:00:00Z`)) || new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date)) return Response.json({ error: { code: "VALIDATION_ERROR" } }, { status: 400, headers });
   const data = await liveEventsService.get();
-  const items = data.items.filter(event => (!date || localDate(event.startsAt) === date) && (!query || `${event.name} ${event.venueName ?? ""} ${event.category ?? ""}`.toLowerCase().includes(query)));
+  const items = data.items.filter(event => (!date || localDate(event.startsAt) === date) && (!query || `${event.name} ${event.venueName ?? ""} ${event.category ?? ""}`.toLowerCase().includes(query))).map(event => ({ ...event, media: resolveEventMedia(event) }));
   return Response.json({ ...data, items, cityId: "astana", requestId: crypto.randomUUID(), generatedAt: new Date().toISOString(), total: items.length }, { status: data.dataMode === "unavailable" ? 503 : 200, headers });
 }

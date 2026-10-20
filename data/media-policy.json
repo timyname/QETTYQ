@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-20",
+  "defaultPublisherPosterPolicy": "deny_until_item_rights_verified",
+  "remoteHotlinkingEnabled": false,
+  "publishers": {
+    "sxodim-astana-noncommercial": {
+      "termsUrl": "https://sxodim.com/polzovatelskoe-soglashenie",
+      "factReuse": "noncommercial_with_credit",
+      "posterRights": "unknown",
+      "autoDownload": false,
+      "hotlink": false,
+      "reason": "General publisher reuse terms do not verify authorship or a grant for every third-party photograph/poster."
+    }
+  },
+  "organizerApprovalRequirements": [
+    "Explicit event/source-page binding",
+    "Verified rights holder and retained grant reference",
+    "Permission to store and publicly display the asset",
+    "Permission for the current public project distribution workflow",
+    "Validated local raster file, MIME, dimensions and SHA-256",
+    "Approved review state, no revocation and no expired grant"
+  ],
+  "approvedOrganizerMedia": [],
+  "ownedCategoryIllustrations": {
+    "provenance": "public/assets/ideas/manifest.json",
+    "rightsBasis": "project_generated_visuals",
+    "mediaType": "category_illustration",
+    "mandatoryNotice": "Иллюстрация категории, не афиша мероприятия",
+    "mappings": [
+      { "categories": ["Театр", "Балет", "«JAN» театрының қойылымдары", "Theatre", "Theater"], "src": "/assets/ideas/03-ballet-theatre.jpg", "label": "Балет и театр" },
+      { "categories": ["Концерты", "Живая музыка", "Concerts"], "src": "/assets/ideas/02-rock-live-music.jpg", "label": "Живая музыка" },
+      { "categories": ["Выставки и ярмарки", "Выставки", "Exhibitions"], "src": "/assets/ideas/12-exhibition-contemporary-art.jpg", "label": "Выставка и современное искусство" },
+      { "categories": ["Кино", "Cinema", "Movies"], "src": "/assets/ideas/13-cinema.jpg", "label": "Кино" },
+      { "categories": ["Мастер-классы", "Workshops"], "src": "/assets/ideas/14-workshop-creativity.jpg", "label": "Мастер-класс и творчество" },
+      { "categories": ["Прогулки", "Walks"], "src": "/assets/ideas/15-walk-architecture.jpg", "label": "Прогулка и архитектура" },
+      { "categories": ["Вечеринки", "Танцы", "Dance"], "src": "/assets/ideas/04-bachata-social-dance.jpg", "label": "Танцы и общение" },
+      { "categories": ["Активный отдых", "Спорт", "Sports"], "src": "/assets/ideas/07-active-leisure.jpg", "label": "Активный отдых" }
+    ]
+  }
+}

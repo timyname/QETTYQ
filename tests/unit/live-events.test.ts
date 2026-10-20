@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { extractSxodimCandidates, fetchLiveAstanaEvents, fetchSxodimDocument, parseSxodimDetail, EVENT_REFRESH_MS, SXODIM_INDEX, SXODIM_TERMS, type SxodimSnapshot, type SourceFetcher } from "../../src/server/ingestion/sxodim-live";
+import { extractSxodimCandidates, prioritizeSxodimCandidates, extractSxodimMediaCandidates, resolveEventMedia, fetchLiveAstanaEvents, fetchSxodimDocument, parseSxodimDetail, EVENT_REFRESH_MS, SXODIM_INDEX, SXODIM_TERMS, type ApprovedOrganizerMedia, type EventMediaPolicy, type SxodimSnapshot, type SourceFetcher } from "../../src/server/ingestion/sxodim-live";
+import mediaPolicy from "../../data/media-policy.json";
 import { cloudflareEventCache, createLiveEventsService, liveEventsService } from "../../src/server/ingestion/live-events";
 import { GET } from "../../src/app/api/events/route";
 
@@ -64,6 +65,22 @@ describe("live source normalization (synthetic, no external requests)", () => {
     expect(item.contentLanguage).toBe("kk");
     expect(item.lat).toBe(51.15);
   });
+  it("prioritizes near-date index links instead of promoted distant cards, without inventing occurrence dates", () => {
+    const promo = { ...candidate, id: "promo", info: "7 ноября в 19:00, Synthetic venue" };
+    const today = { ...candidate, id: "today", info: "20 октября в 19:00, Synthetic venue" };
+    const old = { ...candidate, id: "old", info: "19 октября в 19:00, Synthetic venue" };
+    expect(prioritizeSxodimCandidates([promo, old, today], new Date(now).toISOString()).map(x => x.id)).toEqual(["today", "promo", "old"]);
+    expect(parseSxodimDetail(detail({ startDate: "not-an-occurrence" }), today, new Date(now).toISOString())).toEqual([]);
+  });
+  it("keeps an explicit organizer website separate from aggregator and rejects private/unsafe links", () => {
+    const get = (organizer: unknown) => parseSxodimDetail(detail({ organizer }), candidate, new Date(now).toISOString())[0];
+    expect(get({ url: "https://organizer.example/event" }).organizerUrl).toBe("https://organizer.example/event");
+    expect(get({ url: page }).organizerUrl).toBeNull();
+    expect(get({ url: "https://127.0.0.1/private" }).organizerUrl).toBeNull();
+    expect(get({ url: "https://user:pass@organizer.example" }).organizerUrl).toBeNull();
+    expect(get(undefined).organizerUrl).toBeNull();
+    expect(get({ url: "https://organizer.example/event" }).contactUrl).toBe(page);
+  });
 });
 
 describe("bounded public fetch adapter", () => {
@@ -90,6 +107,71 @@ describe("bounded public fetch adapter", () => {
     const fetcher = vi.fn(async (url: string) => response(url.endsWith("robots.txt") ? "User-agent: *\nDisallow:\n" : "All rights reserved"));
     await expect(fetchLiveAstanaEvents({ fetcher, now: new Date(now).toISOString() })).rejects.toThrow("SOURCE_REUSE_POLICY_REQUIRES_REVIEW");
     expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("rights-aware event media (synthetic fixtures, no media requests)", () => {
+  const at = new Date(now).toISOString();
+  const imageUrl = "https://sxodim.com/uploads/posts/2026/10/synthetic.jpg";
+  const mediaEvent = { name: "SYNTHETIC TEST event", category: "Театр", contactUrl: page };
+  const approved = (): ApprovedOrganizerMedia => ({ id: "synthetic-approval", eventSourceUrl: page, localAssetPath: "/assets/event-posters/synthetic-approved.jpg", reviewStatus: "approved", rightsHolder: "Synthetic owner", grantReference: "private:synthetic-evidence", approvedAt: "2026-10-19T10:00:00Z", expiresAt: null, revokedAt: null, permissions: { store: true, publicWebDisplay: true, publicProjectDistribution: true }, validatedFile: { mime: "image/jpeg", width: 720, height: 960, sha256: "a".repeat(64), validatedAt: "2026-10-19T10:00:00Z" }, credit: "Synthetic owner" });
+  const policy = (poster = approved()): EventMediaPolicy => ({ ...mediaPolicy, approvedOrganizerMedia: [poster] });
+
+  it("records only admin discovery metadata, never a permission to copy or display", () => {
+    const candidates = extractSxodimMediaCandidates(detail({ image: imageUrl }), page, at);
+    expect(candidates).toEqual([{ publisher: "sxodim-astana-noncommercial", sourcePageUrl: page, candidateUrl: imageUrl, discoveredAt: at, discoveredVia: "schema.org/Event.image", rights: "unknown", displayAllowed: false, downloadAllowed: false }]);
+    expect(parseSxodimDetail(detail({ image: imageUrl }), candidate, at)[0].image).toBeNull();
+  });
+  it.each(["https://other.example/poster.jpg", "https://sxodim.com/uploads/posts/test.svg", "https://user:pass@sxodim.com/uploads/posts/test.jpg", "https://sxodim.com/uploads/posts/test.jpg?token=x"]) ("refuses unapproved candidate metadata URL %s", image => {
+    expect(extractSxodimMediaCandidates(detail({ image }), page, at)).toEqual([]);
+  });
+  it("requires matching Event/source and bounds discoveries", () => {
+    expect(extractSxodimMediaCandidates(detail({ image: imageUrl, "@type": "Article" }), page, at)).toEqual([]);
+    expect(extractSxodimMediaCandidates(detail({ image: imageUrl, url: page + "-other" }), page, at)).toEqual([]);
+    expect(extractSxodimMediaCandidates(detail({ image: Array.from({ length: 8 }, (_, i) => imageUrl.replace("synthetic", `synthetic-${i}`)) }), page, at)).toHaveLength(4);
+  });
+  it("discovers from the already fetched HTML without additional requests or public leakage", async () => {
+    const fetcher = vi.fn(async (url: string) => response(url.endsWith("robots.txt") ? "User-agent: *\nDisallow:\n" : url === SXODIM_TERMS ? permission : url === SXODIM_INDEX ? index : detail({ image: imageUrl })));
+    const hook = vi.fn();
+    const data = await fetchLiveAstanaEvents({ fetcher, now: at, onMediaCandidates: hook });
+    expect(fetcher).toHaveBeenCalledTimes(4);
+    expect(hook).toHaveBeenCalledOnce();
+    expect(hook.mock.calls[0][0][0].candidateUrl).toBe(imageUrl);
+    expect(JSON.stringify(data)).not.toContain(imageUrl);
+    expect(data.items[0].image).toBeNull();
+  });
+  it("does not erase source facts if admin discovery storage fails", async () => {
+    const fetcher = async (url: string) => response(url.endsWith("robots.txt") ? "User-agent: *\nDisallow:\n" : url === SXODIM_TERMS ? permission : url === SXODIM_INDEX ? index : detail({ image: imageUrl }));
+    const data = await fetchLiveAstanaEvents({ fetcher, now: at, onMediaCandidates: () => { throw Error("synthetic storage failure"); } });
+    expect(data.items).toHaveLength(1);
+  });
+  it("uses labeled owned category art, not a source poster or fabricated event photo", () => {
+    const result = resolveEventMedia(mediaEvent, { now: at });
+    expect(result).toMatchObject({ kind: "category_illustration", src: "/assets/ideas/03-ballet-theatre.jpg", label: "Иллюстрация категории", notice: "Иллюстрация категории, не афиша мероприятия", fit: "cover", credit: null });
+    expect(result.alt).toContain("не афиша");
+    expect(resolveEventMedia({ ...mediaEvent, category: "Бизнес" }, { now: at })).toMatchObject({ kind: "none", src: null, label: "Без афиши", fit: null });
+  });
+  it("rejects a made-up illustration filename even with an eligible category", () => {
+    const custom = policy(); custom.approvedOrganizerMedia = [];
+    custom.ownedCategoryIllustrations = { ...custom.ownedCategoryIllustrations, mappings: [{ categories: ["Театр"], src: "/assets/ideas/03-fake.jpg", label: "Test" }] };
+    expect(resolveEventMedia(mediaEvent, { policy: custom, now: at }).kind).toBe("none");
+  });
+  it("prefers a bound approved local organizer poster without exposing evidence references", () => {
+    const result = resolveEventMedia(mediaEvent, { policy: policy(), now: at });
+    expect(result).toMatchObject({ kind: "organizer_poster", src: "/assets/event-posters/synthetic-approved.jpg", label: "Афиша организатора", fit: "contain", credit: "Synthetic owner" });
+    expect(JSON.stringify(result)).not.toContain("private:");
+  });
+  it.each(["pending", "revoked", "expired", "wrong-event", "missing-permission", "remote", "bad-file", "missing-record"]) ("fails closed for %s organizer media", reason => {
+    const poster = approved();
+    if (reason === "pending") poster.reviewStatus = "pending";
+    if (reason === "revoked") poster.revokedAt = "2026-10-20T10:00:00Z";
+    if (reason === "expired") poster.expiresAt = at;
+    if (reason === "wrong-event") poster.eventSourceUrl += "-other";
+    if (reason === "missing-permission") poster.permissions.publicProjectDistribution = false;
+    if (reason === "remote") poster.localAssetPath = imageUrl;
+    if (reason === "bad-file") poster.validatedFile.sha256 = "not-a-hash";
+    if (reason === "missing-record") delete (poster as Partial<ApprovedOrganizerMedia>).validatedFile;
+    expect(resolveEventMedia(mediaEvent, { policy: policy(poster), now: at }).kind).toBe("category_illustration");
   });
 });
 
@@ -161,5 +243,28 @@ describe("events API", () => {
     expect(body.items[0].requiredCredit.text).toBe("Давай Сходим");
     expect(body.fetchedAt).toBe(fixture.fetchedAt);
     expect(result.headers.get("cache-control")).toContain("no-store");
+  });
+  it("adds safe media only to response items, preserving null images and raw cache DTO", async () => {
+    const fixture = snap(); fixture.items[0].category = "Театр";
+    vi.spyOn(liveEventsService, "get").mockResolvedValue({ ...fixture, dataMode: "live", freshness: "fresh", cacheStatus: "hit", warnings: [] });
+    const body = await (await GET(new Request("https://qettyq.example/api/events"))).json();
+    expect(body.items[0].media.kind).toBe("category_illustration");
+    expect(body.items[0].image).toBeNull();
+    expect(body.items[0].requiredCredit.text).toBe("Давай Сходим");
+    expect(fixture.items[0]).not.toHaveProperty("media");
+    expect(JSON.stringify(body)).not.toContain("candidateUrl");
+  });
+  it("keeps provider failure explicitly unavailable and does not invent media/events", async () => {
+    vi.spyOn(liveEventsService, "get").mockResolvedValue({ ...snap(), items: [], dataMode: "unavailable", freshness: "unavailable", cacheStatus: "miss", warnings: ["SOURCE_HTTP_503"] });
+    const result = await GET(new Request("https://qettyq.example/api/events"));
+    const body = await result.json();
+    expect(result.status).toBe(503); expect(body.items).toEqual([]); expect(body.freshness).toBe("unavailable");
+  });
+  it("does not relabel a stale fallback as live when adding media", async () => {
+    const fixture = snap(); fixture.items[0].category = "Театр";
+    vi.spyOn(liveEventsService, "get").mockResolvedValue({ ...fixture, dataMode: "snapshot", freshness: "stale", cacheStatus: "stale-fallback", warnings: ["SOURCE_HTTP_503"] });
+    const body = await (await GET(new Request("https://qettyq.example/api/events"))).json();
+    expect(body.dataMode).toBe("snapshot"); expect(body.freshness).toBe("stale");
+    expect(body.items[0].media.kind).toBe("category_illustration");
   });
 });

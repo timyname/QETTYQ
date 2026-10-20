@@ -21,7 +21,8 @@ function isSnapshot(value: unknown): value is SxodimSnapshot {
 
 /** Cloudflare Cache API is local to a data center; not a global distributed rate limiter. */
 export function cloudflareEventCache(): SnapshotCache {
-  const key = new Request("https://qettyq-app.ablecorgi64.chatgpt.site/__qettyq_internal_cache/sxodim-astana-v1");
+  // v2 drops promotion-order caches after switching to near-date discovery priority.
+  const key = new Request("https://qettyq-app.ablecorgi64.chatgpt.site/__qettyq_internal_cache/sxodim-astana-v2");
   const cache = (globalThis as unknown as { caches?: { default?: Cache } }).caches?.default;
   return {
     async read() {

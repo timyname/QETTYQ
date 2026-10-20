@@ -1,3 +1,6 @@
+import defaultMediaPolicy from "../../../data/media-policy.json";
+import ownedIllustrations from "../../../public/assets/ideas/manifest.json";
+
 /** Worker-compatible, fixed-source adapter. No Node TCP/DNS, login, JS evaluation or photos. */
 export const SXODIM_INDEX = "https://sxodim.com/astana";
 export const SXODIM_TERMS = "https://sxodim.com/polzovatelskoe-soglashenie";
@@ -13,7 +16,7 @@ export type LiveAstanaEvent = {
   priceFromKzt: number | null;
   price: { kind: "unknown" | "exact" | "from"; minMinor: number | null; currency: "KZT" | null; basis: "unknown" };
   status: "scheduled" | "unknown"; availability: "unknown";
-  bookingUrl: string | null; contactUrl: string; image: null;
+  bookingUrl: string | null; contactUrl: string; organizerUrl?: string | null; image: null;
   requiredCredit: { text: "Давай Сходим"; url: string };
   fetchedAt: string;
   provenance: { sourceId: "sxodim-astana-noncommercial"; sourceUrl: string; parserVersion: "sxodim-jsonld-v1"; scheduleQuality: "observed"; priceQuality: "observed" | "unknown" | "conflicting" };
@@ -25,6 +28,30 @@ export type SxodimSnapshot = {
   coverage: { indexCandidates: number; detailPagesRequested: number; importedOccurrences: number; rejected: number; scope: string };
 };
 export type SourceFetcher = (input: string, init?: RequestInit) => Promise<Response>;
+export type PublisherMediaCandidate = {
+  publisher: "sxodim-astana-noncommercial";
+  sourcePageUrl: string; candidateUrl: string; discoveredAt: string;
+  discoveredVia: "schema.org/Event.image";
+  rights: "unknown"; displayAllowed: false; downloadAllowed: false;
+};
+export type ApprovedOrganizerMedia = {
+  id: string; eventSourceUrl: string; localAssetPath: string;
+  reviewStatus: "pending" | "approved" | "rejected" | "revoked";
+  rightsHolder: string; grantReference: string; approvedAt: string;
+  expiresAt: string | null; revokedAt: string | null;
+  permissions: { store: boolean; publicWebDisplay: boolean; publicProjectDistribution: boolean };
+  validatedFile: { mime: "image/jpeg" | "image/png" | "image/webp" | "image/avif"; width: number; height: number; sha256: string; validatedAt: string };
+  credit: string | null;
+};
+export type EventMediaPolicy = {
+  remoteHotlinkingEnabled: boolean;
+  approvedOrganizerMedia: ApprovedOrganizerMedia[];
+  ownedCategoryIllustrations: { provenance: string; rightsBasis: string; mediaType: string; mandatoryNotice: string; mappings: Array<{ categories: string[]; src: string; label: string }> };
+};
+export type EventMediaPlan =
+  | { kind: "organizer_poster"; src: string; alt: string; label: string; notice: string | null; credit: string | null; fit: "contain" }
+  | { kind: "category_illustration"; src: string; alt: string; label: string; notice: string; credit: null; fit: "cover" }
+  | { kind: "none"; src: null; alt: string; label: string; notice: string; credit: null; fit: null; reason: "no_approved_media" };
 type Candidate = { id: string; name: string; url: string; bookingUrl: string | null; category: string | null; venueName: string | null; info: string; priceLabel: string | null };
 type ObjectValue = Record<string, unknown>;
 const object = (value: unknown): ObjectValue => value !== null && typeof value === "object" && !Array.isArray(value) ? value as ObjectValue : {};
@@ -49,6 +76,51 @@ function bookingUrl(input: string | null): string | null {
   try { const url = new URL(input, SXODIM_INDEX); return url.origin === "https://sxodim.com" && !url.username && !url.password && /^\/astana\/[a-z0-9-]+\/[a-z0-9-]+\/tickets$/.test(url.pathname) && !url.search && !url.hash ? url.href : null; } catch { return null; }
 }
 
+/** Admin-only discovery metadata. A URL is not a copyright grant or a display instruction. */
+export function extractSxodimMediaCandidates(html: string, sourcePageUrl: string, discoveredAt: string): PublisherMediaCandidate[] {
+  if (!eventUrl(sourcePageUrl) || !Number.isFinite(Date.parse(discoveredAt)) || new TextEncoder().encode(html).byteLength > MAX_BYTES) return [];
+  const found = new Map<string, PublisherMediaCandidate>();
+  const scripts = [...html.matchAll(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)].slice(0, 20);
+  for (const script of scripts) {
+    let item: ObjectValue;
+    try { item = object(JSON.parse(script[1])); } catch { continue; }
+    if (item["@type"] !== "Event" || eventUrl(typeof item.url === "string" ? item.url : null) !== sourcePageUrl) continue;
+    for (const image of (Array.isArray(item.image) ? item.image : [item.image]).slice(0, 4)) {
+      const raw = typeof image === "string" ? image : object(image).contentUrl ?? object(image).url;
+      if (typeof raw !== "string") continue;
+      try {
+        const url = new URL(raw, sourcePageUrl);
+        if (url.origin !== "https://sxodim.com" || url.username || url.password || url.search || url.hash || !/^\/uploads\/posts\/[a-z0-9/_.-]+\.(jpe?g|png|webp|avif)$/i.test(url.pathname)) continue;
+        found.set(url.href, { publisher: "sxodim-astana-noncommercial", sourcePageUrl, candidateUrl: url.href, discoveredAt, discoveredVia: "schema.org/Event.image", rights: "unknown", displayAllowed: false, downloadAllowed: false });
+      } catch { /* Invalid image metadata is ignored; nothing is downloaded. */ }
+    }
+  }
+  return [...found.values()].slice(0, 4);
+}
+
+/** Server-only safe render plan. Public image and raw source/cache facts stay unchanged. */
+export function resolveEventMedia(event: Pick<LiveAstanaEvent, "name" | "category" | "contactUrl">, options: { policy?: EventMediaPolicy; now?: string } = {}): EventMediaPlan {
+  const policy: EventMediaPolicy = options.policy ?? defaultMediaPolicy;
+  const now = Date.parse(options.now ?? new Date().toISOString());
+  const safePosterPath = (path: string) => /^\/assets\/event-posters\/[a-z0-9][a-z0-9._-]{0,120}\.(jpe?g|png|webp|avif)$/i.test(path) && !path.includes("..");
+  for (const item of (Array.isArray(policy.approvedOrganizerMedia) ? policy.approvedOrganizerMedia : []).slice(0, 1000)) {
+    if (!item || item.eventSourceUrl !== event.contactUrl || item.reviewStatus !== "approved" || item.revokedAt !== null || typeof item.rightsHolder !== "string" || !item.rightsHolder.trim() || typeof item.grantReference !== "string" || !item.grantReference.trim() || typeof item.localAssetPath !== "string" || !safePosterPath(item.localAssetPath)) continue;
+    if (!Number.isFinite(now) || !Number.isFinite(Date.parse(item.approvedAt)) || Date.parse(item.approvedAt) > now || item.expiresAt !== null && (!Number.isFinite(Date.parse(item.expiresAt)) || Date.parse(item.expiresAt) <= now)) continue;
+    if (item.permissions?.store !== true || item.permissions?.publicWebDisplay !== true || item.permissions?.publicProjectDistribution !== true) continue;
+    const file = item.validatedFile;
+    if (!file || !["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.mime) || file.width < 1 || file.height < 1 || file.width > 8192 || file.height > 8192 || !Number.isInteger(file.width) || !Number.isInteger(file.height) || !/^[a-f0-9]{64}$/i.test(file.sha256) || !Number.isFinite(Date.parse(file.validatedAt)) || Date.parse(file.validatedAt) > now) continue;
+    return { kind: "organizer_poster", src: item.localAssetPath, alt: `Афиша «${event.name}», предоставленная организатором с разрешением.`, label: "Афиша организатора", notice: null, credit: typeof item.credit === "string" ? item.credit : null, fit: "contain" };
+  }
+  const owned = policy.ownedCategoryIllustrations;
+  if (owned?.mediaType === "category_illustration" && owned.rightsBasis === "project_generated_visuals" && owned.provenance === "public/assets/ideas/manifest.json" && typeof owned.mandatoryNotice === "string" && owned.mandatoryNotice.trim() && Array.isArray(owned.mappings)) {
+    const category = event.category?.trim().toLowerCase();
+    const match = owned.mappings.slice(0, 100).find(mapping => Array.isArray(mapping?.categories) && mapping.categories.some(alias => typeof alias === "string" && alias.trim().toLowerCase() === category));
+    // Only existing project illustration slots are eligible; arbitrary local or remote URLs are denied.
+    if (match && ownedIllustrations.cards.some(card => card.src === match.src)) return { kind: "category_illustration", src: match.src, alt: `Иллюстрация категории «${match.label}» — не афиша этого мероприятия.`, label: "Иллюстрация категории", notice: owned.mandatoryNotice, credit: null, fit: "cover" };
+  }
+  return { kind: "none", src: null, alt: "Афиша отсутствует", label: "Без афиши", notice: "Афиша не добавлена: права на изображение не подтверждены.", credit: null, fit: null, reason: "no_approved_media" };
+}
+
 /** Public index is used only to discover bounded same-origin event-page links. */
 export function extractSxodimCandidates(html: string): Candidate[] {
   if (new TextEncoder().encode(html).byteLength > MAX_BYTES) throw new Error("SOURCE_DOCUMENT_TOO_LARGE");
@@ -67,6 +139,29 @@ export function extractSxodimCandidates(html: string): Candidate[] {
     candidates.set(id, { id, name, url, bookingUrl: links.map(link => bookingUrl(link)).find(Boolean) ?? null, category: text(attr(start[0], "data-category"), 80), venueName: afterTime?.split(",")[0]?.trim() ?? null, info, priceLabel: text(attr(start[0], "data-minprice"), 30) });
   }
   return [...candidates.values()];
+}
+
+/** Discovery priority only: never used as an occurrence or exposed as an event fact. */
+export function prioritizeSxodimCandidates(candidates: Candidate[], fetchedAt: string): Candidate[] {
+  const clock = new Date(fetchedAt), year = Number(new Intl.DateTimeFormat("en", { timeZone: "Asia/Almaty", year: "numeric" }).format(clock));
+  const monthNames = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+  const priority = (candidate: Candidate) => {
+    const match = candidate.info.match(/\b(\d{1,2})\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)(?:\s+(20\d{2}))?\s+в\s+(\d{1,2}):(\d{2})\b/iu);
+    if (!match) return Number.MAX_SAFE_INTEGER;
+    const month = monthNames.indexOf(match[2].toLowerCase()) + 1;
+    const guessed = Date.parse(`${match[3] ?? year}-${String(month).padStart(2, "0")}-${match[1].padStart(2, "0")}T${match[4].padStart(2, "0")}:${match[5]}:00+05:00`);
+    // Unknown/old date labels never outrank near-future links; JSON-LD remains the only date authority.
+    return Number.isFinite(guessed) && guessed >= +clock ? guessed : Number.MAX_SAFE_INTEGER;
+  };
+  return [...candidates].sort((a, b) => priority(a) - priority(b));
+}
+
+function organizerUrl(value: unknown): string | null {
+  if (typeof value !== "string" || value.length > 2048) return null;
+  try {
+    const url = new URL(value), host = url.hostname.toLowerCase();
+    return url.protocol === "https:" && !url.username && !url.password && !url.port && host !== "sxodim.com" && host.includes(".") && !host.endsWith(".local") && !host.endsWith(".localhost") && !/^(?:\d{1,3}\.){3}\d{1,3}$/.test(host) && !host.includes(":") ? url.href : null;
+  } catch { return null; }
 }
 
 function validInstant(value: unknown): string | null {
@@ -117,7 +212,7 @@ export function parseSxodimDetail(html: string, candidate: Candidate, fetchedAt:
     result.push({ id: `sxodim:${candidate.id}:${start}`, name: title, cityId: "astana", category: candidate.category, venueName: candidate.venueName, address: text(addressObject.streetAddress, 350), lat: knownGeo ? latNumber : null, lon: knownGeo ? lonNumber : null,
       startsAt: start, endsAt: end, timeZone: "Asia/Almaty", durationMinutes: end ? Math.round((Date.parse(end) - Date.parse(start)) / 60_000) : null, contentLanguage: language,
       priceFromKzt: priceMinor === null ? null : priceMinor / 100, price: { kind, minMinor: priceMinor, currency: priceMinor === null ? null : "KZT", basis: "unknown" }, status: /EventScheduled|EventRescheduled/.test(String(item.eventStatus ?? "")) ? "scheduled" : "unknown", availability: "unknown",
-      bookingUrl: candidate.bookingUrl, contactUrl: candidate.url, image: null, requiredCredit: { text: "Давай Сходим", url: candidate.url }, fetchedAt,
+      bookingUrl: candidate.bookingUrl, contactUrl: candidate.url, organizerUrl: organizerUrl(object(first(item.organizer)).url), image: null, requiredCredit: { text: "Давай Сходим", url: candidate.url }, fetchedAt,
       provenance: { sourceId: "sxodim-astana-noncommercial", sourceUrl: candidate.url, parserVersion: "sxodim-jsonld-v1", scheduleQuality: "observed", priceQuality: priceConflict ? "conflicting" : priceMinor === null ? "unknown" : "observed" },
       warnings: [...(!knownGeo ? ["COORDINATES_UNKNOWN"] : []), ...(!end ? ["DURATION_UNKNOWN"] : []), ...(priceMinor === null ? [priceConflict ? "PRICE_CONFLICT" : "PRICE_UNKNOWN"] : priceMinor > 0 ? ["TICKET_FEES_MAY_APPLY"] : []), "AVAILABILITY_CONFIRM_WITH_ORGANIZER", ...(language === "und" ? ["CONTENT_LANGUAGE_UNKNOWN"] : [])] });
   }
@@ -142,7 +237,7 @@ export async function fetchSxodimDocument(url: string, fetcher: SourceFetcher = 
 }
 
 /** One refresh: robots + permission check, index, at most eight sequential event pages. */
-export async function fetchLiveAstanaEvents(options: { fetcher?: SourceFetcher; now?: string } = {}): Promise<SxodimSnapshot> {
+export async function fetchLiveAstanaEvents(options: { fetcher?: SourceFetcher; now?: string; onMediaCandidates?: (candidates: PublisherMediaCandidate[]) => void | Promise<void> } = {}): Promise<SxodimSnapshot> {
   const fetcher = options.fetcher ?? fetch, fetchedAt = options.now ?? new Date().toISOString();
   const robots = await fetchSxodimDocument("https://sxodim.com/robots.txt", fetcher);
   if (!/^User-agent:\s*\*\s*\r?\nDisallow:\s*$/i.test(robots.trim())) throw new Error("SOURCE_ROBOTS_POLICY_REQUIRES_REVIEW");
@@ -151,11 +246,19 @@ export async function fetchLiveAstanaEvents(options: { fetcher?: SourceFetcher; 
   const candidates = extractSxodimCandidates(await fetchSxodimDocument(SXODIM_INDEX, fetcher));
   if (!candidates.length) throw new Error("SOURCE_MARKUP_CHANGED");
   // Prefer explicitly timed listings; detail JSON-LD, not index date inference, decides applicability.
-  const selected = candidates.filter(candidate => /\b\d{1,2}:\d{2}\b/.test(candidate.info)).slice(0, MAX_DETAILS);
+  const selected = prioritizeSxodimCandidates(candidates.filter(candidate => /\b\d{1,2}:\d{2}\b/.test(candidate.info)), fetchedAt).slice(0, MAX_DETAILS);
   const events = new Map<string, LiveAstanaEvent>(); let rejected = 0;
   for (const candidate of selected) {
-    try { const items = parseSxodimDetail(await fetchSxodimDocument(candidate.url, fetcher), candidate, fetchedAt); if (!items.length) rejected++; for (const item of items) events.set(item.id, item); } catch (error) { if (error instanceof Error && error.message === "SOURCE_RATE_LIMITED") throw error; rejected++; }
+    try {
+      const html = await fetchSxodimDocument(candidate.url, fetcher);
+      const items = parseSxodimDetail(html, candidate, fetchedAt);
+      if (!items.length) rejected++;
+      for (const item of items) events.set(item.id, item);
+      if (items.length && options.onMediaCandidates) {
+        try { await options.onMediaCandidates(extractSxodimMediaCandidates(html, candidate.url, fetchedAt)); } catch { /* Admin metadata failure must not erase valid event facts. */ }
+      }
+    } catch (error) { if (error instanceof Error && error.message === "SOURCE_RATE_LIMITED") throw error; rejected++; }
   }
   if (!events.size) throw new Error("SOURCE_NO_CONFIRMED_UPCOMING_EVENTS");
-  return { source: { id: "sxodim-astana-noncommercial", name: "Давай Сходим", url: SXODIM_INDEX, termsUrl: SXODIM_TERMS, reuse: "noncommercial_with_credit", mediaCopied: false }, fetchedAt, expiresAt: new Date(Date.parse(fetchedAt) + EVENT_REFRESH_MS).toISOString(), items: [...events.values()].sort((a, b) => a.startsAt.localeCompare(b.startsAt)), coverage: { indexCandidates: candidates.length, detailPagesRequested: selected.length, importedOccurrences: events.size, rejected, scope: "First eight explicitly timed public listings; not a complete city calendar. No photographs copied." } };
+  return { source: { id: "sxodim-astana-noncommercial", name: "Давай Сходим", url: SXODIM_INDEX, termsUrl: SXODIM_TERMS, reuse: "noncommercial_with_credit", mediaCopied: false }, fetchedAt, expiresAt: new Date(Date.parse(fetchedAt) + EVENT_REFRESH_MS).toISOString(), items: [...events.values()].sort((a, b) => a.startsAt.localeCompare(b.startsAt)), coverage: { indexCandidates: candidates.length, detailPagesRequested: selected.length, importedOccurrences: events.size, rejected, scope: "At most eight explicitly timed public listings prioritized by near-date labels; occurrences verified only in Event JSON-LD. Not a complete city calendar. No photographs copied." } };
 }

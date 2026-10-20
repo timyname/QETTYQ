@@ -3,10 +3,10 @@ import { clusterMapPoints, clusterMarkerSize, createClusterLabel, createMapToolt
 
 describe("CityMap tooltip DOM", () => {
   it("keeps untrusted title and date as text rather than HTML", () => {
-    type TestNode = { tag: string; textContent: string | null; children: TestNode[]; append: (...nodes: TestNode[]) => void };
+    type TestNode = { tag: string; textContent: string | null; children: TestNode[]; appendChild: (node: TestNode) => TestNode };
     const created: TestNode[] = [];
     const document = { createElement(tag: string) {
-      const node: TestNode = { tag, textContent: null, children: [], append(...nodes) { this.children.push(...nodes); } };
+      const node: TestNode = { tag, textContent: null, children: [], appendChild(child) { this.children.push(child); return child; } };
       created.push(node);
       return node;
     } } as unknown as Document;

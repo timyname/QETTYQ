@@ -1,13 +1,10 @@
 import { DeterministicProvider } from "./deterministic";
-import { OpenAIProvider } from "./openai";
 import type { LLMProvider } from "./types";
 
 export function createLLMProvider(): LLMProvider {
-  const enabled = process.env.LLM_ENABLED === "true";
-  const provider = process.env.LLM_PROVIDER;
-  const key = process.env.OPENAI_API_KEY;
-  const model = process.env.LLM_MODEL;
-  if (enabled && provider === "openai" && key && model) return new OpenAIProvider(key, model);
+  // Legacy recommendations have no per-request consent or durable TEST reservation.
+  // A configured key must NEVER implicitly enable billing here. The sole permitted
+  // paid path is the explicitly opted-in, bounded local smart-assistant chat adapter.
   return new DeterministicProvider();
 }
 

@@ -65,7 +65,7 @@ test("основной путь: 15 реакций → условия → реа
   await expect(dock.getByRole("button", { name: "Поиск", exact: true })).toHaveAttribute("aria-current", "page");
   await dock.getByRole("button", { name: "Карта", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Город на карте" })).toBeVisible();
-  await expect(page.locator(".city-map")).toHaveClass(/leaflet-container/);
+  await expect(page.locator('.maplibregl-canvas, [data-map-engine="fallbackleaflet"] .leaflet-container')).toBeVisible();
   await dock.getByRole("button", { name: "Профиль", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Твой QETTYQ" })).toBeVisible();
   await page.getByRole("button", { name: "QETTYQ — на главную" }).click();

@@ -4,7 +4,7 @@ import type { Locale } from "@/data/events";
 export const LOCAL_MEMORY_KEY = "qettyq.local-memory.v1";
 export const LOCAL_MEMORY_VERSION = 1;
 export const MAX_CHAT_MESSAGES = 24;
-export const MAX_MESSAGE_CHARS = 500;
+export const MAX_MESSAGE_CHARS = 4000;
 
 export type LocalChatRole = "user" | "assistant";
 
@@ -13,7 +13,8 @@ export type LocalChatMessage = {
   role: LocalChatRole;
   text: string;
   createdAt: string;
-  mode: "user" | "deterministic";
+  mode: "user" | "deterministic" | "openai";
+  citations?: Array<{ url: string; title: string; startIndex?: number; endIndex?: number }>;
 };
 
 export type LocalPreferenceProfile = {
@@ -42,7 +43,7 @@ export interface StorageLike {
 const goals = new Set<Goal>(["food", "walk", "activity", "new"]);
 const locales = new Set<Locale>(["ru", "kk", "en"]);
 const roles = new Set<LocalChatRole>(["user", "assistant"]);
-const modes = new Set<LocalChatMessage["mode"]>(["user", "deterministic"]);
+const modes = new Set<LocalChatMessage["mode"]>(["user", "deterministic", "openai"]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -74,12 +75,23 @@ function safeMessage(value: unknown): LocalChatMessage | null {
   const createdAt = typeof value.createdAt === "string" && Number.isFinite(Date.parse(value.createdAt))
     ? value.createdAt
     : new Date(0).toISOString();
+  const citations: NonNullable<LocalChatMessage['citations']> = [];
+  for (const citation of Array.isArray(value.citations) ? value.citations.slice(0, 20) : []) {
+    if (!isRecord(citation) || typeof citation.url !== 'string' || citation.url.length > 2048 || typeof citation.title !== 'string') continue;
+    try {
+      const url = new URL(citation.url);
+      if (url.protocol !== 'https:' || url.username || url.password || !url.hostname.includes('.') || url.hostname.endsWith('.local') || url.hostname.endsWith('.localhost') || /^(?:\d{1,3}\.){3}\d{1,3}$/.test(url.hostname)) continue;
+      const start = citation.startIndex, end = citation.endIndex;
+      citations.push({ url: url.href, title: citation.title.slice(0, 200), ...(typeof start === 'number' && typeof end === 'number' && Number.isInteger(start) && Number.isInteger(end) && start >= 0 && end > start && end <= text.length ? { startIndex: start, endIndex: end } : {}) });
+    } catch { /* Ignore unsafe links, never interpret stored HTML. */ }
+  }
   return {
     id: value.id,
     role: value.role as LocalChatRole,
     mode: value.mode as LocalChatMessage["mode"],
     text,
     createdAt,
+    ...(citations.length ? { citations } : {}),
   };
 }
 

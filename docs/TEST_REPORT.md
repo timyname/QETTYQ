@@ -1,5 +1,15 @@
 # Отчёт проверки
 
+## Актуальный проход · live evidence, D1, public UI · 20.10.2026
+
+- `pnpm test`: финально **261/261 PASS**, 23 файла; `pnpm test:e2e --workers=1`: **12/12 PASS**, 18.1 с. Production street-routing HTTP 200 после исправления Cloudflare redirect. Подробности в `docs/agent-reports/A-live-release-20261020.md`.
+- `pnpm typecheck`: PASS. Ранее в этом проходе `pnpm build`, `pnpm data:validate` (80 snapshot POI) — PASS.
+- Root E2E: 12/12 PASS. Built Worker preview: 12/12 PASS после стабилизации ожидания layout при resize (`expect.poll` с тем же условием отсутствия пересечения CTA/dock). Synthetic routing fixture не является доказательством реального внешнего маршрута.
+- Sites v6 и v7 build helper: все 5 стадий PASS. D1 таблицы `qettyq_ai_public_reservations` / `qettyq_routing_throttle` подтверждены native overview. Публичные health/events/status endpoints отвечают, афиша live/fresh: 8 карточек и реальные публикации.
+- Публичный AI status: `API_KEY_MISSING`; вызов модели публично не проводился, квота прежнего локального теста не сбрасывалась. Проверки бюджета/idempotency/cooldown/нет DB/provider failure — offline unit, не оплаченные запросы.
+- Маршрутизатор локально вернул 708.5 м / 567.2 с / 58 вершин для двух публичных тестовых точек. Первый public Worker вызов завершился 503 до HTTP-ответа провайдера; недоказанное предположение об IP-блокировке не принимается за факт. Найдена несовместимость `redirect:'error'` в Cloudflare; финальная повторная проверка отражается в отчёте релиза.
+- Проверены реальные Chrome UI: live-афиша со ссылками, полноэкранная карта/маркеры, навигация 4 tabs; 430×932. Ошибка очистки `null.getBoundingClientRect` исправлена. Реальный iPhone и сквозной публичный AI не проверены.
+
 ## Финальная интеграция live-афиши и glass · 20.10.2026
 
 Завершающий прогон: Site `PORT=5173 pnpm test:e2e --workers=1`: 8/8 PASS,10.5s. Исходный organizer-тест не ослаблялся; readiness исправил реальную раннюю потерю клика. Новый тест использует явно synthetic events fixture, а не выдаёт mock за live.
@@ -104,3 +114,10 @@ CUA mobile:430×932,390×844,360×800; на390 CTA632.6..680.6 при mainbottom
 | App build/E2E/deploy | NOT RUN в этом проходе | Код приложения не менялся; прежние результаты выше не относятся к новым147 макетам |
 
 Фактически исполнены bundled Node команды `redesign-penpot-swipes.mjs`, `complete-penpot-interactions.mjs`, `run-penpot-list-repairs.mjs`, `run-penpot-editors.mjs`, `finalize-penpot-controls.mjs`, `repair-swipe-overlay.mjs`, `redesign-feed-carousel.mjs`, `clip-map-surfaces.mjs`, `audit-penpot-controls.mjs`, `export-swipe-contract.mjs`, `export-penpot-review.mjs`, а также малые official MCP вызовы по сценарию. Два больших MCP скрипта превысили30s ответного timeout, но фактическое завершение отдельно прочитано через API и затем перепроверено. После этого операции разделены на небольшие batches. Native exports просмотрены для05/08/08.editor/19.selected.culture/14/27/29/29.followup; браузерный clickflow — через CUA.
+# Дополнение 20.10.2026: AI и доказательства для презентации
+
+- Единственный разрешённый live-тест серверного `answerSmartAssistant`: GPT-5.5 + `web_search`, HTTP 200, режим `openai`, одна цитата Visit Astana. Личные данные и геопозицию не передавали. Не считать это проверкой публичного AI или браузерного AI-сценария.
+- После теста `GET /api/assistant/status`: `available:false`, `reason:TEST_QUOTA_EXHAUSTED`, `remainingTestCalls:0`. Квоту не сбрасывали.
+- Chrome, 430×932: фактические скриншоты карты, плана A/B с выбранной вручную публичной точкой, ответа чата по правилам с карточками, афиши, бюджета, свайпов и памяти. Без моков ответов HTTP в этом проходе.
+- В dev-логах при переходах карты обнаружена ошибка очистки `MapCanvas`: обращение к `null.getBoundingClientRect`. В этом проходе презентации код карты не менялся. Это открытая ошибка, не статус «без ошибок».
+- Презентация v8: финализатор подтвердил 10 слайдов, 0 структурных/геометрических замечаний и повторный импорт PPTX. Все 10 страниц финального PDF просмотрены, наложений и обрезанных блоков не обнаружено. Проверка в нативном PowerPoint не проводилась. Отчёт: `docs/agent-reports/A9-pitch-v8.md`.

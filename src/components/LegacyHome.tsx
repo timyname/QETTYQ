@@ -118,7 +118,7 @@ export default function Home() {
         body: JSON.stringify({ goal, minutes, budget, likedTags: tags, origin: { lat: 51.1282, lon: 71.4304 } }),
       });
       if (!response.ok) throw new Error("Не удалось получить варианты");
-      const payload = await response.json();
+      const payload = await response.json() as { items: Recommendation[] };
       setResults(payload.items);
       setStage("results");
     } catch (reason) {

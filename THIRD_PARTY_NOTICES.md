@@ -4,7 +4,13 @@
 
 © OpenStreetMap contributors. The Astana POI snapshot and map data are subject to the Open Database License (ODbL). Attribution and license: https://www.openstreetmap.org/copyright . Runtime map tiles also retain visible attribution. Do not remove credits required by any future provider.
 
-## Illustrations
+## Runtime map and walking routes
+
+MapLibre GL JS is BSD-3-Clause licensed. The copied runtime worker's notice is in `public/assets/maplibre-LICENSE.txt`. OpenFreeMap/OpenMapTiles/OpenStreetMap attribution stays visible on the map. OpenFreeMap service: https://openfreemap.org/ .
+
+Walking geometry comes from the dedicated FOSSGIS / OSRM Foot graph, using OpenStreetMap data. The UI retains attribution and a "fix the map" link. The application sends a valid identifying user agent and limits global public requests through D1 to one per 1.5 seconds and 200 per day. Provider policy: https://routing.openstreetmap.de/about.html . Route coordinates are sent only after explicit provider-bound consent; the provider may keep technical logs. Do not mislabel driving geometry as walking or remove the credit.
+
+## Project imagery
 
 The 15 onboarding images are generated category illustrations, not evidence of real venues, events, people, prices or schedules. See `public/assets/ideas/manifest.json`. No third-party event photographs were downloaded in this implementation pass.
 
