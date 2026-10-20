@@ -24,6 +24,14 @@ describe('dedicated approved 2GIS browser map credential boundary (synthetic, no
   it('rejects an accidental duplicate of the private server credential', () => {
     expect(browserMapConfig({ '2GIS_API_KEY': privateKey, QETTYQ_2GIS_BROWSER_KEY: privateKey, QETTYQ_2GIS_BROWSER_KEY_APPROVED: 'true' }).enabled).toBe(false);
   });
+  it('permits explicitly approved temporary demo reuse, never implicit reuse', () => {
+    const now = Date.parse('2026-10-21T00:00:00Z');
+    const env = { '2GIS_API_KEY': privateKey, QETTYQ_2GIS_BROWSER_KEY: privateKey, QETTYQ_2GIS_BROWSER_KEY_APPROVED: 'true', QETTYQ_2GIS_REUSE_DEMO_KEY_APPROVED: 'true', QETTYQ_2GIS_DEMO_PUBLIC_UNTIL: '2026-11-20T19:00:00Z' };
+    expect(browserMapConfig(env, now)).toEqual({ enabled: true, provider: '2gis', browserKey: privateKey });
+    for (const flag of ['false', 'TRUE', '1', undefined]) expect(browserMapConfig({ ...env, QETTYQ_2GIS_REUSE_DEMO_KEY_APPROVED: flag }, now).enabled).toBe(false);
+    for (const expiry of ['', 'invalid', '2026-10-20T00:00:00Z', '2027-10-21T00:00:00Z']) expect(browserMapConfig({ ...env, QETTYQ_2GIS_DEMO_PUBLIC_UNTIL: expiry }, now).enabled).toBe(false);
+    expect(browserMapConfig(env, Date.parse(env.QETTYQ_2GIS_DEMO_PUBLIC_UNTIL)).enabled).toBe(false);
+  });
   it.each(['', 'short', 'https://evil.example/script.js', 'javascript:alert(1)', 'a'.repeat(513), '<script>synthetic</script>', 'synthetic\nkey-with-newline'])('rejects malformed public key %s', key => {
     expect(browserMapConfig({ QETTYQ_2GIS_BROWSER_KEY: key, QETTYQ_2GIS_BROWSER_KEY_APPROVED: 'true' }).enabled).toBe(false);
   });

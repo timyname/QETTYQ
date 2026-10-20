@@ -1,5 +1,15 @@
 # Статус QETTYQ
 
+## Карта 2ГИС включена · 21.10.2026
+
+- Основной web runtime — 2GIS MapGL1.78.0 с реальным опубликованным стилем `QETTYQ · Pearl & Jade` (`12d28735-c7be-4e24-9b69-6c57afc51eae`). Сохранены фирменные маркеры, кластеры, стеклянные controls и зелёная дорожная линия. Подпись SDK не скрыта: live v10 hit-test подтвердил видимость под шапкой (82.5–101.5px), без перекрытия dock/toolbar.
+- Owner разрешил временное браузерное использование именно текущего demo key: нет в видимом UI/Git/image, доступен в network по назначению MapGL. В консоли подтверждены Origin `https://qettyqapp.anamai.kz` после reload и Map Tiles1000/месяц/Блокировка. Это тайлы, не число посетителей. Application expiry `2026-11-20T19:00:00Z`; demo blocking21ноября. Google/OpenAI закрыты и их cap/ledger не менялись.
+- VPS `qettyq:vps-20261021-10`, immutable source tree `4f70da76ed07e514084e5bc0affcb050b6e5d31a`, Next build/tsc PASS. Обновлялся только QETTYQ app; SQLite backup verified, SSH ключ сохранён с прежним digest. Чужие native/PWA/presentation изменения в образ не включены.
+- QA:590/590 unit/integration,10/10 synthetic MapGL E2E, typecheck/scopedlint PASS. Live browser: MapGL ready/published style, реальная карточка места, ручной старт и возврат на карту PASS. Один реальный FOSSGIS пеший расчёт:2.8км,≈38мин дороги,35мин проектного посещения+18мин buffer=≈91мин; street geometry действительно нарисована поверх2GIS. Это не 2GIS Routing API и не подтверждение посещения.
+- Данные прежние:749sourced POI,16events,8geocoded; production mixed event plan/reorder3/remove2/unknown-duration smoke PASS, собственная disposable session удалена. Источники фото/права не расширились автоматически от смены карты. Новых платных Google/OpenAI probes0.
+- Сервис/карта/деплой готовы на HTTPS; AI и данные без функциональных изменений. Native physical iPhone+multi-stop external app остаются непроверенными; web Origin не разрешает native. Презентация/видео/заявка этим обновлением не изменялись.
+- Proof: `exports/screenshots/dgis-release/live-map-v10.png`, реальная линия `live-street-route-v9.png`; style publication `style-published.png`. Не synthetic evidence и не физический iPhone.
+
 ## Клавиатура, афиша и компактный маршрут · 21.10.2026
 
 Опубликован `qettyq:vps-20261021-8`, healthy. Приёмка: 572/572 unit/integration PASS, TypeScript PASS; независимый E2E61/61PASS +landscapeattributionhit-test1/1PASS. Immutable production build PASS; public16events/8coordinates, mixedevent3stopreorder/remove2, memoryrestore/deletePASS. Подробности TEST_REPORT. Физический iPhone/WKWebView пока не проверен.

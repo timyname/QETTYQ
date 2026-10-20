@@ -12,6 +12,7 @@ import { markerIconPaths } from './map-marker-icons';
 import s from './MapCanvas.module.css';
 import { DgisMapCanvas } from './DgisMapCanvas';
 import { approvedBrowserMapKey } from '../client/dgis-mapgl';
+import { approvedDgisStyleId } from '../client/dgis-theme';
 
 export type MapCanvasPoint = { id: string; title: string; dateLabel: string; category: string; lat: number; lon: number };
 type Coordinates = { lat: number; lon: number };
@@ -43,7 +44,7 @@ function categoryIcon(category: string, document: Document) {
 }
 
 export function MapCanvas(props: MapCanvasProps) {
-  const [config, setConfig] = useState<{ pending: true } | { pending: false; browserKey: string | null }>({ pending: true });
+  const [config, setConfig] = useState<{ pending: true } | { pending: false; browserKey: string | null; styleId: string | null }>({ pending: true });
   const [unavailable, setUnavailable] = useState(false);
   useEffect(() => {
     const controller = new AbortController(); let disposed = false;
@@ -53,13 +54,14 @@ export function MapCanvas(props: MapCanvasProps) {
         if (!response.ok) throw new Error('MAP_CONFIG_UNAVAILABLE');
         const data: unknown = await response.json();
         const browserKey = approvedBrowserMapKey(data);
-        if (!disposed) setConfig({ pending: false, browserKey });
-      }).catch(() => { if (!disposed) setConfig({ pending: false, browserKey: null }); })
+        const styleId = approvedDgisStyleId(data && typeof data === 'object' && 'styleId' in data ? data.styleId : null);
+        if (!disposed) setConfig({ pending: false, browserKey, styleId });
+      }).catch(() => { if (!disposed) setConfig({ pending: false, browserKey: null, styleId: null }); })
       .finally(() => clearTimeout(timeout));
     return () => { disposed = true; clearTimeout(timeout); controller.abort(); };
   }, []);
   if (config.pending) return <Localize><div className={s.root} data-map-engine="loading"><p className={s.notice} role="status">Загружаем карту Астаны…</p></div></Localize>;
-  if (config.browserKey && !unavailable) return <DgisMapCanvas {...props} browserKey={config.browserKey} onUnavailable={() => setUnavailable(true)} />;
+  if (config.browserKey && !unavailable) return <DgisMapCanvas {...props} browserKey={config.browserKey} styleId={config.styleId ?? undefined} onUnavailable={() => setUnavailable(true)} />;
   return <><MapLibreCanvas {...props} />{unavailable && <p className={s.notice} role="status">Карта 2ГИС недоступна. Резервный режим OpenStreetMap.</p>}</>;
 }
 

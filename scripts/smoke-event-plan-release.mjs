@@ -7,7 +7,7 @@ check(opened.ok && token, 'SESSION_FAILED');
 const headers = { 'x-qettyq-session': token, 'content-type': 'application/json' };
 try {
   const config = await fetch(`${base}/api/maps/config`).then(r => r.json());
-  check(config.enabled === false && !('browserKey' in config), 'UNAPPROVED_BROWSER_KEY_EXPOSED');
+  check(config.enabled === true && config.provider === '2gis' && typeof config.browserKey === 'string' && typeof config.styleId === 'string', 'APPROVED_MAPGL_NOT_ACTIVE');
   const catalog = await fetch(`${base}/api/catalog`).then(r => r.json());
   const feed = await fetch(`${base}/api/events`).then(r => r.json());
   check(feed.items.every(event => ['none', 'organizer_poster'].includes(event.media?.kind)), 'GENERATED_EVENT_ART');
@@ -26,7 +26,7 @@ try {
   };
   await submit(ids); await submit([event.id, ids[1], ids[0]]); await submit([ids[1], event.id]);
   console.log(JSON.stringify({ places: catalog.items.length, events: feed.items.length, geocodedEvents: feed.items.filter(event => event.lat !== null && event.lon !== null).length,
-    generatedEventImages: 0, browserMapKeyExposed: false, realEventMixedPlan: 'PASS', reorderThreeStops: 'PASS', removeToTwoStops: 'PASS', unknownDuration: event.durationMinutes === null ? 'PASS' : 'observed' }));
+    generatedEventImages: 0, browserMap: 'approved temporary 2GIS demo + published style', realEventMixedPlan: 'PASS', reorderThreeStops: 'PASS', removeToTwoStops: 'PASS', unknownDuration: event.durationMinutes === null ? 'PASS' : 'observed' }));
 } finally {
   check((await fetch(`${base}/api/session/data`, { method: 'DELETE', headers })).ok, 'OWN_SESSION_CLEANUP_FAILED');
   console.log('own disposable plans + session deleted');

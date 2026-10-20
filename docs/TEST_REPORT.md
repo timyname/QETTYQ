@@ -1,5 +1,17 @@
 # Отчёт проверки
 
+## Активация demo MapGL и published style · 21.10.2026
+
+- `pnpm test`:590/590 PASS,51files, финальный run04:44; `pnpm typecheck`:PASS. Scoped ESLint map/config/theme/tests+PolicyPages/i18n-policy/smoke-script PASS. Первое обновление policy поймало missing translation2ГИС (589/590), добавлен RU/KK/EN brand row и полный повтор590PASS. Проверки не выключались.
+- Agent `PORT=3037 pnpm exec playwright test tests/e2e/dgis-map.spec.ts --workers=1`:10/10 PASS, browser mock only, external network aborted. Markers/click/manual origin/street line, client text no key, style/SDK/WebGL/key error failover, native credit geometry and synthetic58px safe-area. Не доказательство live tiles/реального iPhone. Подробно `agent-reports/A-mapgl-style-20261021.md` и `A-dgis-mapgl-qa-20261021.md`.
+- Production `docker build --platform linux/amd64` from `git archive 4f70da76ed07e514084e5bc0affcb050b6e5d31a …`:PASS Next16.4.2/TypeScript, `qettyq:vps-20261021-10`, manifest SHA256 `2bb0757e51b4eb8baf3eac2c6c301cf6a0324e4135ce021433b9b871700f35d0`. Private index excluded unrelated dirty native/PWA sources; no env included.
+- `docker exec qettyq-app node backup.mjs`:verified/seven-day retention. App-only `QETTYQ_IMAGE=… docker compose … up -d --no-build --no-deps app`; no proxy/other project changes. SSH authorized_keys SHA256 remains `9abd2d5bb7b3e791b345eeaf6bd608cb40930acb908e6dd9056cf1ab38135c40`.
+- Console manual verification: demo active/block21.11.2026; Map Tiles saved1000/month with Блокировка. Initial raw Origin without scheme was not committed by UI; corrected to full HTTPS Origin, Enter creates chip, Save then reload confirms. Current key not rotated/new key not created, no paid conversion.
+- Public browser live v9/v10: `data-map-engine=2gis`, `data-map-ready=true`, `data-map-theme=qettyq-published-style`; screenshot genuine tiles+markers. Card selection and origin pick PASS, picker closed and stayed on map. Public arbitrary test point—not user's GPS—used for one FOSSGIS call: street2.8km/≈38min, total≈91min with35estimated visit+18buffer. Native 2GIS deep link with start+destination confirmed, external app not launched. Google/OpenAI provider calls0.
+- v9 first live screenshot discovered 2GIS credit under dock; v10 corrected via documented copyright topLeft + controls padding. Live rect82.5–101.5px; DOM hit-test confirms native link uncovered. Final proof `exports/screenshots/dgis-release/live-map-v10.png`; no unredacted console key screenshot saved.
+- `node scripts/smoke-event-plan-release.mjs`:749POI/16events/8geocoded; approved config+published style; mixed real-event plan/reorder3/remove2/unknown duration PASS; disposable session cleanup PASS. This checks HTTP/real server plan, not provider network or physical device.
+- Prior full61E2E belong to release8, not a new full-regression run; current targeted10 plus590 logic tests are the new evidence. Physical iPhone/native origins, background visits and 2GIS Routes are not claimed tested/connected.
+
 ## Keyboard / event plan / guarded2GIS · 21.10.2026
 
 - `pnpm test`: **572/572 PASS,50files**. `pnpm typecheck` PASS. Scoped ESLint всех изменённых server/UI/provider модулей exit0; проверки не выключались. Новые тесты: venue+address conflicts/media policy, prepared2GISkeygate/SDKloader42, eventmixedplan nullable duration, schedulewait/lateness, routevisit ambiguity/accuracy.

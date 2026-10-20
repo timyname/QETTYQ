@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Compass, Minus, Plus } from 'lucide-react';
 import { Localize, translateText, useI18n } from '../client/i18n';
 import { dgisBounds, dgisRouteBounds, loadDgisSdk, type DgisMap, type DgisObject } from '../client/dgis-mapgl';
+import { approvedDgisStyleId, dgisThemeOptions, QETTYQ_DGIS_PALETTE } from '../client/dgis-theme';
 import { clusterMapPoints } from './CityMap';
 import type { MapCanvasProps } from './MapCanvas';
 import { markerIconPaths } from './map-marker-icons';
 import s from './MapCanvas.module.css';
 
-type Props = MapCanvasProps & { browserKey: string; onUnavailable: () => void };
+type Props = MapCanvasProps & { browserKey: string; styleId?: string; onUnavailable: () => void };
 const valid = (point: { lat: number; lon: number }) => Number.isFinite(point.lat) && Number.isFinite(point.lon)
   && Math.abs(point.lat) <= 90 && Math.abs(point.lon) <= 180;
 const animation = () => ({ animate: !window.matchMedia('(prefers-reduced-motion: reduce)').matches, duration: 180 });
@@ -29,7 +30,10 @@ function mapPadding(host: HTMLElement) {
   probe.style.paddingBottom = 'var(--map-attribution-bottom,12px)';
   const creditBottom = Number.parseFloat(getComputedStyle(probe).paddingBottom) || 12;
   probe.remove();
-  return { fit: { top, bottom, left: 42, right: 42 }, controls: { top: safeTop + 12, bottom: creditBottom + safeBottom, left: 10, right: 10 } };
+  // Native 2GIS copyright occupies the free band below the global 76px header
+  // and above map toolbar / route-back controls (100–110px). The bottom dock and
+  // expanded route sheet must never cover mandatory provider attribution.
+  return { fit: { top, bottom, left: 42, right: 42 }, controls: { top: safeTop + 78, bottom: creditBottom + safeBottom, left: 16, right: 10 } };
 }
 
 function markerIcon(category: string) {
@@ -39,7 +43,7 @@ function markerIcon(category: string) {
   return svg;
 }
 
-/** Only mounted with an explicitly approved dedicated public MapGL key.
+/** Only mounted with an explicitly approved public MapGL key.
  * Provider attribution remains its native SDK control; no copyright-hiding CSS.
  */
 export function DgisMapCanvas(props: Props) {
@@ -47,10 +51,12 @@ export function DgisMapCanvas(props: Props) {
   const host = useRef<HTMLDivElement>(null), map = useRef<DgisMap | null>(null);
   const latest = useRef(props), renderMap = useRef<(() => void) | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const styleId = approvedDgisStyleId(props.styleId);
   useEffect(() => { latest.current = props; renderMap.current?.(); }, [props]);
 
   useEffect(() => {
     if (!host.current) return;
+    setLoaded(false);
     let disposed = false, failed = false, ready = false;
     let objects: DgisObject[] = [], routeObjects: DgisObject[] = [], popup: DgisObject | null = null;
     let geometry: MapCanvasProps['routeGeometry'];
@@ -69,8 +75,9 @@ export function DgisMapCanvas(props: Props) {
     void loadDgisSdk().then(api => {
       if (disposed || failed || !host.current?.isConnected) return;
       const view = new api.Map(host.current, { center: [71.4304, 51.1282], zoom: 13, key: props.browserKey,
-        lang: language, zoomControl: false, enableTrackResize: true, copyright: 'bottomLeft' });
+        lang: language, zoomControl: false, enableTrackResize: true, copyright: 'topLeft', ...dgisThemeOptions(styleId) });
       map.current = view;
+      view.setControlsLayoutPadding(mapPadding(host.current).controls);
       canvas = view.getCanvas(); canvas.addEventListener('webglcontextlost', fail);
 
       const render = () => {
@@ -85,8 +92,8 @@ export function DgisMapCanvas(props: Props) {
           if (line !== geometry) {
             removeRoute(); geometry = line;
             if (bounds && line) {
-              routeObjects = [new api.Polyline(view, { coordinates: line.coordinates, width: 9, color: '#F4F6F2', zIndex: 10 }),
-                new api.Polyline(view, { coordinates: line.coordinates, width: 5, color: '#0B6E5D', zIndex: 11 })];
+              routeObjects = [new api.Polyline(view, { coordinates: line.coordinates, width: 9, color: QETTYQ_DGIS_PALETTE.pearl, zIndex: 10 }),
+                new api.Polyline(view, { coordinates: line.coordinates, width: 5, color: QETTYQ_DGIS_PALETTE.jade, zIndex: 11 })];
               view.fitBounds(bounds, { maxZoom: 16, padding: padding.fit, animation: animation() });
             }
           }
@@ -139,14 +146,19 @@ export function DgisMapCanvas(props: Props) {
       renderMap.current = render;
       view.on('styleload', () => { if (disposed || failed) return; ready = true; clearTimeout(timer); setLoaded(true); render(); });
       view.on('styleloaderror', fail);
+      // Since MapGL 1.61, `error` also reports invalidtilekey (including revoked /
+      // exhausted access), styleloaderror and webglcontextlost. Stop the SDK even
+      // after styleload: otherwise a working style may hide unusable map tiles.
+      // Never render or log its payload: provider messages can contain key URLs.
+      view.on('error', fail);
       view.on('click', event => { const point = { lat: event.lngLat[1], lon: event.lngLat[0] }; if (valid(point)) latest.current.onPick?.(point); });
       for (const type of ['centerend', 'zoomend', 'rotationend', 'pitchend', 'resize'] as const) view.on(type, render);
       timer = window.setTimeout(() => { if (!ready) fail(); }, 15_000);
     }).catch(fail);
     return () => { disposed = true; clearTimeout(timer); canvas?.removeEventListener('webglcontextlost', fail); removeObjects(); removeRoute(); map.current?.destroy(); map.current = null; renderMap.current = null; };
-  }, [props.browserKey, language]);
+  }, [props.browserKey, styleId, language]);
 
-  return <Localize><div className={s.root} data-map-engine="2gis" data-route-quality={dgisRouteBounds(props.routeGeometry) && loaded ? 'street' : 'none'}>
+  return <Localize><div className={s.root} data-map-engine="2gis" data-map-theme={styleId ? 'qettyq-published-style' : 'qettyq-overlays'} data-map-ready={loaded} data-route-quality={dgisRouteBounds(props.routeGeometry) && loaded ? 'street' : 'none'}>
     <div ref={host} className={s.canvas} aria-label="Интерактивная карта Астаны" />
     {!loaded && <p className={s.notice} role="status">Загружаем карту Астаны…</p>}
     {loaded && <div className={s.controls} role="group" aria-label="Управление картой">

@@ -1,9 +1,11 @@
 /** Small adapter surface from the documented MapGL v1 API, not a second map SDK. */
+import type { dgisThemeOptions } from './dgis-theme';
+
 export type DgisAnimation = { animate?: boolean; duration?: number };
 export type DgisBounds = { northEast: number[]; southWest: number[] };
 export type DgisMap = {
   destroy(): void;
-  on(type: 'styleload' | 'styleloaderror' | 'idle' | 'resize' | 'centerend' | 'zoomend' | 'rotationend' | 'pitchend', handler: () => void): DgisMap;
+  on(type: 'error' | 'styleload' | 'styleloaderror' | 'idle' | 'resize' | 'centerend' | 'zoomend' | 'rotationend' | 'pitchend', handler: () => void): DgisMap;
   on(type: 'click', handler: (event: { lngLat: number[] }) => void): DgisMap;
   project(point: number[]): number[]; unproject(point: number[]): number[];
   fitBounds(bounds: DgisBounds, options?: { padding?: { top: number; bottom: number; left: number; right: number }; maxZoom?: number; animation?: DgisAnimation }): DgisMap;
@@ -15,7 +17,7 @@ export type DgisMap = {
 };
 export type DgisObject = { destroy(): void };
 export type DgisSdk = {
-  Map: new (host: HTMLElement, options: { center: number[]; zoom: number; key: string; lang: string; zoomControl: false; enableTrackResize: true; copyright: 'bottomLeft' }) => DgisMap;
+  Map: new (host: HTMLElement, options: { center: number[]; zoom: number; key: string; lang: string; zoomControl: false; enableTrackResize: true; copyright: 'topLeft' } & ReturnType<typeof dgisThemeOptions>) => DgisMap;
   HtmlMarker: new (map: DgisMap, options: { coordinates: number[]; html: HTMLElement; anchor: number[]; interactive: boolean; preventMapInteractions: boolean }) => DgisObject;
   Polyline: new (map: DgisMap, options: { coordinates: number[][]; width: number; color: string; zIndex: number }) => DgisObject;
 };
