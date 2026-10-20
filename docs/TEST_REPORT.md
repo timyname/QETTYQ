@@ -1,5 +1,13 @@
 # Отчёт проверки
 
+## Google Cloud403 — исправлено · 21.10.2026 01:56 Asia/Aqtobe
+
+- Через существующий Chrome Google Cloud проверены проекты/ключи сравнением SHA256 без вывода значений. Первый проект содержал другой старый ключ и не изменён. У выбранного ключа Places API(New) был disabled; существующий billing Pay as you go подключён.
+- Places API(New) включён и UI показал Disable вместоEnable. Key restrictions сохранены как IPадрес сервера+1API Places(New), secret value не ротировался. Новая подписка/payment details/Cloud billing limit не создавались.
+- **Один post-fix** `node scripts/probe-google-public.mjs`:HTTP200,statuslive,5items,5withHours,storage no_store,mapDisplay external_google_only,exit0. Собственная гостевая сессия удалена script finally; AI запросов0. Runtime не перезапускался.
+- Read-only VPS ledger: Google2reservations/200000microUSD; старый403 не возмещён/не сброшен. OpenAI9/4500000microUSD не изменён. Server key SHA256 matchtrue. Это прикладные резервы, не Google invoice.
+- Скриншот сохранён локально в ignored `.sites-runtime/google-places-enabled-20261021.png`; ключ на изображении не раскрыт. Подробно:`agent-reports/A-google-cloud-403-20261021.md`.
+
 ## Data Hub / OSM expansion / compact route · 21.10.2026
 
 - Node24 `node node_modules/vitest/vitest.mjs run tests/unit tests/integration`: **388/388 PASS,38files**; `tsc --noEmit` PASS. Scoped ESLint новых server/API/UI/scripts PASS. Первый полный run поймал missing price-source translation; исправлено, новый полный run388PASS.
