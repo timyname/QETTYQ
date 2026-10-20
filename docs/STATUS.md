@@ -2,6 +2,10 @@
 
 ## Текущий релиз · 20.10.2026 · live-афиша и единый glass
 
+Финал: GitHub main обновлён (`73a501c`, затем документационный follow-up). Публичный Sites v5 успешно опубликован: https://qettyq-app.ablecorgi64.chatgpt.site . Source SHA `4cbe17236ac8405852d158effb9e1f213b02624d`. Native deployment `appgdep_6ad755703754819194535ff3f5acb22b` succeeded. Production smoke: health200; events200 live/fresh,7,cachehit; новая test-session201 → chat200 с3 event cards → удаление test-session200. Старый maps-config больше не отдаёт ключ.
+
+Site E2E 8/8 PASS. Визуально проверены 430×932,390×844,360×800: CTA/дата/цена/credit над dock. Proof: `exports/qettyq-glass-mobile.png`. LAN preview включён: `http://192.168.0.106:3000`, пока Mac и dev-процесс работают. Реальный iPhone ещё не проверен владельцем.
+
 Этот раздел имеет приоритет над историческими контрольными точками ниже.
 
 - Сервис: работающий Astana web pilot, 15 свайпов → условия → лента/чат/карта/профиль. Шапка и dock закреплены; прокрутка контента внутри. Общие glass tokens и лимонные активные состояния; long-form поверхности мягче для читаемости.
@@ -9,7 +13,7 @@
 - AI: чат ищет реальные события через тот же кэш и места из POI; deterministic, не GPT/RAG. Локальные история/профиль; GPS не сохраняется. Durable backend-профили ещё не реализованы.
 - Маршруты: оценка по прямой и внешние Google/2ГИС/Apple; дорожный routing и такси не подключены.
 - Презентация: v7 PPTX/PDF, 10 слайдов. Видео не снималось, заявка не отправлялась.
-- Проверки: 100 unit/integration PASS. Финальный E2E и production-публикация фиксируются отдельной записью после завершения, не считаются выполненными заранее.
+- Проверки: 100 unit/integration PASS, Site E2E8/8 PASS; production smoke описан выше.
 - Отчёты: `agent-reports/A1-live-afisha.md`, `A3-backend-pilot.md`, `A9-sites-port.md`, `TEST_REPORT.md`.
 
 ## Актуально · локальный web app, 20.10.2026

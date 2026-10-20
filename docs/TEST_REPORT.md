@@ -2,6 +2,12 @@
 
 ## Финальная интеграция live-афиши и glass · 20.10.2026
 
+Завершающий прогон: Site `PORT=5173 pnpm test:e2e --workers=1`: 8/8 PASS,10.5s. Исходный organizer-тест не ослаблялся; readiness исправил реальную раннюю потерю клика. Новый тест использует явно synthetic events fixture, а не выдаёт mock за live.
+
+Vinext build helper: exit0, все5 стадий. Sites v5 succeeded, production HTTP smoke: health200; events200 live/fresh7 с fetchedAt `2026-10-20T11:50:51.145Z`, cachehit; session201/chat200 с3событиями/delete200. `/api/maps-config` не отдаёт ключ. Production session smoke — одно наблюдение, не гарантия durable storage.
+
+CUA mobile:430×932,390×844,360×800; на390 CTA632.6..680.6 при mainbottom738. На360 CTA601..649 при mainbottom694. Документ не удлиняется за viewport, контент имеет внутренний scroll. Proof: `exports/qettyq-glass-mobile.png`. LAN URL вернул200 с Mac; Safari на физическом iPhone не проверялся.
+
 Имеет приоритет над числами прежних проходов ниже.
 
 - `pnpm test`: PASS, 100 тестов в 12 файлах. Без реальных платных AI-вызовов.
