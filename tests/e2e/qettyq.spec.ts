@@ -1,12 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
+import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
 
 // Provider failures are deterministic here; real-source smoke is recorded separately.
 test.beforeEach(async ({ page }) => {
+  await installOfflineTestGuards(page);
   await page.route('**/api/events', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [], dataMode: 'unavailable', freshness: 'unavailable', fetchedAt: null }) }));
 });
 
 async function openSwipes(page: Page) {
-  await page.goto("/");
+  await openRussianApp(page);
   await expect(page.getByRole("heading", { name: /Не знаешь, как/ })).toBeVisible();
   await page.getByRole("button", { name: "Выбрать свой вайб" }).click();
   await expect(page.getByTestId('swipe-card')).toHaveAccessibleName(/, 1 из 15/);
@@ -155,7 +157,7 @@ test("mobile и reduced motion: полноширинная карточка, д�
 test('организатор: локальный черновик проходит форму и не отправляется на публикацию', async ({ page }) => {
   const mutations: string[] = [];
   page.on('request', request => { if (/organizer|moderation|publish/.test(request.url()) && request.method() === 'POST') mutations.push(request.url()); });
-  await page.goto('/');
+  await openRussianApp(page);
   await page.getByRole('button', { name: 'QETTYQ — на главную' }).click();
   await page.getByRole('navigation').getByRole('button', { name: 'Профиль', exact: true }).click();
   await page.getByRole('button', { name: 'Моё событие', exact: true }).click();

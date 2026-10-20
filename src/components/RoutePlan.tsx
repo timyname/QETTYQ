@@ -1,8 +1,10 @@
 'use client';
 
+import { Localize, useI18n, formatDate, formatNumber, translateText } from '../client/i18n';
+
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowUpRight, Bus, CalendarDays, Car, Clock3, MapPin, Navigation, Share2, Trash2, Footprints } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, CalendarDays, Clock3, MapPin, Navigation, Share2, Trash2, Footprints } from 'lucide-react';
 import { arrivalLabels, astanaDateInput, googleWalkingPlanUrl, parseAstanaDateInput } from '@/client/route-timeline';
 import s from './RoutePlan.module.css';
 import type { RoutingStatus, StreetRoute } from '../server/pilot/street-routing';
@@ -20,8 +22,6 @@ type Props = {
   onBack: () => void; onOpenStop: (id: string) => void; onChangeStart: () => void;
   onRemove: (id: string) => void; onShare: (departure: string) => void;
 };
-const time = (iso: string) => new Intl.DateTimeFormat('ru-RU', { timeZone: 'Asia/Almaty', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
-const dateLabel = (iso: string) => new Intl.DateTimeFormat('ru-RU', { timeZone: 'Asia/Almaty', day: 'numeric', month: 'long' }).format(new Date(iso));
 const record = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 const provider = (value: unknown) => value === 'fossgis_foot' || value === 'valhalla_demo' || value === 'openrouteservice';
 const metric = (value: unknown, limit: number) => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= limit;
@@ -37,6 +37,9 @@ function isStreetRoute(value: unknown, pointCount: number, expectedProvider: Rou
 }
 
 export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop, onChangeStart, onRemove, onShare }: Props) {
+  const { language } = useI18n();
+  const time = (iso: string) => formatDate(iso, language, { hour: '2-digit', minute: '2-digit' });
+  const dateLabel = (iso: string) => formatDate(iso, language, { day: 'numeric', month: 'long' });
   const [departure, setDeparture] = useState(() => new Date().toISOString());
   const [dateError, setDateError] = useState('');
   const [active, setActive] = useState(plan.stops[0]?.id);
@@ -86,17 +89,17 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
   const remainingMinutes = street && plan.totalMinutes !== null && plan.remainingMinutes !== null ? plan.totalMinutes + plan.remainingMinutes - totalMinutes! : plan.remainingMinutes;
   const end = plan.stops.at(-1)!;
   const navigation = googleWalkingPlanUrl(plan.stops, origin, destination)!;
-  const points = plan.stops.map((p, index) => ({ ...p, title: p.name, dateLabel: `${index === plan.stops.length - 1 ? 'B' : index + 1} · ${p.durationMinutes} мин — оценка посещения` }));
+  const points = plan.stops.map((p, index) => ({ ...p, title: p.name, dateLabel: translateText(`${index === plan.stops.length - 1 ? 'B' : index + 1} · ${p.durationMinutes} мин — оценка посещения`, language) }));
 
-  return <main className={s.screen} aria-label="Маршрут по Астане">
+  return <Localize><main className={s.screen} aria-label="Маршрут по Астане">
     <div className={s.map}><MapCanvas fitPoints points={points} origin={origin} routeGeometry={street?.geometry} routeAttribution={street?.attribution} activeId={active} onSelect={id => { setActive(id); setExpanded(true); }} /></div>
     <div className={s.top}><button className={s.back} onClick={onBack}><ArrowLeft size={18} /> На карту</button><h1>Твой маршрут</h1></div>
     <section className={s.sheet} data-expanded={expanded} aria-label="План маршрута">
       <button className={s.handle} aria-label={expanded ? 'Свернуть план маршрута' : 'Развернуть план маршрута'} aria-expanded={expanded} onClick={() => setExpanded(!expanded)}><span /></button>
       <div className={s.scroll}>
-        <div className={s.travelModes} role="group" aria-label="Способ передвижения"><button aria-pressed="true"><Footprints size={17} />Пешком</button><button disabled title="Автомобильный расчёт пока не подключён"><Car size={17} />Авто</button><button disabled title="Стоимость и время такси пока не подключены"><Car size={17} />Такси</button><button disabled title="Расписание транспорта пока не подключено"><Bus size={17} />Автобус</button></div><p className={s.modeNote}>Здесь рассчитываем только пеший путь. Другие способы пока недоступны.</p>
+        <div className={s.walkingMode}><Footprints size={15} />Пешком</div>
         <div className={s.heading}><div><small>Астана · {dateLabel(departure)}{street ? ' · путь по улицам' : ''}</small><h2>{totalMinutes === null ? 'Нужна точка старта' : `Примерно ${totalMinutes} мин`}</h2></div><button className={s.icon} aria-label="Поделиться планом" onClick={() => onShare(departure)}><Share2 size={19} /></button></div>
-        <label className={s.departure}><CalendarDays size={19} /><span>Дата и время начала<input aria-label="Дата и время начала маршрута" type="datetime-local" value={astanaDateInput(departure)} onChange={e => { const parsed = parseAstanaDateInput(e.target.value); if (parsed) { setDeparture(parsed); setDateError(''); } else setDateError('Выберите действительные дату и время.'); }} /></span><button type="button" onClick={() => { setDeparture(new Date().toISOString()); setDateError(''); }}>Сейчас</button></label>
+        <label className={s.departure}><CalendarDays size={19} /><span>Дата и время начала<input lang={language} aria-label="Дата и время начала маршрута" type="datetime-local" value={astanaDateInput(departure)} onChange={e => { const parsed = parseAstanaDateInput(e.target.value); if (parsed) { setDeparture(parsed); setDateError(''); } else setDateError('Выберите действительные дату и время.'); }} /></span><button type="button" onClick={() => { setDeparture(new Date().toISOString()); setDateError(''); }}>Сейчас</button></label>
         {dateError && <p role="alert" className={s.warning}>{dateError}</p>}
         <p className={s.zone}>Время Астаны. Расписание мест на выбранную дату нужно уточнить.</p>
         <ol className={s.timeline}>
@@ -104,16 +107,16 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
           {plan.stops.map((stop, index) => <li key={stop.id} data-active={active === stop.id}>
             <span className={s.dot}>{index === plan.stops.length - 1 && !destination ? 'B' : index + 1}</span>
             <div className={s.stop}>
-              <small className={s.leg}><Footprints size={12} />{street?.legs[index] ? `≈${Math.ceil(street.legs[index].durationSeconds / 60)} мин · ${(street.legs[index].distanceMeters / 1000).toFixed(1)} км по улицам` : origin && plan.legs?.[index] ? `≈${plan.legs[index].estimatedMinutes} мин · ${plan.legs[index].distanceKm.toFixed(1)} км по прямой` : 'Дорога пока не рассчитана'}</small>
-              <button className={s.stopTitle} onClick={() => { setActive(stop.id); onOpenStop(stop.id); }}>{stop.name}<ArrowUpRight size={15} /></button>
+              <small className={s.leg}><Footprints size={12} />{street?.legs[index] ? `≈${Math.ceil(street.legs[index].durationSeconds / 60)} мин · ${(street.legs[index].distanceMeters / 1000).toLocaleString(language === 'kk' ? 'kk-KZ' : language === 'en' ? 'en-GB' : 'ru-RU', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} км по улицам` : origin && plan.legs?.[index] ? `≈${plan.legs[index].estimatedMinutes} мин · ${plan.legs[index].distanceKm.toLocaleString(language === 'kk' ? 'kk-KZ' : language === 'en' ? 'en-GB' : 'ru-RU', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} км по прямой` : 'Дорога пока не рассчитана'}</small>
+              <button className={s.stopTitle} onClick={() => { setActive(stop.id); onOpenStop(stop.id); }}><span translate="no">{stop.name}</span><ArrowUpRight size={15} /></button>
               <small>{arrivals[index] ? `≈${time(arrivals[index]!)} · ` : ''}посещение ≈{stop.durationMinutes} мин</small>
-              <small>{stop.address ?? 'Адрес уточняйте перед посещением'}</small>
+              <small translate={stop.address ? 'no' : undefined}>{stop.address ?? 'Адрес уточняйте перед посещением'}</small>
             </div>
             <button className={s.remove} disabled={busy || plan.stops.length === 1} aria-label={`Убрать ${stop.name} из плана`} onClick={() => onRemove(stop.id)}><Trash2 size={15} /></button>
           </li>)}
           {destination && <li><span className={s.dot}>B</span><div><b>Конечная точка на карте</b><small>После выбранных остановок</small></div></li>}
         </ol>
-        <div className={s.facts}><span><Clock3 size={15} />{remainingMinutes === null ? 'Оставшееся свободное время неизвестно.' : `Останется ≈${remainingMinutes} мин`}</span><span><MapPin size={15} />{street ? `${(street.distanceMeters / 1000).toFixed(1)} км по улицам` : plan.distanceKm === null ? 'Расстояние пока не рассчитано.' : `≈${plan.distanceKm.toFixed(1)} км по прямой`}</span><span>Бюджет: {plan.budget.min === null ? 'нужно уточнить стоимость' : `от ${plan.budget.min.toLocaleString('ru-RU')} ₸`}</span></div>
+        <div className={s.facts}><span><Clock3 size={15} />{remainingMinutes === null ? 'Оставшееся свободное время неизвестно.' : `Останется ≈${remainingMinutes} мин`}</span><span><MapPin size={15} />{street ? `${(street.distanceMeters / 1000).toLocaleString(language === 'kk' ? 'kk-KZ' : language === 'en' ? 'en-GB' : 'ru-RU', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} км по улицам` : plan.distanceKm === null ? 'Расстояние пока не рассчитано.' : `≈${plan.distanceKm.toLocaleString(language === 'kk' ? 'kk-KZ' : language === 'en' ? 'en-GB' : 'ru-RU', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} км по прямой`}</span><span>Бюджет: {plan.budget.min === null ? 'нужно уточнить стоимость' : `от ${formatNumber(plan.budget.min, language)} ₸`}</span>{plan.totalMinutes !== null && plan.travelMinutes !== null && <span><Clock3 size={15} />Запас времени {formatNumber(bufferMinutes, language)} мин</span>}</div>
         {(plan.feasibility === 'infeasible' || remainingMinutes !== null && remainingMinutes < 0) && <p className={s.warning}>Этот план превышает выбранные ограничения. Убери остановку или измени условия.</p>}
         {!street && <p className={s.note}>На карте — точки плана, не линия дороги. Время пешком оценено по прямой; точный путь уточнит навигация. Посещения — проектная оценка, не бронь.</p>}
         <section className={s.routing} aria-label="Расчёт пути по улицам">
@@ -125,5 +128,5 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
       </div>
       <div className={s.actions}><a className={s.begin} href={navigation} target="_blank" rel="noreferrer"><Navigation size={19} />Начать маршрут<ArrowUpRight size={18} /></a><small>{origin ? 'Откроется Google Maps с остановками. Выбранная точка старта передастся сервису.' : 'Откроется Google Maps с остановками. Точку старта выберешь там.'}</small></div>
     </section>
-  </main>;
+  </main></Localize>;
 }

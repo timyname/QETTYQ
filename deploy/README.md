@@ -69,11 +69,15 @@ Before updates, retain the previous QETTYQ image and verified database backup.
 Restart only this Compose service with the previous image tag. Never prune other
 containers/images or restore an old AI ledger: doing so could reset approved spend.
 Restore app data only with a reviewed reconciliation of all AI reservations.
-Keep backups private; guest profile/dialogue APIs are not durably enabled yet.
+Keep backups private: opt-in profile/dialogue/visits are durable personal data.
+Reconcile consent/expiry/deletion when restoring; backups retain data at most
+seven days. Never restore deleted profiles silently or roll back AI spend.
 
-After verification, remove exactly the approved temporary SSH public-key line;
-compare the remaining authorized_keys digest with its pre-deployment digest.
-No permanent root access is part of this deployment.
+Owner update, 2026-10-21: retain the current QETTYQ SSH key for future work.
+The private key stays in ignored local runtime storage with mode0600; do not
+print, commit or copy it into images. Host-key pinning is mandatory. This access
+does not authorize changes to other projects. The previous release's temporary
+key was removed; do not remove the new retained key as routine cleanup.
 
 Runtime availability and actual release evidence are recorded in
 `../docs/STATUS.md` and `../docs/TEST_REPORT.md`, not inferred from these instructions.

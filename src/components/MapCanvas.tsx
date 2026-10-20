@@ -1,5 +1,7 @@
 'use client';
 
+import { Localize, useI18n, translateText } from '../client/i18n';
+
 import { useEffect, useRef, useState } from 'react';
 import { Compass, Minus, Plus } from 'lucide-react';
 import type { Map as VectorMap, Marker } from 'maplibre-gl';
@@ -28,6 +30,7 @@ function categoryIcon(category: string, document: Document) {
 }
 
 export function MapCanvas(props: MapCanvasProps) {
+  const { language } = useI18n();
   const host = useRef<HTMLDivElement>(null);
   const map = useRef<VectorMap | null>(null);
   const markers = useRef<Marker[]>([]);
@@ -99,7 +102,7 @@ export function MapCanvas(props: MapCanvasProps) {
           const position = view.unproject([group.x, group.y]);
           if (group.points.length > 1) {
             button.textContent = String(group.points.length);
-            button.title = `Мест: ${group.points.length}. Приблизить`;
+            button.title = translateText(`Мест: ${group.points.length}. Приблизить`, language);
             button.setAttribute('aria-label', button.title);
             button.addEventListener('click', event => {
               event.stopPropagation();
@@ -125,7 +128,7 @@ export function MapCanvas(props: MapCanvasProps) {
         }
         const origin = current.origin;
         if (origin && validCoordinates(origin)) {
-          const dot = document.createElement('div'); dot.className = s.origin; dot.setAttribute('role', 'img'); dot.setAttribute('aria-label', 'Точка старта маршрута');
+          const dot = document.createElement('div'); dot.className = s.origin; dot.setAttribute('role', 'img'); dot.setAttribute('aria-label', translateText('Точка старта маршрута', language));
           markers.current.push(new gl.Marker({ element: dot }).setLngLat([origin.lon, origin.lat]).addTo(view));
         }
       };
@@ -159,9 +162,9 @@ export function MapCanvas(props: MapCanvasProps) {
     }).catch(fail);
 
     return () => { disposed = true; controller.abort(); clearTimeout(styleTimer); clearTimeout(startupTimer); observer?.disconnect(); removeMarkers(); map.current?.remove(); map.current = null; renderMarkers.current = null; };
-  }, []);
+  }, [language]);
 
-  return <div className={s.root} data-map-engine={fallback ? 'fallbackleaflet' : 'maplibre'} data-route-quality={props.routeGeometry && loaded && !fallback ? 'street' : 'none'}>
+  return <Localize><div className={s.root} data-map-engine={fallback ? 'fallbackleaflet' : 'maplibre'} data-route-quality={props.routeGeometry && loaded && !fallback ? 'street' : 'none'}>
     {fallback ? <><CityMap {...props} /><p className={s.notice} role="status">Векторная карта недоступна. Резервный режим OpenStreetMap.</p></> : <>
       <div ref={host} className={s.canvas} aria-label="Интерактивная карта Астаны" />
       {!loaded && <p className={s.notice} role="status">Загружаем карту Астаны…</p>}
@@ -172,5 +175,5 @@ export function MapCanvas(props: MapCanvasProps) {
       </div>}
     </>}
     {props.routeAttribution && <div className={s.routeCredit}><a href={props.routeAttribution.url} target="_blank" rel="noreferrer">{props.routeAttribution.text}</a> · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noreferrer">Исправить карту</a>{fallback && <span>Линия пути недоступна в резервном режиме.</span>}</div>}
-  </div>;
+  </div></Localize>;
 }

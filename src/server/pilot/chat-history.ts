@@ -1,3 +1,5 @@
+import { redactDecimalCoordinates } from "./location-redaction";
+
 export type RecentChatMessage = { role: "user" | "assistant"; text: string };
 export const CHAT_PAYLOAD_SOFT_BYTES = 14 * 1024;
 export const CHAT_HISTORY_MAX_BYTES = 6 * 1024;
@@ -21,7 +23,7 @@ export function normalizeChatHistory(input: unknown): RecentChatMessage[] {
   if (!Array.isArray(input)) return [];
   const history: RecentChatMessage[] = input.slice(-6).flatMap(value => {
     if (!value || typeof value !== "object" || !["user", "assistant"].includes(value.role) || typeof value.text !== "string") return [];
-    const text = clip(value.text.replace(/-?\d{1,3}\.\d{3,}/gu, "[координата скрыта]"), 1600, 1000);
+    const text = clip(redactDecimalCoordinates(value.text, "[координата скрыта]"), 1600, 1000);
     return text ? [{ role: value.role as RecentChatMessage["role"], text }] : [];
   });
   while (history.length && bytes(history) > CHAT_HISTORY_MAX_BYTES) history.shift();

@@ -22,8 +22,9 @@ const context = pilotContextSchema.parse({ goal: "activity", minutes: 120 });
 const token = "client-12345678901234567890123456789012";
 const sourcePolicy = { id: "sxodim-astana-noncommercial", name: "Давай Сходим", policyUrl: "https://sxodim.com/polzovatelskoe-soglashenie", allowPersist: true, allowDisplay: true, allowLlm: false, credit: "Давай Сходим", minimumRefreshMinutes: 60 };
 const osmPolicy = { ...sourcePolicy, id: "osm-overpass-poi", name: "OSM", policyUrl: "https://www.openstreetmap.org/copyright", allowLlm: true, credit: "© OpenStreetMap contributors" };
+const unknownHoursPlace: Place = { ...(placesJson[0] as Place), name: "SYNTHETIC TEST restaurant without metadata", category: "restaurant", tags: ["restaurant", "food"], retrievedAt: "2026-10-20T10:00:00Z", openingHours: null, price: null, durationMinutes: 55 };
 function store() { const result = createEventsStore(db); result.registerSource(sourcePolicy); result.registerSource(osmPolicy); return result; }
-function importPlaces() { const result = store(); result.importPlaces(placesJson as Place[], { sourceId: osmPolicy.id, expiresAt: "2026-11-19T00:00:00Z" }); return result; }
+function importPlaces() { const result = store(); result.importPlaces([unknownHoursPlace], { sourceId: osmPolicy.id, expiresAt: "2026-11-19T00:00:00Z" }); return result; }
 beforeEach(() => { directory = mkdtempSync(join(tmpdir(), "qettyq-sqlite-test-")); db = openDatastore({ path: join(directory, "qettyq.sqlite"), migrate: true }); time = Date.parse("2026-10-20T11:10:00Z"); });
 afterEach(() => { db.close(); rmSync(directory, { recursive: true }); });
 
@@ -33,10 +34,10 @@ describe("durable Astana data (real SQLite, zero network)", () => {
     expect(repository.importSxodim(seed()).imported).toBe(snapshotJson.items.length);
     expect(repository.importSxodim(seed())).toMatchObject({ imported: 0, skipped: "unchanged" });
     repository.importPlaces(placesJson as Place[], { sourceId: osmPolicy.id, expiresAt: "2026-11-19T00:00:00Z" });
-    expect(db.prepare("SELECT COUNT(*) AS n FROM venues WHERE source_id=?").get(osmPolicy.id)?.n).toBe(80);
+    expect(db.prepare("SELECT COUNT(*) AS n FROM venues WHERE source_id=?").get(osmPolicy.id)?.n).toBe(placesJson.length);
     expect(db.prepare("SELECT COUNT(*) AS n FROM event_occurrences").get()?.n).toBe(snapshotJson.items.length);
     expect(db.prepare("SELECT COUNT(*) AS n FROM media_rights").get()?.n).toBe(0);
-    expect(db.prepare("SELECT quality FROM fact_provenance WHERE field='openingHours' LIMIT 1").get()?.quality).toBe("unknown");
+    expect(db.prepare("SELECT COUNT(*) AS n FROM fact_provenance WHERE field='openingHours'").get()?.n).toBe(placesJson.length);
     db.close(); db = openDatastore({ path: join(directory, "qettyq.sqlite") });
     expect(createEventsStore(db).readSnapshot()?.items).toHaveLength(snapshotJson.items.length);
     expect(statSync(join(directory, "qettyq.sqlite")).mode & 0o777).toBe(0o600);
@@ -103,8 +104,25 @@ describe("durable Astana data (real SQLite, zero network)", () => {
     expect(repository.retrievePlaces({ context: { ...context, goal: "new", likedTags: ["armwrestling"] }, now: time })).toEqual([]);
     expect(repository.retrievePlaces({ context: { ...context, budget: 100000, strictBudget: true }, now: time })).toEqual([]);
     expect(repository.retrievePlaces({ context, now: time, requireOpen: true })).toEqual([]);
-    expect(repository.retrievePlaces({ context: { ...context, minutes: 20 }, now: time, query: placesJson[0].name })).toEqual([]);
+    expect(repository.retrievePlaces({ context: { ...context, minutes: 20 }, now: time, query: unknownHoursPlace.name })).toEqual([]);
     expect(() => repository.retrievePlaces({ context, near: { lat: NaN, lon: 0, radiusKm: 1 } })).toThrow("INVALID_NEAR_FILTER");
+  });
+  it("imports only observed supported OSM hours with seven-day expiry; unsupported/missing metadata remain unknown", () => {
+    const repository = store();
+    const input = { ...unknownHoursPlace, openingHours: "Mo-Fr 10:00-20:00; Sa 11:00-18:00; Su off" };
+    repository.importPlaces([input], { sourceId: osmPolicy.id, expiresAt: "2026-11-19T00:00:00Z" });
+    const saturday = Date.parse("2026-10-24T12:00:00+05:00"), sunday = Date.parse("2026-10-25T12:00:00+05:00");
+    expect(repository.openingStatus(input.id, saturday, saturday + 3600_000)).toBe("open");
+    expect(repository.openingStatus(input.id, sunday, sunday + 3600_000)).toBe("closed");
+    expect(repository.openingStatus(input.id, saturday + 7 * 86400_000, saturday + 7 * 86400_000 + 3600_000)).toBe("unknown");
+    const facts = db.prepare("SELECT source_url,fetched_at,expires_at FROM venue_opening_hours WHERE venue_id=?").all(input.id);
+    expect(facts[0]).toMatchObject({ source_url: input.sourceUrl, fetched_at: new Date(input.retrievedAt).toISOString(), expires_at: "2026-10-27T10:00:00.000Z" });
+    repository.importPlaces([{ ...input, openingHours: "Mo-Su 10:00-20:00; PH off", retrievedAt: "2026-10-20T11:00:00Z" }], { sourceId: osmPolicy.id, expiresAt: "2026-11-19T00:00:00Z" });
+    expect(repository.openingStatus(input.id, saturday, saturday + 3600_000)).toBe("unknown");
+    expect(db.prepare("SELECT COUNT(*) AS n FROM venue_opening_hours WHERE state='open'").get()?.n).toBe(0);
+    repository.importPlaces([{ ...input, openingHours: null, retrievedAt: "2026-10-20T12:00:00Z" }], { sourceId: osmPolicy.id, expiresAt: "2026-11-19T00:00:00Z" });
+    expect(repository.openingStatus(input.id, saturday, saturday + 3600_000)).toBe("unknown");
+    expect(db.prepare("SELECT COUNT(*) AS n FROM venue_opening_hours").get()?.n).toBe(0);
   });
   it("rejects an implicit/relative/ephemeral production database", () => {
     expect(() => openDatastore({ path: ":memory:", production: true })).toThrow("DURABLE_DATABASE_PATH_REQUIRED");

@@ -1,8 +1,10 @@
 import { expect, test, type Page, type BrowserContext } from '@playwright/test';
+import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
 
 // Explicitly synthetic street geometry for UI wiring, not proof of a real road.
 // The one real FOSSGIS adapter smoke is documented separately.
 test.beforeEach(async ({ page }) => {
+  await installOfflineTestGuards(page);
   await page.route('**/api/events', r => r.fulfill({ json: { items: [], dataMode: 'unavailable', freshness: 'unavailable', fetchedAt: null } }));
   await page.route('**/api/routing', async r => {
     if (r.request().method() === 'GET') await r.fulfill({ json: { available: true, provider: 'fossgis_foot', label: 'FOSSGIS / OSRM Foot', localDemo: true, reason: null } });
@@ -12,7 +14,7 @@ test.beforeEach(async ({ page }) => {
 async function routeScreen(page: Page, context: BrowserContext) {
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: 51.1282, longitude: 71.4304 });
-  await page.goto('/');
+  await openRussianApp(page);
   await page.getByRole('button', { name: 'Выбрать свой вайб' }).click();
   await page.getByRole('button', { name: 'Пропустить подбор интересов', exact: true }).click();
   await page.getByRole('button', { name: 'К условиям подборки', exact: true }).click();
@@ -44,8 +46,8 @@ test('улицы: явное согласие, одна 401-сессия, мет
   await expect(page.getByText(/координаты старта и всех остановок получит FOSSGIS/)).toBeVisible();
   await page.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта' }).check();
   await button.click();
-  await expect(page.getByText('1.0 км по улицам', { exact: true })).toBeVisible();
-  await expect(page.getByText(/12 мин · 1.0 км по улицам/)).toBeVisible();
+  await expect(page.getByText('1,0 км по улицам', { exact: true })).toBeVisible();
+  await expect(page.getByText(/12 мин · 1,0 км по улицам/)).toBeVisible();
   await expect(page.locator('[data-map-engine="maplibre"][data-route-quality="street"]')).toBeVisible();
   await expect(page.locator('.maplibregl-canvas')).toBeVisible();
   expect(calls).toBe(2);

@@ -1,5 +1,7 @@
 "use client";
 
+import { Localize, useI18n, translateText } from '../client/i18n';
+
 import { useEffect, useRef, useState } from "react";
 import type { CityEvent } from "@/data/events";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
@@ -90,6 +92,7 @@ export function createClusterLabel(count: number, document: Document) {
 }
 
 export function CityMap({ points, activeId, onSelect, onPick, origin }: Props) {
+  const { language } = useI18n();
   const host = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
@@ -160,10 +163,10 @@ export function CityMap({ points, activeId, onSelect, onPick, origin }: Props) {
           const size = clusterMarkerSize(group.points.length);
           const position = map.containerPointToLatLng([group.x, group.y]);
           const marker = L.marker(position, {
-            bubblingMouseEvents: false, title: `Мест: ${group.points.length}. Приблизить`, alt: `Мест: ${group.points.length}. Приблизить`,
+            bubblingMouseEvents: false, title: translateText(`Мест: ${group.points.length}. Приблизить`, language), alt: translateText(`Мест: ${group.points.length}. Приблизить`, language),
             icon: L.divIcon({ className: "qettyq-map-cluster-wrap", html: createClusterLabel(group.points.length, document), iconSize: [size, size], iconAnchor: [size / 2, size / 2] }),
           }).addTo(layer);
-          marker.bindTooltip(createMapTooltip({ title: `Мест: ${group.points.length}`, dateLabel: "Нажмите, чтобы приблизить" }, document));
+          marker.bindTooltip(createMapTooltip({ title: translateText(`Мест: ${group.points.length}`, language), dateLabel: translateText("Нажмите, чтобы приблизить", language) }, document));
           marker.on("click", () => {
             if (map.getZoom() < 19) {
               map.fitBounds(group.points.map(point => [point.lat, point.lon] as [number, number]), { padding: [52, 52], maxZoom: Math.min(19, map.getZoom() + 2) });
@@ -210,12 +213,12 @@ export function CityMap({ points, activeId, onSelect, onPick, origin }: Props) {
     map.on("zoomend moveend resize", renderPoints);
     renderPoints();
     return () => { map.off("zoomend moveend resize", renderPoints); layer.clearLayers(); };
-  }, [points, activeId, originLat, originLon, ready]);
+  }, [points, activeId, originLat, originLon, ready, language]);
 
   useEffect(() => {
     const point = points.find(point => point.id === activeId);
     if (ready && point && Number.isFinite(point.lat) && Number.isFinite(point.lon)) mapRef.current?.panInside([point.lat, point.lon], { padding: [30, 30] });
   }, [activeId, points, ready]);
 
-  return <div className="city-map" ref={host} aria-label="Карта событий Астаны">{error && <p role="status">Не удалось загрузить карту. Список мест остаётся доступным.</p>}</div>;
+  return <Localize><div className="city-map" ref={host} aria-label="Карта событий Астаны">{error && <p role="status">Не удалось загрузить карту. Список мест остаётся доступным.</p>}</div></Localize>;
 }

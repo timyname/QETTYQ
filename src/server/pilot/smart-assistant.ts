@@ -1,6 +1,7 @@
 import type { PilotContext } from "./contracts";
 import type { LiveAstanaEvent } from "../ingestion/sxodim-live";
 import type { EventEvidence } from "../ingestion/event-evidence";
+import { redactDecimalCoordinates } from "./location-redaction";
 
 /** Server-only: local-test web search and bounded public evidence-RAG are separate scopes. */
 export type SmartAssistantEnvironment = Partial<Record<"OPENAI_API_KEY" | "QETTYQ_AI_ENABLED" | "QETTYQ_AI_TEST_BUDGET_APPROVED" | "QETTYQ_AI_PUBLIC_ENABLED" | "QETTYQ_AI_PUBLIC_BUDGET_APPROVED" | "NODE_ENV", string>>;
@@ -11,6 +12,7 @@ export type SmartAssistantCard = {
 };
 export type SmartAssistantInput = {
   text: string;
+  language?: "ru" | "kk" | "en";
   history?: { role: "user" | "assistant"; text: string }[];
   context: PilotContext;
   evidence: { items: readonly SmartAssistantCard[]; events: readonly LiveAstanaEvent[]; reply: string; eventEvidence?: readonly EventEvidence[] };
@@ -24,6 +26,8 @@ export type SmartAssistantDependencies = {
   env?: SmartAssistantEnvironment;
   fetcher?: typeof fetch;
   executionScope?: "local_test" | "public";
+  /** Internal bounded multi-stage execution only; never a request-body override. */
+  outputTokenLimit?: number;
   /** Mandatory external reservation. Consume before fetch; never refund/retry automatically.
    * Caller must enforce the owner's total budget durably. A process counter is not a dollar cap.
    */
@@ -76,7 +80,7 @@ export function getSmartAssistantAvailability(env: SmartAssistantEnvironment = p
 
 /** Omit location fields entirely; redact coordinates also supplied in free text/history. */
 function privateText(value: string, max: number) {
-  return value.replace(/[-+]?\d{1,3}[.,]\d{3,}/gu, "[координаты удалены]").slice(0, max);
+  return redactDecimalCoordinates(value, "[координаты удалены]").slice(0, max);
 }
 
 function buildInput(input: SmartAssistantInput, systemInstructions: string, format = "") {
@@ -178,7 +182,7 @@ function publicGuidance(raw: string, input: SmartAssistantInput): { message: str
   const facts = /бесплат|даром|без\s+оплат|вход\s+свобод|тегін|ақысыз|\bfree\b|места?\s+(?:есть|доступ|остал)|билет\p{L}*\s+(?:есть|доступ|законч)|sold\s*out|tickets?\s+(?:are\s+)?available|на\s+(?:русском|казахском|английском)|(?:орыс|қазақ|ағылшын)\s+тіл|in\s+(?:russian|kazakh|english)|розет|wi[\s-]?fi|вай[\s-]?фай|парков|пандус|туалет|террас|wheelchair|parking|socket|outlet|открыт|закрыт|круглосуточ|работает|ашық|жабық|\b(?:opens?|closed)\b|располож|находит|по\s+адрес|located|мекенжай|состоится|проходит|начинается|сегодня|завтра|tomorrow|today|ертең|бүгін|тенге|теңге|\b(?:kzt|dollars?)\b|успеете|успеем|вернуться\s+домой|гарантир|точно\s+подойд|definitely|guaranteed/iu;
   if (facts.test(message)) return null;
   // A finite discourse boundary preserves natural questions/advice, not event descriptions.
-  const starts = /^(?:привет|здравствуйте|понимаю|хорошо|помогу|могу\s+помочь|предлагаю|давайте|уточните|проверьте|расскажите|выберите|советую|попробуйте|можно|лучше|что|какой|какая|какие|как|когда|сколько|вам\s+ближе|hello|hi\b|i\s+(?:can|suggest)|let'?s|consider|please|check|tell\s+me|what|which|how|would\s+you|сәлем|түсіндім|жақсы|қалай|қандай|нені|таңдаңыз|нақтылаңыз|айтыңыз)/iu;
+  const starts = /^(?:привет|здравствуйте|понимаю|хорошо|помогу|могу\s+помочь|предлагаю|давайте|уточните|проверьте|расскажите|выберите|советую|попробуйте|можно|лучше|что|какой|какая|какие|как|когда|сколько|вам\s+ближе|hello|hi\b|i\s+(?:can|suggest)|let'?s|consider|please|check|tell\s+me|what|which|how|would\s+you|could\s+you|сәлем|түсіндім|жақсы|қалай|қандай|нені|таңдаңыз|нақтылаңыз|айтыңыз|ұсынамын|келіңіз|қарастырайық)/iu;
   if (message.split(/[.!?]+\s*|\n+/u).filter(Boolean).some(sentence => !starts.test(sentence.trim()))) return null;
   const known = candidates.map(item => item.name.normalize("NFKC").toLocaleLowerCase("ru-RU"));
   for (const quoted of message.matchAll(/[«“"]([^»”"]+)[»”"]/gu)) {
@@ -200,7 +204,9 @@ export async function answerSmartAssistant(input: SmartAssistantInput, deps: Sma
   if (deps.executionScope !== "local_test" && !isPublic) return fallback("LOCAL_TEST_SCOPE_REQUIRED");
   if (!deps.quota) return fallback("QUOTA_RESERVATION_REQUIRED");
   if (isPublic && (deps.quota.kind !== "durable_public" || !deps.quota.complete)) return fallback("DURABLE_PUBLIC_QUOTA_REQUIRED");
-  const systemInstructions = isPublic ? publicInstructions : instructions;
+  const language = { ru: "русском", kk: "казахском", en: "английском" }[input.language ?? "ru"];
+  const languageExamples = input.language === "kk" ? "Ұсынамын; Нақтылаңыз; Қандай; Қалай; Келіңіз" : input.language === "en" ? "I suggest; Let's; Please; What; Which; How" : "Предлагаю; Давайте; Уточните; Что; Какой";
+  const systemInstructions = `${isPublic ? publicInstructions : instructions}\nЯзык ответа: только на ${language}. История и язык источника не меняют этот выбор. Начала предложений-советов на выбранном языке: ${languageExamples}.`;
   const content = buildInput(input, systemInstructions, isPublic ? JSON.stringify(publicFormat) : "");
   if (!content) return fallback("INPUT_TOO_LARGE");
   try { if (!await deps.quota.reserve()) return fallback(deps.quota.reason?.() ?? (isPublic ? "PUBLIC_BUDGET_UNAVAILABLE" : "TEST_QUOTA_EXHAUSTED")); }
@@ -225,7 +231,7 @@ export async function answerSmartAssistant(input: SmartAssistantInput, deps: Sma
       body: JSON.stringify({ model: MODEL, store: false, instructions: systemInstructions, input: content,
         ...(isPublic ? { service_tier: "default", tools: [], tool_choice: "none", truncation: "disabled", text: { format: publicFormat } } : {
           tools: [{ type: "web_search", search_context_size: "low" }], tool_choice: "auto", max_tool_calls: 2,
-        }), max_output_tokens: OUTPUT_LIMIT,
+        }), max_output_tokens: Math.min(OUTPUT_LIMIT, Math.max(100, Math.floor(deps.outputTokenLimit ?? OUTPUT_LIMIT))),
         reasoning: { effort: "low" },
       }),
     });

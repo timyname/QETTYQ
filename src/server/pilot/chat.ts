@@ -1,5 +1,6 @@
 import type { PilotContext } from "./contracts";
-import { searchPilotPlaces } from "./catalog";
+import { pilotPlaces, searchPilotPlaces } from "./catalog";
+import { requestedFoodMatch } from "./food-search";
 import type { LiveEventsResult } from "../ingestion/live-events";
 import type { LiveAstanaEvent } from "../ingestion/sxodim-live";
 import { retrieveEventEvidence, type EventEvidence } from "../ingestion/event-evidence";
@@ -7,7 +8,7 @@ import { retrieveEventEvidence, type EventEvidence } from "../ingestion/event-ev
 export function parseContext(text: string, context: PilotContext): PilotContext {
   const value = text.toLocaleLowerCase("ru-RU");
   const result = { ...context, likedTags: [...context.likedTags] };
-  if (/кофе|кафе|поесть|ресторан|еда|coffee|food|тамақ/u.test(value)) result.goal = "food";
+  if (/кофе|кафе|поесть|ресторан|еда|coffee|food|тамақ|жегім|ас іш|донер|шаурм|рамен|рамэн|суши|пицц|бургер|restaurant|dinner|lunch|ramen|sushi|pizza|burger/u.test(value)) result.goal = "food";
   else if (/прогул|погуля|парк|walk|саябақ|серуен/u.test(value)) result.goal = "walk";
   else if (/музей|театр|концерт|спектак|лекци|событи|афиш|выстав|кино|museum|theat|көрме/u.test(value)) result.goal = "activity";
   else if (/новое|необыч|new|жаңа/u.test(value)) result.goal = "new";
@@ -33,10 +34,10 @@ export function filterChatEvents(events: LiveAstanaEvent[], text: string, contex
 }
 
 /** The only network dependency is the fixed-source, hourly cached service passed by the route. */
-export async function answerPilotChatWithEvents(text: string, context: PilotContext, options: { getEvents: () => Promise<LiveEventsResult>; now?: () => number }) {
+export async function answerPilotChatWithEvents(text: string, context: PilotContext, options: { getEvents: () => Promise<LiveEventsResult>; now?: () => number; forceEvents?: boolean; semanticText?: string }) {
   const base = answerPilotChat(text, context);
   const query = text.toLocaleLowerCase("ru-RU");
-  if (cinemaQuery.test(query) || !eventQuery.test(query)) return { ...base, events: [] as LiveAstanaEvent[], eventEvidence: [] as EventEvidence[], eventsMeta: null };
+  if (cinemaQuery.test(query) || !options.forceEvents && !eventQuery.test(query)) return { ...base, events: [] as LiveAstanaEvent[], eventEvidence: [] as EventEvidence[], eventsMeta: null };
   const now = options.now?.() ?? Date.now();
   let data: LiveEventsResult;
   try { data = await options.getEvents(); }
@@ -44,7 +45,7 @@ export async function answerPilotChatWithEvents(text: string, context: PilotCont
     data = { dataMode: "unavailable", freshness: "unavailable", cacheStatus: "miss", fetchedAt: null, expiresAt: null, source: null, coverage: null, items: [], warnings: ["Не удалось проверить афишу. События не выдумываются."] };
   }
   // Preserve the original explicit preference mode even when parsing the event noun proposes activity.
-  const retrieval = retrieveEventEvidence(data, text, { ...base.proposedContext, goal: context.goal }, now);
+  const retrieval = retrieveEventEvidence(data, text, { ...base.proposedContext, goal: context.goal }, now, { semanticText: options.semanticText });
   const events = retrieval.items;
   const firstDate = events.length ? new Intl.DateTimeFormat("ru-RU", { timeZone: "Asia/Almaty", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(events[0].startsAt)) : null;
   return {
@@ -68,7 +69,8 @@ export function answerPilotChat(text: string, context: PilotContext) {
   const proposedContext = parseContext(text, context);
   const unsupported = /кино|фильм|кинозал|movie|cinema|концерт|билет|concert/u.test(text.toLocaleLowerCase("ru-RU"));
   const unavailableActivity = /баня|сауна|шашлык|барабан|бачат|армрестл|армресл|гончар|керамик/u.test(text.toLocaleLowerCase("ru-RU"));
-  const items = unsupported || unavailableActivity ? [] : searchPilotPlaces(proposedContext, text);
+  const candidates = proposedContext.goal === "food" ? pilotPlaces.filter(place => requestedFoodMatch(place, text)) : pilotPlaces;
+  const items = unsupported || unavailableActivity ? [] : searchPilotPlaces(proposedContext, text, candidates);
   return {
     generationMode: "deterministic" as const,
     reply: unsupported

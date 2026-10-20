@@ -14,6 +14,11 @@ export type Place = {
   dataMode: "snapshot";
   price: { min: number; max: number } | null;
   durationMinutes: number;
+  openingHours?: string | null;
+  website?: string | null;
+  cuisines?: string[];
+  coordinateQuality?: "observed" | "derived";
+  nameTranslations?: Partial<Record<"ru" | "kk" | "en", string>>;
 };
 
 export type Recommendation = Place & {

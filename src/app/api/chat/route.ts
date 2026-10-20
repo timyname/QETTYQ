@@ -1,5 +1,11 @@
 import { catalogMeta } from "../../../server/pilot/catalog";
-import { answerPilotChatWithEvents } from "../../../server/pilot/chat";
+import { answerPilotChatWithEvents, parseContext } from "../../../server/pilot/chat";
+import { answerReasonedAssistant } from "../../../server/pilot/reasoned-assistant";
+import { localizedClarification, localizedSearchReply } from "../../../server/pilot/chat-language";
+import { requestedFoodMatch } from "../../../server/pilot/food-search";
+import { getGooglePlacesRuntime, unavailableGooglePlaces, type GooglePlacesResult } from "../../../server/pilot/google-places";
+import { pilotPlaces, searchPilotPlaces } from "../../../server/pilot/catalog";
+import type { MemoryAIContext } from "../../../server/memory/contracts";
 import { liveEventsService } from "../../../server/ingestion/live-events";
 import { answerSmartAssistant, type SmartAssistantResult } from "../../../server/pilot/smart-assistant";
 import { getLocalAITestGate, reserveLocalAITestCall } from "../../../server/pilot/ai-test-quota";
@@ -9,7 +15,7 @@ import { boundChatPayload } from "../../../server/pilot/chat-history";
 import { chatInputSchema, pilotContextSchema } from "../../../server/pilot/contracts";
 import { apiError, blockCrossSiteMutation, jsonResponse, readJson, requireSession, validationError } from "../../../server/session/http";
 
-export async function handleChat(request: Request, publicRuntime?: PublicAIRuntime, events: HostedRuntime["events"] = liveEventsService) {
+export async function handleChat(request: Request, publicRuntime?: PublicAIRuntime, events: HostedRuntime["events"] = liveEventsService, memory?: HostedRuntime["memory"]) {
   const blocked = blockCrossSiteMutation(request);
   if (blocked) return blocked;
   const auth = requireSession(request);
@@ -27,14 +33,56 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   auth.session.chatRequestTimes = auth.session.chatRequestTimes.filter((time) => time > now - 60_000);
   if (auth.session.chatRequestTimes.length >= 30) return apiError("RATE_LIMITED", 429);
   auth.session.chatRequestTimes.push(now);
-  const context = parsed.data.context ?? auth.session.context ?? pilotContextSchema.parse({});
-  const result = await answerPilotChatWithEvents(parsed.data.text, context, { getEvents: () => events.get() });
+  let saved: MemoryAIContext | null = null;
+  if (parsed.data.useAI && memory) { try { saved = await memory.readForAI(request); } catch { /* no hidden RAM/consent fallback */ } }
+  const preferences = saved?.preferences;
+  const context = parsed.data.context ?? auth.session.context ?? pilotContextSchema.parse(preferences ? {
+    likedTags: preferences.likedTags, goal: preferences.goal, minutes: preferences.minutes, budget: preferences.budget,
+  } : {});
+  const history = [...(saved?.history ?? []), ...parsed.data.history].filter((entry, index, all) => index === all.findIndex(other => entry.role === other.role && entry.text === other.text)).slice(-6);
+  let result = await answerPilotChatWithEvents(parsed.data.text, context, { getEvents: () => events.get() });
+  result.reply = localizedSearchReply(parsed.data.language, result);
   let assistant: SmartAssistantResult = { mode: "deterministic", reply: result.reply, citations: [], model: null, reason: "AI_NOT_REQUESTED" };
+  let googlePlaces: GooglePlacesResult | undefined;
+  let reasoningMode: "plan_retrieve_answer" | "deterministic" = "deterministic";
   if (parsed.data.useAI) {
-    const input = { text: parsed.data.text, history: parsed.data.history, context: result.proposedContext,
+    const input = { text: parsed.data.text, language: parsed.data.language, history, context: result.proposedContext,
       evidence: { items: result.items, events: result.events, eventEvidence: result.eventEvidence, reply: result.reply } };
     if (publicRuntime) {
-      assistant = await answerSmartAssistant(input, publicRuntime.dependencies(auth.session.id, request.headers.get('idempotency-key') ?? crypto.randomUUID()));
+      const reasoned = await answerReasonedAssistant({ ...input, language: parsed.data.language }, publicRuntime.dependencies(auth.session.id, request.headers.get('idempotency-key') ?? crypto.randomUUID()), async plan => {
+        if (plan.intent === "general" || plan.intent === "clarify") result = { ...result, reply: localizedClarification(parsed.data.language), items: [], events: [], eventEvidence: [], eventsMeta: null };
+        if (plan.intent === "events") result = await answerPilotChatWithEvents(parsed.data.text, context, {
+          getEvents: () => events.get(), forceEvents: true, semanticText: plan.query,
+        });
+        if (plan.intent === "places" && result.items.length) {
+          // Re-query only the already admissible pool; model terms cannot widen it.
+          const ids = new Set(result.items.map(item => item.id));
+          result = { ...result, items: searchPilotPlaces(result.proposedContext, plan.query, pilotPlaces.filter(place => ids.has(place.id))), events: [], eventEvidence: [], eventsMeta: null };
+        }
+        if (plan.intent === "food") {
+          // The planner routes meaning; original text still owns money/time limits.
+          const foodContext = parseContext(parsed.data.text, { ...context, goal: "food" });
+          const query = plan.cuisineOrDish ?? plan.query;
+          const candidates = pilotPlaces.filter(place => requestedFoodMatch(place, parsed.data.text, plan.cuisineOrDish));
+          const items = searchPilotPlaces(foodContext, query, candidates);
+          result = { ...result, proposedContext: foodContext, items, events: [], eventEvidence: [], eventsMeta: null };
+          const google = getGooglePlacesRuntime();
+          googlePlaces = foodContext.strictBudget && foodContext.budget !== null
+            ? unavailableGooglePlaces("GOOGLE_PRICE_NOT_VERIFIED")
+            : parsed.data.googleConsent && google
+            ? await google.search({ query, language: parsed.data.language, consent: true, requestId: crypto.randomUUID() })
+            : unavailableGooglePlaces(parsed.data.googleConsent ? "GOOGLE_SERVER_KEY_REQUIRED" : "GOOGLE_CONSENT_REQUIRED", parsed.data.googleConsent);
+        }
+        if (plan.intent !== "general" && plan.intent !== "clarify") result.reply = localizedSearchReply(parsed.data.language, result);
+        // A person's consent never grants a data source new LLM rights.
+        const allowed = (id: string) => events.canSendToLlm ? events.canSendToLlm(id) : ["osm-overpass-poi", "sxodim-astana-noncommercial"].includes(id);
+        const withheld = result.items.length > 0 && !allowed("osm-overpass-poi") || result.events.some(event => !allowed(event.provenance.sourceId));
+        return { reply: withheld ? localizedClarification(parsed.data.language) : result.reply, items: allowed("osm-overpass-poi") ? result.items : [],
+          events: result.events.filter(event => allowed(event.provenance.sourceId)),
+          eventEvidence: result.eventEvidence.filter(event => result.events.some(item => item.id === event.eventId && allowed(item.provenance.sourceId))) };
+      });
+      if (reasoned.plan) reasoningMode = "plan_retrieve_answer";
+      assistant = reasoned.assistant.reply ? reasoned.assistant : { ...reasoned.assistant, reply: result.reply };
     } else {
       const gate = getLocalAITestGate(request);
       assistant = gate.allowed
@@ -42,15 +90,29 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
         : { ...assistant, reason: gate.reason };
     }
   }
+  if (result.proposedContext.goal === "food" && !googlePlaces) {
+    const google = getGooglePlacesRuntime();
+    googlePlaces = result.proposedContext.strictBudget && result.proposedContext.budget !== null
+      ? unavailableGooglePlaces("GOOGLE_PRICE_NOT_VERIFIED")
+      : parsed.data.googleConsent && google
+      ? await google.search({ query: parsed.data.text, language: parsed.data.language, consent: true, requestId: crypto.randomUUID() })
+      : unavailableGooglePlaces(parsed.data.googleConsent ? "GOOGLE_SERVER_KEY_REQUIRED" : "GOOGLE_CONSENT_REQUIRED", parsed.data.googleConsent);
+  }
   const meta = catalogMeta();
+  let memoryStored = false;
+  if (memory) {
+    try { memoryStored = (await memory.recordExchange(request, { userMessageId: crypto.randomUUID(), userText: parsed.data.text,
+      assistantMessageId: crypto.randomUUID(), assistantText: assistant.reply, mode: assistant.mode })).stored; }
+    catch { /* no provider retry or misleading saved promise */ }
+  }
   const warnings = assistant.mode === "openai"
     ? result.warnings.filter(warning => !warning.startsWith("Без внешнего AI:"))
     : result.warnings;
-  return jsonResponse({ ...meta, ...result, ...assistant, generationMode: assistant.mode,
+  return jsonResponse({ ...meta, ...result, ...assistant, generationMode: assistant.mode, reasoningMode, googlePlaces, memoryStored, language: parsed.data.language,
     dataMode: result.eventsMeta?.dataMode ?? meta.dataMode, warnings: [...(result.eventsMeta ? [] : meta.warnings), ...warnings] });
 }
 
 export function POST(request: Request) {
   const hosted = getHostedRuntime();
-  return handleChat(request, hosted?.ai, hosted?.events);
+  return handleChat(request, hosted?.ai, hosted?.events, hosted?.memory);
 }

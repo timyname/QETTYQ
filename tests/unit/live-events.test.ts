@@ -102,6 +102,30 @@ describe("bounded public fetch adapter", () => {
     expect(data.items).toHaveLength(1);
     expect(data.source.mediaCopied).toBe(false);
   });
+  it("caps the same-index serial refresh at 24 details and reports actual calls, never photos", async () => {
+    const listing = Array.from({ length: 30 }, (_, i) => index.replace('data-id="123"', `data-id="${1000 + i}"`).replaceAll(page, `https://sxodim.com/astana/event/synthetic-${i}`)).join("");
+    let inFlight = 0, peak = 0;
+    const fetcher = vi.fn<SourceFetcher>(async url => {
+      inFlight++; peak = Math.max(peak, inFlight); await Promise.resolve(); inFlight--;
+      return response(url.endsWith("robots.txt") ? "User-agent: *\nDisallow:\n" : url === SXODIM_TERMS ? permission : url === SXODIM_INDEX ? listing : detail({ url }));
+    });
+    const snapshot = await fetchLiveAstanaEvents({ fetcher, now: new Date(now).toISOString() });
+    expect(snapshot.items).toHaveLength(24); expect(snapshot.coverage).toMatchObject({ indexCandidates: 30, detailPagesRequested: 24, importedOccurrences: 24 });
+    expect(fetcher).toHaveBeenCalledTimes(27); expect(peak).toBe(1);
+    expect(fetcher.mock.calls.every(([url]) => !url.includes("uploads"))).toBe(true);
+  });
+  it("caps multi-occurrence pages at 50 records without claiming all selected pages were fetched", async () => {
+    const listing = Array.from({ length: 24 }, (_, i) => index.replace('data-id="123"', `data-id="${1000 + i}"`).replaceAll(page, `https://sxodim.com/astana/event/synthetic-${i}`)).join("");
+    const fetcher = vi.fn<SourceFetcher>(async url => response(url.endsWith("robots.txt") ? "User-agent: *\nDisallow:\n" : url === SXODIM_TERMS ? permission : url === SXODIM_INDEX ? listing
+      : Array.from({ length: 20 }, (_, i) => detail({ url, startDate: new Date(Date.parse("2026-10-23T13:30:00Z") + i * 86400_000).toISOString().replace(".000Z", "Z") })).join("")));
+    const snapshot = await fetchLiveAstanaEvents({ fetcher, now: new Date(now).toISOString() });
+    expect(snapshot.items).toHaveLength(50); expect(snapshot.coverage.detailPagesRequested).toBe(3); expect(fetcher).toHaveBeenCalledTimes(6);
+  });
+  it.each([403, 429])("stops on detail HTTP%s instead of retrying or working around a block", async status => {
+    const fetcher = vi.fn<SourceFetcher>(async url => response(url.endsWith("robots.txt") ? "User-agent: *\nDisallow:\n" : url === SXODIM_TERMS ? permission : url === SXODIM_INDEX ? index : "blocked", url.startsWith(`${SXODIM_INDEX}/event/`) ? status : 200));
+    await expect(fetchLiveAstanaEvents({ fetcher, now: new Date(now).toISOString() })).rejects.toThrow(status === 429 ? "SOURCE_RATE_LIMITED" : "SOURCE_HTTP_403");
+    expect(fetcher).toHaveBeenCalledTimes(4);
+  });
   it("fails closed when robots or reuse terms change", async () => {
     await expect(fetchLiveAstanaEvents({ fetcher: async () => response("User-agent: *\nDisallow: /\n"), now: new Date(now).toISOString() })).rejects.toThrow("SOURCE_ROBOTS_POLICY_REQUIRES_REVIEW");
     const fetcher = vi.fn(async (url: string) => response(url.endsWith("robots.txt") ? "User-agent: *\nDisallow:\n" : "All rights reserved"));

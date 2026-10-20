@@ -2,6 +2,7 @@ import places from "../../../data/places.json";
 import { recommend } from "../../domain/recommend";
 import type { Place } from "../../domain/types";
 import type { PilotContext } from "./contracts";
+import { weeklyOpeningStatus } from "../ingestion/weekly-hours";
 
 export const pilotPlaces = places as Place[];
 export const catalogCredit = { text: "© OpenStreetMap contributors", url: "https://www.openstreetmap.org/copyright", license: "ODbL" };
@@ -12,6 +13,11 @@ export function publicPlace(place: Place) {
     lat: place.lat, lon: place.lon, address: place.address,
     tags: [...place.tags], price: place.price, durationMinutes: place.durationMinutes,
     durationState: "estimated" as const,
+    openingHours: place.openingHours ?? null,
+    openingStatus: weeklyOpeningStatus(place.openingHours, Date.now(), Date.now() + place.durationMinutes * 60_000, place.retrievedAt),
+    sourceUrl: place.sourceUrl, retrievedAt: place.retrievedAt,
+    cuisines: place.cuisines ?? [],
+    coordinateQuality: place.coordinateQuality ?? "observed",
   };
 }
 
@@ -19,19 +25,24 @@ export function catalogMeta() {
   return {
     requestId: crypto.randomUUID(), dataMode: "snapshot" as const,
     generatedAt: new Date().toISOString(), attribution: catalogCredit,
-    warnings: ["Каталог мест — сохранённый снимок от 19 октября 2026 года. Это не расписание мероприятий.", "Длительность посещения — оценка; цену, расписание и наличие мест нужно уточнить."],
+    warnings: ["Каталог мест — датированный снимок OpenStreetMap. Это не расписание мероприятий.", "Длительность посещения — оценка; опубликованные часы могут иметь исключения, цену и наличие мест нужно уточнить."],
   };
 }
 
-export function searchPilotPlaces(context: PilotContext, text = "") {
+export type SearchedPlace = ReturnType<typeof publicPlace> & {
+  distanceKm: number | null; travelMinutes: number | null; totalMinutes: number | null;
+  feasibility: "feasible" | "uncertain" | "infeasible"; routeQuality: "estimated" | "unavailable";
+  reason: string; unknowns: string[];
+};
+export function searchPilotPlaces(context: PilotContext, text = "", pool: readonly Place[] = pilotPlaces): SearchedPlace[] {
   const normalized = text.toLocaleLowerCase("ru-RU");
   const categoryWords = /музей|museum|мұражай/u.test(normalized) ? ["museum"]
     : /театр|theat|спектак/u.test(normalized) ? ["theatre"]
       : /кофе|coffee|кафе/u.test(normalized) ? ["cafe"]
         : /парк|park|саябақ/u.test(normalized) ? ["park", "garden"] : [];
   const categoryCandidates = categoryWords.length
-    ? pilotPlaces.filter((place) => place.tags.some((tag) => categoryWords.includes(tag)))
-    : pilotPlaces;
+    ? pool.filter((place) => place.tags.some((tag) => categoryWords.includes(tag)))
+    : [...pool];
   const candidates = context.goal === "new" && context.likedTags.length > 0
     ? categoryCandidates.filter((place) => place.tags.some((tag) => context.likedTags.includes(tag)))
     : categoryCandidates;

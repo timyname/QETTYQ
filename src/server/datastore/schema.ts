@@ -96,6 +96,11 @@ CREATE TABLE IF NOT EXISTS memory_visits(
  visited_at_ms INTEGER NOT NULL, confirmation TEXT NOT NULL CHECK(confirmation='user_confirmed'), expires_at_ms INTEGER NOT NULL,
  PRIMARY KEY(client_hash,entity_kind,entity_id,visited_at_ms)
 );
+CREATE INDEX IF NOT EXISTS memory_clients_expiry ON memory_clients(expires_at_ms);
+CREATE INDEX IF NOT EXISTS memory_consents_expiry ON memory_consents(expires_at_ms);
+CREATE INDEX IF NOT EXISTS memory_profiles_expiry ON memory_profiles(expires_at_ms);
+CREATE INDEX IF NOT EXISTS memory_messages_expiry ON memory_messages(expires_at_ms);
+CREATE INDEX IF NOT EXISTS memory_visits_expiry ON memory_visits(expires_at_ms);
 CREATE TABLE IF NOT EXISTS qettyq_ai_public_reservations(
  request_id TEXT PRIMARY KEY NOT NULL, approval_id TEXT NOT NULL, session_hash TEXT NOT NULL,
  reserved_at_ms INTEGER NOT NULL, utc_day TEXT NOT NULL,

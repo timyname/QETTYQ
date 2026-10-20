@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
 
 // Synthetic browser fixture only. No real event, availability, price or provider
 // integration is asserted by this test. Real-source smoke is a separate check.
@@ -22,6 +23,7 @@ const tomorrow = {
 };
 
 test('synthetic_test: афиша фильтрует сегодня, сохраняет событие и показывает честные детали с обязательным credit', async ({ page }) => {
+  await installOfflineTestGuards(page);
   await page.clock.setFixedTime(new Date(NOW));
   await page.route('**/api/events', route => route.fulfill({
     status: 200, contentType: 'application/json', body: JSON.stringify({
@@ -30,7 +32,7 @@ test('synthetic_test: афиша фильтрует сегодня, сохран
     }),
   }));
 
-  await page.goto('/');
+  await openRussianApp(page);
   await expect(page.getByRole('button', { name: 'Выбрать свой вайб' })).toBeEnabled();
   await page.getByRole('button', { name: 'QETTYQ — на главную' }).click();
   const feed = page.getByRole('region', { name: 'Афиша Астаны' });

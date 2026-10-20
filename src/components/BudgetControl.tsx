@@ -1,5 +1,7 @@
 'use client';
 
+import { Localize, useI18n, formatNumber } from '../client/i18n';
+
 import { useId, useState } from 'react';
 import { Check, Infinity as InfinityIcon, Wallet } from 'lucide-react';
 import s from './BudgetControl.module.css';
@@ -16,6 +18,7 @@ const MAX_BUDGET = 1_000_000;
 const PRESETS = [0, 3_000, 5_000, 10_000] as const;
 
 export function BudgetControl({ value, onChange, strict, onStrictChange }: BudgetControlProps) {
+  const { language } = useI18n();
   const id = useId();
   const amountId = `budget-${id}`;
   const descriptionId = `${amountId}-description`;
@@ -42,7 +45,7 @@ export function BudgetControl({ value, onChange, strict, onStrictChange }: Budge
     select(next);
   }
 
-  return <fieldset className={s.root}>
+  return <Localize><fieldset className={s.root}>
     <legend className={s.legend}>Бюджет</legend>
     <label className={s.amountLabel} htmlFor={amountId}>
       <span><Wallet size={19} aria-hidden="true" /> Бюджет на человека</span>
@@ -72,9 +75,9 @@ export function BudgetControl({ value, onChange, strict, onStrictChange }: Budge
         className={s.preset}
         type="button"
         aria-pressed={validValue && value === amount}
-        aria-label={amount === 0 ? 'Только бесплатные варианты, 0 ₸' : `Бюджет ${amount.toLocaleString('ru-RU')} ₸ на человека`}
+        aria-label={amount === 0 ? 'Только бесплатные варианты, 0 ₸' : `Бюджет ${formatNumber(amount, language)} ₸ на человека`}
         onClick={() => select(amount)}
-      >{amount === 0 ? '0 ₸' : amount.toLocaleString('ru-RU')}</button>)}
+      >{amount === 0 ? '0 ₸' : formatNumber(amount, language)}</button>)}
       <button
         className={`${s.preset} ${s.unlimited}`}
         type="button"
@@ -90,5 +93,5 @@ export function BudgetControl({ value, onChange, strict, onStrictChange }: Budge
       <input type="checkbox" checked={strict} onChange={event => onStrictChange(event.target.checked)} />
       <span>Не предлагать варианты с неизвестной ценой</span>
     </label>
-  </fieldset>;
+  </fieldset></Localize>;
 }

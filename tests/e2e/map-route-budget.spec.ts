@@ -1,14 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
+import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
 
 // Events are explicitly unavailable in these UI tests. Real vector-map browser
 // smoke is recorded separately; this file accepts the documented Leaflet fallback.
 test.use({ timezoneId: 'America/New_York' });
 test.beforeEach(async ({ page }) => {
+  await installOfflineTestGuards(page);
   await page.route('**/api/events', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [], dataMode: 'unavailable', freshness: 'unavailable', fetchedAt: null }) }));
 });
 
 async function conditions(page: Page) {
-  await page.goto('/');
+  await openRussianApp(page);
   await page.getByRole('button', { name: 'Выбрать свой вайб' }).click();
   await page.getByRole('button', { name: 'Пропустить подбор интересов', exact: true }).click();
   await page.getByRole('button', { name: 'К условиям подборки', exact: true }).click();

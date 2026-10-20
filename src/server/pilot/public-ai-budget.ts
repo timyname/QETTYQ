@@ -11,7 +11,9 @@ export const PUBLIC_AI_DAILY_CALLS = 10;
 
 // $5/M input + $30/M output, standard GPT-5.5, verified 2026-10-20.
 // 50,000 * $5/M + 1,200 * $30/M = $0.286; reserve $0.50, no refunds.
-// This bound ONLY covers one plain request, <=8,000 UTF-8 bytes, no hosted tools,
+// This bound covers one plain request OR the bounded planner+answer pair:
+// <=8,000 UTF-8 bytes EACH, aggregate input<=50,000 tokens/output<=1,200 tokens,
+// planner400+answer800 (reasoning included), no hosted tools,
 // attachments, previous_response_id, hidden conversation, background, or retries.
 // It is an application reservation cap, NOT an OpenAI project billing guarantee.
 

@@ -7,19 +7,29 @@ export type MemoryScope = "profile" | "dialogue" | "ai_transfer" | "visits";
 const scopes: MemoryScope[] = ["profile", "dialogue", "ai_transfer", "visits"];
 const DAY = 86_400_000;
 const profileSchema = z.object({
-  likedTags: z.array(z.string().trim().min(1).max(48)).max(40), locale: z.enum(["ru", "kk", "en"]),
+  likedTags: z.array(z.string().trim().regex(/^[a-z][a-z0-9_]{0,47}$/u)).max(40), locale: z.enum(["ru", "kk", "en"]),
   goal: z.enum(["food", "walk", "activity", "new"]).optional(), minutes: z.number().int().min(20).max(720).optional(),
   budget: z.number().int().min(0).max(1_000_000).nullable().optional(),
 }).strict();
 export type StoredPreferences = z.infer<typeof profileSchema>;
-type Message = { id: string; role: "user" | "assistant"; text: string; mode: "openai" | "deterministic" | "user" };
+export type StoredMemoryMessage = { id: string; role: "user" | "assistant"; text: string; mode: "openai" | "deterministic" | "user" };
+type Message = StoredMemoryMessage;
 const messageSchema = z.object({ id: z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/u), role: z.enum(["user", "assistant"]), text: z.string().trim().min(1), mode: z.enum(["openai", "deterministic", "user"]) }).strict();
 function clientHash(token: string) {
   // Server-verified opaque cookie/session ID only. No user-supplied email or GPS identifier.
   if (!/^[a-zA-Z0-9_-]{32,256}$/u.test(token)) throw new Error("INVALID_MEMORY_CLIENT");
   return createHash("sha256").update(`qettyq-memory-v1:${token}`).digest("hex");
 }
-const redactCoordinates = (text: string) => text.replace(/-?\d{1,3}\.\d{3,}/gu, "[координата скрыта]");
+/** Conservative free-text location suppression; never persist URLs that could
+ * carry map queries. Not a universal detector of every natural-language address.
+ */
+export function redactMemoryLocation(text: string) {
+  const withoutUrls = text.replace(/https?:\/\/\S+/giu, "[ссылка не сохранена]");
+  const addressMarker = /(?:^|[^\p{L}])(?:ул(?:ица|ице|ицу|ицы)?\.?|проспект\p{L}*|пр-т|переул\p{L}*|бульвар\p{L}*|микрорайон\p{L}*|мкр\.?|квартира|кв\.|адрес\p{L}*|живу|проживаю|көшесі\p{L}*|даңғылы\p{L}*|мекенжай\p{L}*|address|street|avenue|road|latitude|longitude|gps|координат\p{L}*|геопозиц\p{L}*)(?=$|[^\p{L}])/iu;
+  const bareAddress = /\p{L}{3,}(?:[ -]\p{L}{2,}){0,3},\s*\d{1,4}(?:\/\d+)?(?:[^\d]|$)/u;
+  if (addressMarker.test(withoutUrls) || bareAddress.test(withoutUrls)) return "[Сообщение с адресом или геопозицией не сохранено]";
+  return withoutUrls.replace(/[+-]?\d{1,3}[.,]\d{1,}/gu, "[координата скрыта]");
+}
 
 /** Not connected to guest API automatically. Caller MUST authenticate the opaque token.
  * Every storage/AI-transfer operation requires its own unexpired explicit consent.
@@ -34,12 +44,24 @@ export function createClientMemory(db: DatabaseSync, clock: () => number = Date.
   }
   function requireConsent(token: string, scope: MemoryScope) { if (!hasConsent(token, scope)) throw new Error(`MEMORY_CONSENT_REQUIRED:${scope}`); return clientHash(token); }
   function consentExpiry(id: string, scope: MemoryScope) { return Number(db.prepare("SELECT expires_at_ms FROM memory_consents WHERE client_hash=? AND scope=?").get(id, scope)!.expires_at_ms); }
+  function identity(token: string) {
+    const time = now(), id = clientHash(token);
+    if (!db.prepare("SELECT 1 FROM memory_clients WHERE id_hash=? AND expires_at_ms>?").get(id, time)) return null;
+    const rows = db.prepare("SELECT scope,expires_at_ms FROM memory_consents WHERE client_hash=? AND expires_at_ms>?").all(id, time);
+    if (!rows.length) return null;
+    const consents = Object.fromEntries(scopes.map(scope => {
+      const row = rows.find(row => row.scope === scope);
+      return [scope, row ? { active: true as const, expiresAt: new Date(Number(row.expires_at_ms)).toISOString() } : null];
+    })) as Record<MemoryScope, { active: true; expiresAt: string } | null>;
+    return { consents, expiresAt: new Date(Math.max(...rows.map(row => Number(row.expires_at_ms)))).toISOString() };
+  }
   function grantConsent(token: string, scope: MemoryScope, retention: "session_24h" | "persistent_30d") {
     if (!scopes.includes(scope) || !["session_24h", "persistent_30d"].includes(retention)) throw new Error("INVALID_MEMORY_CONSENT");
     const id = clientHash(token), time = now(), expiry = time + (retention === "persistent_30d" ? 30 : 1) * DAY;
     atomic(db, () => {
       // Expired clients and dependent rows are deleted before a new opt-in starts.
       db.prepare("DELETE FROM memory_clients WHERE id_hash=? AND expires_at_ms<=?").run(id, time);
+      if (!db.prepare("SELECT 1 FROM memory_clients WHERE id_hash=?").get(id) && Number(db.prepare("SELECT COUNT(*) AS n FROM memory_clients").get()!.n) >= 10000) throw new Error("MEMORY_CAPACITY_REACHED");
       const oldConsent = db.prepare("SELECT expires_at_ms FROM memory_consents WHERE client_hash=? AND scope=?").get(id, scope);
       if (!oldConsent || Number(oldConsent.expires_at_ms) <= time) {
         const table = scope === "profile" ? "memory_profiles" : scope === "dialogue" ? "memory_messages" : scope === "visits" ? "memory_visits" : null;
@@ -59,18 +81,26 @@ export function createClientMemory(db: DatabaseSync, clock: () => number = Date.
     const row = db.prepare("SELECT preferences_json FROM memory_profiles WHERE client_hash=? AND expires_at_ms>?").get(clientHash(token), now());
     return row ? profileSchema.parse(JSON.parse(String(row.preferences_json))) : null;
   }
-  function appendMessage(token: string, message: Message) {
-    const id = requireConsent(token, "dialogue"), parsed = messageSchema.parse(message), text = redactCoordinates(parsed.text);
-    if (Buffer.byteLength(text, "utf8") > 4000 || parsed.role === "user" && parsed.mode !== "user" || parsed.role === "assistant" && parsed.mode === "user") throw new Error("INVALID_MEMORY_MESSAGE");
+  function appendMessages(token: string, input: Message[]) {
+    const id = requireConsent(token, "dialogue");
+    if (!input.length || input.length > 2) throw new Error("INVALID_MEMORY_MESSAGE");
+    const parsedMessages = input.map(message => {
+      const parsed = messageSchema.parse(message), text = redactMemoryLocation(parsed.text);
+      if (Buffer.byteLength(text, "utf8") > 4000 || parsed.role === "user" && parsed.mode !== "user" || parsed.role === "assistant" && parsed.mode === "user") throw new Error("INVALID_MEMORY_MESSAGE");
+      return { ...parsed, text };
+    });
     atomic(db, () => {
       db.prepare("DELETE FROM memory_messages WHERE client_hash=? AND expires_at_ms<=?").run(id, now());
-      const existing = db.prepare("SELECT role,text,mode FROM memory_messages WHERE client_hash=? AND id=?").get(id, parsed.id);
-      if (existing && (existing.role !== parsed.role || existing.text !== text || existing.mode !== parsed.mode)) throw new Error("MESSAGE_ID_CONFLICT");
-      db.prepare("INSERT OR IGNORE INTO memory_messages VALUES(?,?,?,?,?,?,?)").run(id, parsed.id, parsed.role, text, parsed.mode, now(), consentExpiry(id, "dialogue"));
+      for (const parsed of parsedMessages) {
+        const existing = db.prepare("SELECT role,text,mode FROM memory_messages WHERE client_hash=? AND id=?").get(id, parsed.id);
+        if (existing && (existing.role !== parsed.role || existing.text !== parsed.text || existing.mode !== parsed.mode)) throw new Error("MESSAGE_ID_CONFLICT");
+        db.prepare("INSERT OR IGNORE INTO memory_messages VALUES(?,?,?,?,?,?,?)").run(id, parsed.id, parsed.role, parsed.text, parsed.mode, now(), consentExpiry(id, "dialogue"));
+      }
       db.prepare(`DELETE FROM memory_messages WHERE client_hash=? AND id NOT IN
         (SELECT id FROM memory_messages WHERE client_hash=? ORDER BY created_at_ms DESC,rowid DESC LIMIT 24)`).run(id, id);
     });
   }
+  function appendMessage(token: string, message: Message) { appendMessages(token, [message]); }
   function messages(token: string): (Message & { createdAtMs: number })[] {
     if (!hasConsent(token, "dialogue")) return [];
     return db.prepare("SELECT * FROM memory_messages WHERE client_hash=? AND expires_at_ms>? ORDER BY created_at_ms,rowid").all(clientHash(token), now())
@@ -88,8 +118,9 @@ export function createClientMemory(db: DatabaseSync, clock: () => number = Date.
   function markVisited(token: string, input: { entityKind: "venue" | "event"; entityId: string; visitedAtMs: number }) {
     const id = requireConsent(token, "visits"), time = now();
     if (!["venue", "event"].includes(input.entityKind) || !Number.isSafeInteger(input.visitedAtMs) || input.visitedAtMs > time || input.visitedAtMs < 0) throw new Error("INVALID_VISIT");
-    const table = input.entityKind === "venue" ? "venues" : "events";
-    if (!db.prepare(`SELECT 1 FROM ${table} WHERE id=?`).get(input.entityId)) throw new Error("VISIT_ENTITY_NOT_FOUND");
+    const known = input.entityKind === "venue" ? db.prepare("SELECT 1 FROM venues WHERE id=?").get(input.entityId)
+      : db.prepare("SELECT 1 FROM events WHERE id=? UNION ALL SELECT 1 FROM event_occurrences WHERE id=? LIMIT 1").get(input.entityId, input.entityId);
+    if (!known) throw new Error("VISIT_ENTITY_NOT_FOUND");
     atomic(db, () => {
       db.prepare("DELETE FROM memory_visits WHERE client_hash=? AND expires_at_ms<=?").run(id, time);
       db.prepare("INSERT OR IGNORE INTO memory_visits VALUES(?,?,?,?,?,?)").run(id, input.entityKind, input.entityId, input.visitedAtMs, "user_confirmed", consentExpiry(id, "visits"));
@@ -99,7 +130,8 @@ export function createClientMemory(db: DatabaseSync, clock: () => number = Date.
   }
   function visits(token: string) {
     if (!hasConsent(token, "visits")) return [];
-    return db.prepare("SELECT entity_kind,entity_id,visited_at_ms,confirmation FROM memory_visits WHERE client_hash=? AND expires_at_ms>? ORDER BY visited_at_ms DESC LIMIT 100").all(clientHash(token), now());
+    return db.prepare("SELECT entity_kind,entity_id,visited_at_ms,confirmation FROM memory_visits WHERE client_hash=? AND expires_at_ms>? ORDER BY visited_at_ms DESC LIMIT 100").all(clientHash(token), now())
+      .map(row => ({ entityKind: row.entity_kind as "venue" | "event", entityId: String(row.entity_id), visitedAtMs: Number(row.visited_at_ms), confirmation: "user_confirmed" as const }));
   }
   function deleteClient(token: string) { db.prepare("DELETE FROM memory_clients WHERE id_hash=?").run(clientHash(token)); }
   function aiContext(token: string) {
@@ -119,5 +151,5 @@ export function createClientMemory(db: DatabaseSync, clock: () => number = Date.
       return Number(db.prepare("DELETE FROM memory_clients WHERE expires_at_ms<=?").run(time).changes);
     });
   }
-  return { grantConsent, hasConsent, saveProfile, readProfile, appendMessage, messages, revokeConsent, markVisited, visits, deleteClient, purgeExpired, aiContext };
+  return { identity, grantConsent, hasConsent, saveProfile, readProfile, appendMessage, appendMessages, messages, revokeConsent, markVisited, visits, deleteClient, purgeExpired, aiContext };
 }

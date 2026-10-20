@@ -43,8 +43,28 @@ const tagPatterns: Record<string, RegExp> = {
 const stopWords = new Set("найди найти покажи показать посоветуй предложи подбери подобрать хочу хочется можно куда сходить пойти событие события событий мероприятие мероприятия мероприятий афиша афишу интересное интересные интересных подходит подходящие доступные сегодня завтра послезавтра сейчас ближайшие ближайших ближайшее ближайший ближайшую этой этот неделю недели выходные выходных субботу воскресенье октябрь октября ноябрь ноября декабрь декабря январь января февраль февраля март марта апрель апреля май мая июнь июня июль июля август августа сентябрь сентября астана астане астаны astana find show events event today tomorrow weekend week please something available free бесплатно бесплатные бесплатных тенге теңге kzt бюджет бюджета рублей потратить минут минуты минута часов часа час времени время свободно свободных свободные меня нас двоих двое троих человек человека людей группу компания компанию компанией вечером вечер днем днём утро утром без очень такой такие всего больше меньше тыс тысяч стоимость до под для про после через перед рядом около либо или the and for with that this from what where which there these under before after next have want would like".split(/\s+/u));
 // Ignore request framing, not arbitrary unmatched interests. Category/date/price
 // filters still run independently; e.g. sauna, armwrestling and artist names stay tokens.
-const requestScaffolding = new Set("помоги помогите пожалуйста выбрать выбери выбирать выбор досуг досуга варианты вариант вариантов предложите подскажите подскажи расскажи расскажите уточнить уточнения организатора организатору организаторов подтвержденной подтвержденные подтвержденных подтвержденного актуальной актуальные актуальных доступной доступных афиши афише интересует интересуют help choose suggest options confirmed listings organizer clarify".split(/\s+/u));
+const requestScaffolding = new Set("помоги помогите пожалуйста выбрать выбери выбирать выбор выбраться выберусь досуг досуга варианты вариант вариантов предложите подскажите подскажи расскажи расскажите уточнить уточнения организатора организатору организаторов подтвержденной подтвержденные подтвержденных подтвержденного актуальной актуальные актуальных доступной доступных афиши афише интересует интересуют help choose suggest options confirmed listings organizer clarify".split(/\s+/u));
 const stem = (word: string) => word.length > 5 ? word.replace(/(?:иями|ами|ями|ого|ему|ому|ыми|ими|ой|ый|ий|ая|яя|ое|ее|ые|ие|ов|ам|ям|ах|ях|ом|ем|ию|ия|ии|а|у|ы|и|я|е|о|ь)$/u, "") : word;
+
+/** A model's semantic query is an additional matcher, never a replacement for
+ * the original text's categories, exclusions, dates, price or preferences. */
+function textMatcher(query: string) {
+  const mentioned = groups.map(group => ({ group, matches: [...query.matchAll(new RegExp(group.query.source, group.query.flags))] })).filter(value => value.matches.length > 0);
+  const isNegative = (match: RegExpMatchArray) => /(?:^|[^\p{L}])(?:без\s+|не\s+(?:(?:хочу|нужен|нужны|интересует|нравится)\s+)?)$/u.test(query.slice(0, match.index).trimEnd() + " ");
+  const selectedGroups = mentioned.filter(value => value.matches.some(match => !isNegative(match))).map(value => value.group);
+  const excludedGroups = mentioned.filter(value => value.matches.every(isNegative)).map(value => value.group);
+  let remainder = query.replace(/\b20\d{2}-\d{2}-\d{2}\b/gu, "").replace(/бесплат\p{L}*|тегін|\bfree\b|недел\p{L}*/gu, " ")
+    // Only this generic phrase is framing. Names/unsupported activities remain tokens.
+    .replace(/куда[\s-]+нибудь/gu, "куда");
+  for (const { group } of mentioned) { group.query.lastIndex = 0; remainder = remainder.replace(group.query, " "); }
+  const tokens = [...new Set((remainder.match(/\p{L}{4,}/gu) ?? []).filter(token => !stopWords.has(token) && !requestScaffolding.has(token)).map(stem))].slice(0, 12);
+  const alternatives = /(?:^|\s)(?:или|либо|or)(?:\s|$)/u.test(query);
+  return (content: string): "EXPLICITLY_EXCLUDED_CATEGORY" | "TEXT_MISMATCH" | null => {
+    if (excludedGroups.some(group => group.content.test(content))) return "EXPLICITLY_EXCLUDED_CATEGORY";
+    const mismatch = alternatives ? selectedGroups.length > 0 && !selectedGroups.some(group => group.content.test(content)) : selectedGroups.some(group => !group.content.test(content));
+    return mismatch || tokens.some(token => !content.includes(token)) ? "TEXT_MISMATCH" : null;
+  };
+}
 
 function localDay(now: number): string {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Almaty", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(now));
@@ -77,17 +97,12 @@ function queryWindow(query: string, context: PilotContext, now: number): Window 
 }
 
 /** Pure deterministic retrieval. No LLM, network, coordinates, or source description instructions. */
-export function retrieveEventEvidence(data: LiveEventsResult, text: string, context: PilotContext, now = Date.now()): EventRetrieval {
+export function retrieveEventEvidence(data: LiveEventsResult, text: string, context: PilotContext, now = Date.now(), options: { semanticText?: string } = {}): EventRetrieval {
   const query = normalize(text), window = queryWindow(query, context, now);
   const budget = /бесплат|тегін|\bfree\b/u.test(query) ? 0 : context.budget;
   const strict = context.strictBudget || budget === 0;
-  const mentioned = groups.map(group => ({ group, matches: [...query.matchAll(new RegExp(group.query.source, group.query.flags))] })).filter(value => value.matches.length > 0);
-  const isNegative = (match: RegExpMatchArray) => /(?:^|[^\p{L}])(?:без\s+|не\s+(?:(?:хочу|нужен|нужны|интересует|нравится)\s+)?)$/u.test(query.slice(0, match.index).trimEnd() + " ");
-  const selectedGroups = mentioned.filter(value => value.matches.some(match => !isNegative(match))).map(value => value.group);
-  const excludedGroups = mentioned.filter(value => value.matches.every(isNegative)).map(value => value.group);
-  let remainder = query.replace(/\b20\d{2}-\d{2}-\d{2}\b/gu, "").replace(/бесплат\p{L}*|тегін|\bfree\b|недел\p{L}*/gu, " ");
-  for (const { group } of mentioned) { group.query.lastIndex = 0; remainder = remainder.replace(group.query, " "); }
-  const tokens = [...new Set((remainder.match(/\p{L}{4,}/gu) ?? []).filter(token => !stopWords.has(token) && !requestScaffolding.has(token)).map(stem))].slice(0, 12);
+  const matchesOriginal = textMatcher(query);
+  const matchesSemantic = options.semanticText?.trim() ? textMatcher(normalize(options.semanticText)) : null;
   const excluded: EventRetrieval["excluded"] = [];
   const reject = (event: LiveAstanaEvent, reason: string) => { excluded.push({ eventId: event.id, reason }); return false; };
   const items = data.items.filter(event => {
@@ -96,9 +111,9 @@ export function retrieveEventEvidence(data: LiveEventsResult, text: string, cont
     if (!Number.isFinite(start) || start < window.from || window.until !== null && start >= window.until || window.invalid) return reject(event, "OUTSIDE_DATE_WINDOW");
     if (window.kind === "available_time" && end !== null && Number.isFinite(end) && end > window.until!) return reject(event, "EXCEEDS_AVAILABLE_TIME");
     const content = normalize(`${event.name} ${event.category ?? ""} ${event.venueName ?? ""}`);
-    if (excludedGroups.some(group => group.content.test(content))) return reject(event, "EXPLICITLY_EXCLUDED_CATEGORY");
-    const categoryMismatch = /(?:^|\s)(?:или|либо|or)(?:\s|$)/u.test(query) ? selectedGroups.length > 0 && !selectedGroups.some(group => group.content.test(content)) : selectedGroups.some(group => !group.content.test(content));
-    if (categoryMismatch || tokens.some(token => !content.includes(token))) return reject(event, "TEXT_MISMATCH");
+    const originalMismatch = matchesOriginal(content);
+    if (originalMismatch) return reject(event, originalMismatch);
+    if (matchesSemantic?.(content)) return reject(event, "SEMANTIC_TEXT_MISMATCH");
     if (context.goal === "new" && context.likedTags.length && !context.likedTags.some(tag => tag === "live_music" && context.likedTags.includes("rock") ? false : tagPatterns[tag]?.test(content) ?? false)) return reject(event, "PREFERENCE_MISMATCH");
     if (budget !== null) {
       const amount = event.price.minMinor;

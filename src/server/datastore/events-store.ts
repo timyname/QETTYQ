@@ -6,6 +6,7 @@ import { retrieveEventEvidence } from "../ingestion/event-evidence";
 import type { LiveEventsResult } from "../ingestion/live-events";
 import type { LiveAstanaEvent, SxodimSnapshot } from "../ingestion/sxodim-live";
 import { atomic } from "./sqlite";
+import { parseWeeklyHours } from "../ingestion/weekly-hours";
 
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
 const iso = (value: string) => { if (!Number.isFinite(Date.parse(value))) throw new Error("INVALID_TIMESTAMP"); return new Date(value).toISOString(); };
@@ -119,9 +120,20 @@ export function createEventsStore(db: DatabaseSync) {
           lat=excluded.lat,lon=excluded.lon,tags_json=excluded.tags_json,fetched_at=excluded.fetched_at,expires_at=excluded.expires_at,
           price_min_minor=excluded.price_min_minor,price_max_minor=excluded.price_max_minor,duration_estimate_minutes=excluded.duration_estimate_minutes`)
           .run(place.id, options.sourceId, place.id, place.name, place.category, place.address, place.lat, place.lon, JSON.stringify(place.tags), fetched, expires, sourceUrl(place.sourceUrl), place.price ? place.price.min * 100 : null, place.price ? place.price.max * 100 : null, place.durationMinutes);
-        provenance("venue", place.id, "coordinates", "observed", place.sourceUrl, fetched, expires, null, "osm-snapshot-v1");
+        provenance("venue", place.id, "coordinates", place.coordinateQuality === "derived" ? "estimated" : "observed", place.sourceUrl, fetched, expires, null, place.coordinateQuality === "derived" ? "osm-derived-center-v1" : "osm-snapshot-v1");
         provenance("venue", place.id, "duration", "estimated", place.sourceUrl, fetched, expires, null, "osm-snapshot-v1");
-        provenance("venue", place.id, "openingHours", "unknown", place.sourceUrl, fetched, expires, null, "osm-snapshot-v1");
+        const hoursPrefix = `${options.sourceId}:hours:${hash(place.id)}:`;
+        db.prepare("DELETE FROM venue_opening_hours WHERE venue_id=? AND source_id=? AND substr(id,1,?)=?").run(place.id, options.sourceId, hoursPrefix.length, hoursPrefix);
+        const intervals = parseWeeklyHours(place.openingHours);
+        const hoursExpiry = new Date(Math.min(Date.parse(expires), Date.parse(fetched) + 7 * 86400_000)).toISOString();
+        if (place.openingHours) for (let weekday = 0; weekday < 7; weekday++) {
+          const slots = intervals?.filter(slot => slot.weekday === weekday) ?? [];
+          const facts = intervals === null ? [{ state: "unknown", from: null, until: null }]
+            : slots.length ? slots.map(slot => ({ state: "open", from: slot.from, until: slot.until })) : [{ state: "closed", from: null, until: null }];
+          for (const [index, fact] of facts.entries()) db.prepare("INSERT INTO venue_opening_hours VALUES(?,?,?,?,?,?,?,?,?,?,?)")
+            .run(`${hoursPrefix}${weekday}:${index}`, place.id, options.sourceId, weekday, fact.state, fact.from, fact.until, +(intervals !== null), place.sourceUrl, fetched, hoursExpiry);
+        }
+        provenance("venue", place.id, "openingHours", intervals === null ? "unknown" : "observed", place.sourceUrl, fetched, hoursExpiry, place.openingHours ? hash(place.openingHours) : null, "osm-weekly-subset-v1");
       }
       return { imported: places.length };
     });

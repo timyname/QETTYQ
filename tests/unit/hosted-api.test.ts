@@ -7,7 +7,7 @@ import { register } from "../../src/instrumentation";
 import { createSession, resetSessionStoreForTests } from "../../src/server/session/store";
 import { setHostedRuntime, type HostedRuntime } from "../../src/server/pilot/host-runtime";
 import { liveEventsService, type LiveEventsResult } from "../../src/server/ingestion/live-events";
-import * as smartAssistant from "../../src/server/pilot/smart-assistant";
+import * as reasonedAssistant from "../../src/server/pilot/reasoned-assistant";
 import * as vpsRuntime from "../../src/server/vps/runtime";
 
 const clock = Date.parse("2026-10-20T12:00:00Z");
@@ -42,14 +42,14 @@ describe("hosted API dependency wiring, no external traffic", () => {
   });
   it("keeps explicit Sites AI DI and its default event service independent from a registered host", async () => {
     const mock = fixture(), explicit = fixture(); setHostedRuntime(mock.host);
-    const answer = vi.spyOn(smartAssistant, "answerSmartAssistant").mockResolvedValue({ mode: "deterministic", reply: "SYNTHETIC TEST", citations: [], model: null, reason: "TEST_ONLY" });
+    const answer = vi.spyOn(reasonedAssistant, "answerReasonedAssistant").mockResolvedValue({ assistant: { mode: "deterministic", reply: "SYNTHETIC TEST", citations: [], model: null, reason: "TEST_ONLY" }, plan: null, evidence: null });
     await handleChat(request("chat", createSession().id, { text: "Лекции завтра", useAI: true }), explicit.host.ai);
     expect(explicit.dependencies).toHaveBeenCalledOnce(); expect(mock.dependencies).not.toHaveBeenCalled();
     expect(liveEventsService.get).toHaveBeenCalledOnce(); expect(mock.get).not.toHaveBeenCalled(); expect(answer).toHaveBeenCalledOnce();
   });
   it("normalizes 24 browser messages before schema validation, retaining six and redacting decimal GPS", async () => {
     const mock = fixture(); setHostedRuntime(mock.host);
-    const answer = vi.spyOn(smartAssistant, "answerSmartAssistant").mockResolvedValue({ mode: "deterministic", reply: "SYNTHETIC TEST", citations: [], model: null, reason: "TEST_ONLY" });
+    const answer = vi.spyOn(reasonedAssistant, "answerReasonedAssistant").mockResolvedValue({ assistant: { mode: "deterministic", reply: "SYNTHETIC TEST", citations: [], model: null, reason: "TEST_ONLY" }, plan: null, evidence: null });
     const history = Array.from({ length: 24 }, (_, index) => ({ role: "user", text: `${index}: Я у 51.123456,71.123456` }));
     const response = await chat(request("chat", createSession().id, { text: "Лекции завтра", useAI: true, history }));
     expect(response.status).toBe(200);

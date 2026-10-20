@@ -15,6 +15,7 @@ import { PUBLIC_AI_APPROVAL_ID } from "../pilot/public-ai-budget";
 import { createPublicAIRuntime } from "../pilot/public-ai-runtime";
 import { reserveRoutingRequest } from "../pilot/routing-quota";
 import { getHostedRuntime, setHostedRuntime, type HostedRuntime } from "../pilot/host-runtime";
+import { createMemoryService } from "../memory/service";
 
 type LedgerProof = { source: "cloudflare-d1"; sourceFrozen: true; approvalId: typeof PUBLIC_AI_APPROVAL_ID; verifiedRowCount: number; rows: AIReservationExport[] };
 function readVerifiedLedgerProof(path: string | undefined): LedgerProof {
@@ -34,12 +35,12 @@ function readVerifiedLedgerProof(path: string | undefined): LedgerProof {
 }
 
 export type VpsRuntime = HostedRuntime & {
-  diagnostics: { ledgerReady: boolean; ledgerReason: string | null; baselinePlaces: number; baselineOccurrences: number; memoryPublic: false };
+  diagnostics: { ledgerReady: boolean; ledgerReason: string | null; baselinePlaces: number; baselineOccurrences: number; memoryPublic: boolean };
   close(): void;
 };
 
 /** Controlled Node 24 startup only. Does not read .env files, fetch, call AI, or
- * expose memory. Root owns instrumentation/API wiring and the isolated volume.
+ * auto-enable memory for guests. Root owns the isolated persistent volume.
  */
 export function initializeVpsRuntime(options: {
   env?: Record<string, string | undefined>;
@@ -90,10 +91,13 @@ export function initializeVpsRuntime(options: {
     for (const key of ["NODE_ENV", "QETTYQ_PUBLIC_ROUTING_ENABLED", "QETTYQ_ROUTING_PROVIDER", "QETTYQ_VALHALLA_PUBLIC_USAGE_ACK", "OPENROUTESERVICE_API_KEY"]) routingEnv[key] = env[key];
     let closed = false;
     const runtime: VpsRuntime = {
-      ai, events,
+      ai, events: { ...events, canSendToLlm(sourceId) {
+        try { return Boolean(db.prepare("SELECT 1 FROM data_sources WHERE id=? AND allow_persist=1 AND allow_display=1 AND allow_llm=1").get(sourceId)); }
+        catch { return false; }
+      } }, memory: createMemoryService(db, { production: env.NODE_ENV === "production", now: options.now }),
       routing: { reserve: sessionId => reserveRoutingRequest(routingDb, sessionId, options.now?.() ?? Date.now()), env: routingEnv },
-      diagnostics: { ledgerReady, ledgerReason, baselinePlaces: baselinePlaces.length, baselineOccurrences: snapshot.items.length, memoryPublic: false },
-      close() { if (closed) return; closed = true; if (getHostedRuntime() === runtime) setHostedRuntime(null); db.close(); },
+      diagnostics: { ledgerReady, ledgerReason, baselinePlaces: baselinePlaces.length, baselineOccurrences: snapshot.items.length, memoryPublic: true },
+      close() { if (closed) return; closed = true; if (getHostedRuntime() === runtime) setHostedRuntime(null); runtime.memory?.dispose?.(); db.close(); },
     };
     setHostedRuntime(runtime);
     return runtime;

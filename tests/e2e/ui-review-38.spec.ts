@@ -1,12 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
+import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
 
 test.beforeEach(async ({ page }) => {
+  await installOfflineTestGuards(page);
   await page.route('**/api/events', route => route.fulfill({ json: { items: [], dataMode: 'unavailable', freshness: 'unavailable', fetchedAt: null } }));
   await page.route('**/api/assistant/status', route => route.fulfill({ json: { available: false, reason: 'API_KEY_MISSING', localTestOnly: false } }));
 });
 
 async function home(page: Page) {
-  await page.goto('/');
+  await openRussianApp(page);
   await expect(page.getByRole('button', { name: 'Выбрать свой вайб' })).toBeEnabled();
 }
 
@@ -18,8 +20,10 @@ test('38 review: full-bleed welcome, 15 segments, compact setup and responsive g
     await page.setViewportSize({ width, height: 932 });
     await expect.poll(async () => Math.round((await welcome.boundingBox())!.height)).toBe(932);
     const image = page.getByRole('img', { name: /Иллюстрация: рука/ });
-    expect(Math.round((await image.boundingBox())!.width)).toBe(width);
-    expect(Math.round((await image.boundingBox())!.height)).toBe(932);
+    // setViewportSize can resolve before the next mobile visualViewport layout.
+    // Preserve exact full-bleed geometry, but wait for the resized frame.
+    await expect.poll(async () => Math.round((await image.boundingBox())!.width)).toBe(width);
+    await expect.poll(async () => Math.round((await image.boundingBox())!.height)).toBe(932);
     await page.screenshot({ path: `exports/screenshots/ui-review-38/welcome-${width}.png` });
   }
   await page.getByRole('button', { name: 'Выбрать свой вайб' }).click();
@@ -125,10 +129,13 @@ test('38 review: map check and adjacent My plan, real catalogue point, foot-only
   await page.screenshot({ path: 'exports/screenshots/ui-review-38/map-plan-390.png' });
   await page.getByRole('button', { name: 'Мой план · 1', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Твой маршрут', exact: true })).toBeVisible();
-  const modes = page.getByRole('group', { name: 'Способ передвижения' });
-  await expect(modes.getByRole('button', { name: 'Пешком', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  for (const mode of ['Авто', 'Такси', 'Автобус']) await expect(modes.getByRole('button', { name: mode, exact: true })).toBeDisabled();
   const sheet = page.getByRole('region', { name: 'План маршрута' });
+  await expect(sheet.getByText('Пешком', { exact: true })).toBeVisible();
+  // Unsupported modes are no longer drawn. Never allow an active unsupported mode.
+  for (const mode of ['Авто', 'Такси', 'Автобус']) {
+    const unsupported = sheet.getByRole('button', { name: mode, exact: true });
+    if (await unsupported.count()) await expect(unsupported).toBeDisabled();
+  }
   expect((await sheet.boundingBox())!.height).toBeLessThan(844 * .4);
   await expect(page.locator('[data-map-engine] a[href*="openstreetmap.org/copyright"]').first()).toBeVisible();
   await expect(page.getByText('Загружаем карту Астаны…', { exact: true })).toHaveCount(0, { timeout: 20_000 });

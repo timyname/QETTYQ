@@ -9,6 +9,7 @@ import { sqliteRoutingDatabase } from "../../src/server/datastore/routing-sqlite
 import { ROUTING_RESERVATION_SQL } from "../../src/server/pilot/routing-quota";
 import { PUBLIC_AI_APPROVAL_ID, PUBLIC_AI_RESERVATION_SQL } from "../../src/server/pilot/public-ai-budget";
 import baseline from "../../data/livedata/sxodim-astana-2026-10-20.json";
+import baselinePlaces from "../../data/places.json";
 import type { SxodimSnapshot } from "../../src/server/ingestion/sxodim-live";
 
 let directory: string;
@@ -26,12 +27,14 @@ const proof = () => ({ source: "cloudflare-d1", sourceFrozen: true, approvalId: 
 function exportProof(value: unknown = proof()) { const path = join(directory, "verified-d1-export.json"); writeFileSync(path, JSON.stringify(value), { mode: 0o600 }); env.QETTYQ_D1_LEDGER_EXPORT_PATH = path; }
 
 describe("controlled VPS initialization — no providers/network", () => {
-  it("imports actual 80+7 baseline, registers node-free bridge and does not expose memory or unrelated keys", async () => {
+  it("imports the actual baseline, registers node-free bridge and consented memory service without exposing unrelated keys", async () => {
     const loadEvents = vi.fn<() => Promise<SxodimSnapshot>>();
     runtime = initializeVpsRuntime({ env, now: () => time, loadEvents });
     expect(getHostedRuntime()).toBe(runtime);
-    expect(runtime.diagnostics).toMatchObject({ baselinePlaces: 80, baselineOccurrences: 7, memoryPublic: false, ledgerReady: false, ledgerReason: "PUBLIC_LEDGER_EXPORT_PATH_REQUIRED" });
-    expect(runtime).not.toHaveProperty("memory");
+    expect(runtime.diagnostics).toMatchObject({ baselinePlaces: baselinePlaces.length, baselineOccurrences: baseline.items.length, memoryPublic: true, ledgerReady: false, ledgerReason: "PUBLIC_LEDGER_EXPORT_PATH_REQUIRED" });
+    expect(runtime.memory?.readForAI).toBeTypeOf("function");
+    expect(runtime.events.canSendToLlm?.("osm-overpass-poi")).toBe(true);
+    expect(runtime.events.canSendToLlm?.("unknown-source")).toBe(false);
     expect(runtime.routing.env).not.toHaveProperty("OPENAI_API_KEY");
     const data = await runtime.events.get();
     expect(data.items).toHaveLength(baseline.items.length);
@@ -40,9 +43,14 @@ describe("controlled VPS initialization — no providers/network", () => {
     expect(status).toMatchObject({ available: false, reason: "PUBLIC_BUDGET_STORAGE_UNAVAILABLE" });
     const database = openDatastore({ path: env.QETTYQ_DATABASE_PATH });
     try {
-      expect(database.prepare("SELECT COUNT(*) AS n FROM venues WHERE source_id='osm-overpass-poi'").get()?.n).toBe(80);
+      expect(database.prepare("SELECT COUNT(*) AS n FROM venues WHERE source_id='osm-overpass-poi'").get()?.n).toBe(baselinePlaces.length);
       expect(database.prepare("SELECT allow_fetch,allow_llm FROM data_sources WHERE id='osm-overpass-poi'").get()).toMatchObject({ allow_fetch: 0, allow_llm: 1 });
-      expect(database.prepare("SELECT COUNT(*) AS n FROM venue_opening_hours").get()?.n).toBe(0);
+      const taggedPlaces = baselinePlaces as Array<{ id: string; openingHours?: string | null }>;
+      expect(database.prepare("SELECT COUNT(DISTINCT venue_id) AS n FROM venue_opening_hours").get()?.n).toBe(taggedPlaces.filter(place => Boolean(place.openingHours)).length);
+      for (const flags of [[0, 1, 1], [1, 0, 1], [1, 1, 0]]) {
+        database.prepare("UPDATE data_sources SET allow_persist=?,allow_display=?,allow_llm=? WHERE id='osm-overpass-poi'").run(...flags);
+        expect(runtime.events.canSendToLlm?.("osm-overpass-poi")).toBe(false);
+      }
     } finally { database.close(); }
     const source = readFileSync(join(process.cwd(), "src/server/pilot/host-runtime.ts"), "utf8");
     expect(source).not.toMatch(/from\s+["']node:|require\(|\bprocess\./u);

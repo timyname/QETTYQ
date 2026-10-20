@@ -6,7 +6,9 @@ export const SXODIM_INDEX = "https://sxodim.com/astana";
 export const SXODIM_TERMS = "https://sxodim.com/polzovatelskoe-soglashenie";
 export const EVENT_REFRESH_MS = 60 * 60 * 1000;
 const MAX_BYTES = 512_000;
-const MAX_DETAILS = 8;
+// Scoped noncommercial review 2026-10-20: one fixed Astana index, no pagination.
+const MAX_DETAILS = 24;
+const MAX_OCCURRENCES = 50;
 
 export type LiveAstanaEvent = {
   id: string; name: string; cityId: "astana"; category: string | null;
@@ -236,7 +238,7 @@ export async function fetchSxodimDocument(url: string, fetcher: SourceFetcher = 
   } finally { clearTimeout(timer); }
 }
 
-/** One refresh: robots + permission check, index, at most eight sequential event pages. */
+/** One hourly refresh: robots + permission check, one index, <=24 serial pages/50 occurrences. */
 export async function fetchLiveAstanaEvents(options: { fetcher?: SourceFetcher; now?: string; onMediaCandidates?: (candidates: PublisherMediaCandidate[]) => void | Promise<void> } = {}): Promise<SxodimSnapshot> {
   const fetcher = options.fetcher ?? fetch, fetchedAt = options.now ?? new Date().toISOString();
   const robots = await fetchSxodimDocument("https://sxodim.com/robots.txt", fetcher);
@@ -247,18 +249,20 @@ export async function fetchLiveAstanaEvents(options: { fetcher?: SourceFetcher; 
   if (!candidates.length) throw new Error("SOURCE_MARKUP_CHANGED");
   // Prefer explicitly timed listings; detail JSON-LD, not index date inference, decides applicability.
   const selected = prioritizeSxodimCandidates(candidates.filter(candidate => /\b\d{1,2}:\d{2}\b/.test(candidate.info)), fetchedAt).slice(0, MAX_DETAILS);
-  const events = new Map<string, LiveAstanaEvent>(); let rejected = 0;
+  const events = new Map<string, LiveAstanaEvent>(); let rejected = 0, detailPagesRequested = 0;
   for (const candidate of selected) {
+    if (events.size >= MAX_OCCURRENCES) break;
     try {
+      detailPagesRequested++;
       const html = await fetchSxodimDocument(candidate.url, fetcher);
       const items = parseSxodimDetail(html, candidate, fetchedAt);
       if (!items.length) rejected++;
-      for (const item of items) events.set(item.id, item);
+      for (const item of items) if (events.size < MAX_OCCURRENCES || events.has(item.id)) events.set(item.id, item);
       if (items.length && options.onMediaCandidates) {
         try { await options.onMediaCandidates(extractSxodimMediaCandidates(html, candidate.url, fetchedAt)); } catch { /* Admin metadata failure must not erase valid event facts. */ }
       }
-    } catch (error) { if (error instanceof Error && error.message === "SOURCE_RATE_LIMITED") throw error; rejected++; }
+    } catch (error) { if (error instanceof Error && ["SOURCE_RATE_LIMITED", "SOURCE_HTTP_403"].includes(error.message)) throw error; rejected++; }
   }
   if (!events.size) throw new Error("SOURCE_NO_CONFIRMED_UPCOMING_EVENTS");
-  return { source: { id: "sxodim-astana-noncommercial", name: "Давай Сходим", url: SXODIM_INDEX, termsUrl: SXODIM_TERMS, reuse: "noncommercial_with_credit", mediaCopied: false }, fetchedAt, expiresAt: new Date(Date.parse(fetchedAt) + EVENT_REFRESH_MS).toISOString(), items: [...events.values()].sort((a, b) => a.startsAt.localeCompare(b.startsAt)), coverage: { indexCandidates: candidates.length, detailPagesRequested: selected.length, importedOccurrences: events.size, rejected, scope: "At most eight explicitly timed public listings prioritized by near-date labels; occurrences verified only in Event JSON-LD. Not a complete city calendar. No photographs copied." } };
+  return { source: { id: "sxodim-astana-noncommercial", name: "Давай Сходим", url: SXODIM_INDEX, termsUrl: SXODIM_TERMS, reuse: "noncommercial_with_credit", mediaCopied: false }, fetchedAt, expiresAt: new Date(Date.parse(fetchedAt) + EVENT_REFRESH_MS).toISOString(), items: [...events.values()].sort((a, b) => a.startsAt.localeCompare(b.startsAt)), coverage: { indexCandidates: candidates.length, detailPagesRequested, importedOccurrences: events.size, rejected, scope: "At most 24 explicitly timed same-index public listings and 50 occurrences, prioritized by near-date labels; occurrences verified only in Event JSON-LD. Not a complete city calendar. No photographs copied." } };
 }

@@ -37,6 +37,7 @@ import {
   type ReactNode,
 } from "react";
 import Image from "next/image";
+import { Localize, useI18n, localeFor, formatDate, type Language } from '../../client/i18n';
 import styles from "./OrganizerFlow.module.css";
 
 export type OrganizerScreen =
@@ -217,12 +218,13 @@ function todayForInput() {
   return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 10);
 }
 
-function formatDraftTime(value: string | null) {
+function formatDraftTime(value: string | null, language: Language = 'ru') {
   if (!value) return "Черновик хранится только в этом браузере";
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? "Черновик сохранён локально"
-    : `Черновик сохранён локально в ${new Intl.DateTimeFormat("ru-RU", {
+    : `Черновик сохранён локально в ${new Intl.DateTimeFormat(localeFor(language), {
+        hourCycle: 'h23',
         hour: "2-digit",
         minute: "2-digit",
       }).format(date)}`;
@@ -239,10 +241,10 @@ function priceLabel(draft: OrganizerDraft) {
   return "Цена ещё не заполнена";
 }
 
-function occurrenceLabel(draft: OrganizerDraft) {
+function occurrenceLabel(draft: OrganizerDraft, language: Language = 'ru') {
   if (!draft.date || !draft.startTime) return "Дата и время ещё не заполнены";
   const end = draft.endTime ? `–${draft.endTime}` : "";
-  return `${draft.date} · ${draft.startTime}${end} · ${draft.timeZone}`;
+  return `${formatDate(`${draft.date}T12:00:00+05:00`, language, { day: 'numeric', month: 'long', year: 'numeric' })} · ${draft.startTime}${end} · ${draft.timeZone}`;
 }
 
 function FieldLabel({ icon, children }: { icon: ReactNode; children: ReactNode }) {
@@ -256,9 +258,9 @@ function FieldLabel({ icon, children }: { icon: ReactNode; children: ReactNode }
 
 function ModeBadge({ mode }: { mode: OrganizerDataMode }) {
   return (
-    <span className={styles.modeBadge} title="Локальные демонстрационные данные, не опубликованное событие">
+    <Localize><span className={styles.modeBadge} title="Локальные демонстрационные данные, не опубликованное событие">
       Демо · {mode}
-    </span>
+    </span></Localize>
   );
 }
 
@@ -302,6 +304,7 @@ export function OrganizerFlow({
   onOpenEvent,
   onOpenSettings,
 }: OrganizerFlowProps) {
+  const { language } = useI18n();
   const [draft, setDraft] = useState<OrganizerDraft>(() => ({ ...DEFAULT_DRAFT, ...initialDraft }));
   const [activeTab, setActiveTab] = useState<OrganizerCabinetTab>("drafts");
   const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string | null>(null);
@@ -317,13 +320,13 @@ export function OrganizerFlow({
     return {
       id: draft.id,
       title: draft.title,
-      occurrenceLabel: draft.date && draft.startTime ? occurrenceLabel(draft) : null,
+      occurrenceLabel: draft.date && draft.startTime ? occurrenceLabel(draft, language) : null,
       status: "draft",
       tab: "drafts",
       mediaLabel: draft.mediaFileName,
       mode,
     };
-  }, [draft, mode]);
+  }, [draft, mode, language]);
 
   const cabinetEvents = useMemo(() => {
     const all = localDraftEvent ? [localDraftEvent, ...events.filter((event) => event.id !== localDraftEvent.id)] : events;
@@ -481,7 +484,7 @@ export function OrganizerFlow({
           <FieldLabel icon={<ShieldCheck aria-hidden="true" />}>Организатор</FieldLabel>
           <input value={draft.organizerName} maxLength={80} placeholder="Имя или название организации" onChange={(event) => updateDraft({ organizerName: event.target.value })} required />
         </label>
-        <p className={styles.saveState} aria-live="polite"><Check aria-hidden="true" />{formatDraftTime(draft.savedAt)}</p>
+        <p className={styles.saveState} aria-live="polite"><Check aria-hidden="true" />{formatDraftTime(draft.savedAt, language)}</p>
         <div className={styles.stickyBar}>
           <button type="submit" className={styles.primaryButton} disabled={!basicValid || !onNavigate}>Дальше</button>
         </div>
@@ -612,10 +615,10 @@ export function OrganizerFlow({
         )}
         <article className={styles.previewCard}>
           <span className={styles.previewMode}>Предпросмотр · {mode}</span>
-          <h2>{draft.title || "Название ещё не заполнено"}</h2>
+          <h2 translate={draft.title ? 'no' : undefined}>{draft.title || "Название ещё не заполнено"}</h2>
           <dl>
-            <div><dt><CalendarDays aria-hidden="true" />Когда</dt><dd>{occurrenceLabel(draft)}</dd></div>
-            <div><dt><MapPin aria-hidden="true" />Где</dt><dd>{draft.venueName || "Место не указано"}</dd></div>
+            <div><dt><CalendarDays aria-hidden="true" />Когда</dt><dd>{occurrenceLabel(draft, language)}</dd></div>
+            <div><dt><MapPin aria-hidden="true" />Где</dt><dd translate={draft.venueName ? 'no' : undefined}>{draft.venueName || "Место не указано"}</dd></div>
             <div><dt><WalletCards aria-hidden="true" />Цена</dt><dd>{priceLabel(draft)}</dd></div>
             <div><dt><Languages aria-hidden="true" />Язык</dt><dd>{draft.languageUnspecified ? "Не указан" : draft.spokenLanguages.join(", ") || "Не заполнен"}</dd></div>
             <div><dt><Link aria-hidden="true" />Контакт</dt><dd>{draft.contactValue || "Контакт не заполнен"}</dd></div>
@@ -635,7 +638,7 @@ export function OrganizerFlow({
     return (
       <section className={styles.section}>
         <h1>Что происходит с черновиком</h1>
-        <p className={styles.lead}>Показан локальный сценарий `{moderation.mode}`. Он не является подтверждением публикации.</p>
+        <p className={styles.lead}>Показан локальный сценарий: {moderation.mode}. Он не является подтверждением публикации.</p>
         <div className={styles.currentStatus}>
           <FileClock aria-hidden="true" />
           <div><span>Текущий статус</span><strong>{MODERATION_LABELS[moderation.status]}</strong></div>
@@ -675,7 +678,7 @@ export function OrganizerFlow({
               <div className={styles.eventThumb} aria-hidden="true"><CalendarDays /></div>
               <div className={styles.eventBody}>
                 <span>{MODERATION_LABELS[event.status]} · {event.mode}</span>
-                <h2>{event.title}</h2>
+                <h2 translate="no">{event.title}</h2>
                 <p>{event.occurrenceLabel ?? "Дата ещё не заполнена"}</p>
                 <button type="button" disabled={event.id === draft.id ? !onEdit && !onNavigate : !onOpenEvent} onClick={() => openCabinetEvent(event)}>{localDraftOnly ? "Открыть черновик" : "Открыть событие"}</button>
               </div>
@@ -704,13 +707,13 @@ export function OrganizerFlow({
   else content = renderCabinet();
 
   return (
-    <main className={styles.shell} data-screen={screen} data-mode={mode} data-local-draft={localDraftOnly}>
+    <Localize><main className={styles.shell} data-screen={screen} data-mode={mode} data-local-draft={localDraftOnly}>
       <div className={styles.ambient} aria-hidden="true" />
       <div className={styles.phoneColumn}>
         {renderHeader()}
         <div className={styles.content}>{content}</div>
         <p className={styles.liveRegion} aria-live="polite">{announcement}</p>
       </div>
-    </main>
+    </main></Localize>
   );
 }

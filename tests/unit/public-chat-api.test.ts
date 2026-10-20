@@ -6,6 +6,7 @@ import { liveEventsService, type LiveEventsResult } from "../../src/server/inges
 import { createPublicAIRuntime, type PublicAIRuntime } from "../../src/server/pilot/public-ai-runtime";
 import { pilotContextSchema } from "../../src/server/pilot/contracts";
 import type { SmartAssistantDependencies } from "../../src/server/pilot/smart-assistant";
+import { setGooglePlacesRuntime } from "../../src/server/pilot/google-places";
 
 const clock = Date.parse("2026-10-20T12:00:00Z");
 const context = pilotContextSchema.parse({ origin: { lat: 51.123456, lon: 71.654321 } });
@@ -19,6 +20,7 @@ function runtime(reply = "Предлагаю сравнить варианты �
   const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
     const outbound = JSON.parse(String(init?.body));
     const payload = JSON.parse(outbound.input);
+    if (outbound.text?.format?.name === "qettyq_intent") return Response.json({ status: "completed", model: "gpt-5.5", service_tier: "default", usage: { input_tokens: 1000, output_tokens: 100 }, output: [{ type: "message", role: "assistant", content: [{ type: "output_text", text: JSON.stringify({ intent: "events", query: "Лекции в Астане", cuisineOrDish: null }) }] }] });
     const evidenceIds = payload.evidence.events.map((event: { id: string }) => event.id);
     return Response.json({ status: "completed", model: "gpt-5.5", service_tier: "default", usage: { input_tokens: 1000, output_tokens: 100 }, output: [{ type: "message", role: "assistant", content: [{ type: "output_text", text: JSON.stringify({ intent: "advice", evidenceIds, message: reply }) }] }] });
   });
@@ -30,9 +32,15 @@ function request(session: string, body: unknown, headers = {}) {
   return new Request("https://qettyq.example/api/chat", { method: "POST", headers: { "content-type": "application/json", "x-qettyq-session": session, ...headers }, body: JSON.stringify(body) });
 }
 beforeEach(() => { resetSessionStoreForTests(); vi.spyOn(Date, "now").mockReturnValue(clock); vi.spyOn(liveEventsService, "get").mockResolvedValue(snapshot()); });
-afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); resetSessionStoreForTests(); });
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); setGooglePlacesRuntime(null); resetSessionStoreForTests(); });
 
 describe("public chat route integration (offline synthetic provider, never paid)", () => {
+  it("does not spend Google budget or bypass strict unknown prices for food discovery", async () => {
+    const search = vi.fn(); setGooglePlacesRuntime({ search });
+    const result = await (await handleChat(request(createSession().id, { text: "Хочу рамен бесплатно", googleConsent: true, useAI: false, context }))).json();
+    expect(result.items).toEqual([]); expect(result.googlePlaces.reason).toBe("GOOGLE_PRICE_NOT_VERIFIED");
+    expect(result.googlePlaces.items).toEqual([]); expect(search).not.toHaveBeenCalled();
+  });
   it.each([{}, { useAI: false }]) ("does not reserve or contact the provider without explicit useAI=true: %j", async consent => {
     const mock = runtime();
     const response = await handleChat(request(createSession().id, { text: "Лекции завтра", context, ...consent }), mock.adapter);
@@ -51,10 +59,16 @@ describe("public chat route integration (offline synthetic provider, never paid)
     expect(result.citations).toEqual([{ url: sourceUrl, title: "Источник афиши · SYNTHETIC TEST · лекция" }]);
     expect(result.warnings).toContain("SYNTHETIC STALE SOURCE");
     expect(mock.dependencies.mock.calls[0][0]).toBe(session.id);
-    expect(mock.reserve).toHaveBeenCalledOnce(); expect(mock.fetcher).toHaveBeenCalledOnce(); expect(mock.complete).toHaveBeenCalledOnce();
-    const outbound = JSON.parse(String(mock.fetcher.mock.calls[0][1]?.body));
-    expect(outbound.tools).toEqual([]); expect(outbound.tool_choice).toBe("none"); expect(outbound.store).toBe(false);
-    expect(outbound.input).not.toContain("51.123456"); expect(outbound.input).not.toContain("71.654321");
+    expect(mock.reserve).toHaveBeenCalledOnce(); expect(mock.fetcher).toHaveBeenCalledTimes(2); expect(mock.complete).toHaveBeenCalledOnce();
+    const requests = mock.fetcher.mock.calls.map(([, init]) => JSON.parse(String(init?.body)));
+    expect(requests.map(body => body.max_output_tokens)).toEqual([400, 800]);
+    expect(requests.reduce((total, body) => total + body.max_output_tokens, 0)).toBe(1200);
+    expect(mock.complete).toHaveBeenCalledWith(expect.objectContaining({ inputTokens: 2000, outputTokens: 200, toolCalls: 0, serviceTier: "default" }));
+    for (const body of requests) {
+      expect(body.tools).toEqual([]); expect(body.tool_choice).toBe("none"); expect(body.store).toBe(false);
+      expect(body.input).not.toContain("51.123456"); expect(body.input).not.toContain("71.654321");
+    }
+    const outbound = requests[1];
     expect(outbound.input).toContain('"freshness":"stale"');
     expect(JSON.stringify(result)).not.toContain("synthetic-offline-placeholder");
     expect(response.headers.get("cache-control")).toContain("no-store");
@@ -85,8 +99,27 @@ describe("public chat route integration (offline synthetic provider, never paid)
     const result = await (await handleChat(request(createSession().id, { text: "Лекции завтра до 3 000 ₸", useAI: true, context }), mock.adapter)).json();
     expect(result.events).toEqual([]); expect(result.eventEvidence).toEqual([]); expect(result.citations).toEqual([]);
     expect(result.proposedContext).toMatchObject({ budget: 3000, strictBudget: true });
-    const outbound = JSON.parse(String(mock.fetcher.mock.calls[0][1]?.body));
+    const outbound = JSON.parse(String(mock.fetcher.mock.calls[1][1]?.body));
     expect(JSON.parse(outbound.input).evidence.events).toEqual([]);
+  });
+  it("preserves original rock/date constraints despite a broad planner search, and never fabricates missing matches", async () => {
+    const mock = runtime();
+    const response = await handleChat(request(createSession().id, { text: "Рок концерты сегодня", useAI: true, context: { ...context, goal: "new", likedTags: ["rock", "live_music"] } }), mock.adapter);
+    const result = await response.json();
+    expect(result.events).toEqual([]); expect(result.eventEvidence).toEqual([]); expect(result.citations).toEqual([]);
+    expect(result.proposedContext.likedTags).toEqual(["rock", "live_music"]);
+    const outbound = JSON.parse(String(mock.fetcher.mock.calls[1][1]?.body));
+    expect(JSON.parse(outbound.input).evidence.events).toEqual([]);
+  });
+  it("never sends a source's facts to the model when its independent LLM policy denies transfer", async () => {
+    const mock = runtime();
+    const result = await (await handleChat(request(createSession().id, { text: "Лекции завтра", useAI: true, context }), mock.adapter,
+      { get: async () => snapshot(), canSendToLlm: () => false })).json();
+    expect(result.events).toHaveLength(1); // Display rights and LLM rights are independent.
+    const outbound = JSON.parse(String(mock.fetcher.mock.calls[1][1]?.body));
+    const evidence = JSON.parse(outbound.input).evidence;
+    expect(evidence.items).toEqual([]); expect(evidence.events).toEqual([]); expect(result.citations).toEqual([]);
+    expect(evidence.reply).not.toMatch(/SYNTHETIC|В афише|нашёл|окт|событи|\d/u);
   });
   it.each(["Событие бесплатное, проходит на русском языке.", "В кафе есть розетки.", "Предлагаю вход свободный.", "Вы точно успеете посетить событие и вернуться домой.", "Событие состоится завтра вечером.", "Билет стоит три тысячи тенге."]) ("rejects unsupported generated facts even when source citations exist: %s", async unsafe => {
     const mock = runtime(unsafe);

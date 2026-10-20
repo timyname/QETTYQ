@@ -27,15 +27,19 @@ async function session() {
 describe("Astana backend pilot (snapshot, no external providers)", () => {
   beforeEach(() => { resetSessionStoreForTests(); vi.restoreAllMocks(); });
 
-  it("returns public catalog without raw provenance and preserves mandatory attribution", async () => {
+  it("returns reported public source/hour metadata without internal policy and preserves mandatory attribution", async () => {
     const response = await catalog(request("/api/catalog"));
     const result = await response.json();
     expect(response.status).toBe(200);
     expect(result.dataMode).toBe("snapshot");
     expect(result.attribution.text).toContain("OpenStreetMap");
     expect(result.items.length).toBeGreaterThan(0);
-    expect(result.items[0]).not.toHaveProperty("sourceUrl");
-    expect(result.items[0]).not.toHaveProperty("retrievedAt");
+    expect(result.items[0].sourceUrl).toBe(pilotPlaces[0].sourceUrl);
+    expect(result.items[0].retrievedAt).toBe(pilotPlaces[0].retrievedAt);
+    expect(result.items[0].openingHours).toBe(pilotPlaces[0].openingHours ?? null);
+    expect(["open", "closed", "unknown"]).toContain(result.items[0].openingStatus);
+    expect(result.items[0].coordinateQuality).toBe(pilotPlaces[0].coordinateQuality ?? "observed");
+    for (const internal of ["provenance", "allow_llm", "allow_fetch", "policy_url", "payload_json", "content_hash", "OPENAI_API_KEY", "DB"]) expect(result.items[0]).not.toHaveProperty(internal);
     expect(response.headers.get("cache-control")).toContain("no-store");
     expect((await catalog(request("/api/catalog?cityId=almaty"))).status).toBe(400);
   });
