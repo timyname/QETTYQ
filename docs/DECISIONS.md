@@ -1,5 +1,15 @@
 # Решения
 
+## Приоритетный контур · перенос на VPS · 20.10.2026
+
+- Пользователь выбрал существующий Hetzner и qettyqapp.anamai.kz; новый платный сервер не покупался. Локальная linux/amd64 сборка с pinned Node24 digest сохраняет память занятого VPS. Отдельный контейнер/UID/каталог/hostname, только graceful proxy reload; generated NPM hosts не редактируются.
+- Runtime секрет передан allowlist-скриптом по stdin через host-pinned SSH в mode0600 файл. Ни ключ, ни прочие .env значения не включаются в Docker context/Git/логи. Разрешённый временный SSH-доступ подлежит удалению после проверок, не становится постоянным доступом.
+- Node24 SQLite WAL/FULL: события/occurrences/venues/provenance/permissions/cache отдельно от согласий/памяти/AI ledger. Production требует explicit absolute database path. Миграция схемы только при startup; queries не создают схему на запросе. Публичная долговременная память не выдаётся за подключённую.
+- Старый Sites AI writer сначала заморожен успешным deployment/env5, затем проверен полный D1 export:0rows,next_offset=null. Импорт сохраняет approval ID и не сбрасывает локальные резервы. Отсутствие валидного proof при каждом startup закрывает paid AI. $0.50 reserve, $10 cap, unknown accounting fail-closed; hosted search не включается без нового доказанного cost bound.
+- Недельные часы заведения и конкретные событийные даты — разные сущности. У source permissions отдельно persist/display/LLM/fetch; новый кандидат не получает разрешение от старого OSM/Sxodim источника. Не выводить pins/фото/цены по догадке; не использовать Google data на OSM вопреки правилам.
+- UI сохраняет существующий glass/jade/limon язык; design-intelligence/frontend-design направили плотность/иерархию, а не новый несвязанный редизайн. OSM/OpenFreeMap credits видны, даже если отзыв просил скрыть их.
+- Первые реальные AI ответы выявили lexical false-negative для вежливой framing-фразы. Исправлены только scaffolding/category normalization; неизвестные конкретные интересы, рок, даты и бюджет по-прежнему отсекаются кодом. Не заменяем deterministic constraints свободной генерацией.
+
 ## Актуальные решения · публичные данные и D1 · 20.10.2026
 
 - Владелец разрешил D1 без отдельной платной подписки; binding `DB` реально provisioned. Durable D1 используется для глобальных резервов AI и ограничителя routing, не выдаётся за durable-хранение гостевых сессий.

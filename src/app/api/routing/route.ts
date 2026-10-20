@@ -1,5 +1,6 @@
 import { blockCrossSiteMutation, jsonResponse, readJson, requireSession } from '../../../server/session/http';
 import { requestStreetRoute, routingStatus, validRoutingPoints } from '../../../server/pilot/street-routing';
+import { getHostedRuntime } from '../../../server/pilot/host-runtime';
 
 export type RoutingRuntime = {
   reserve?: (sessionId: string) => Promise<boolean>;
@@ -30,5 +31,5 @@ export async function handleRouting(request: Request, options: RoutingRuntime = 
   if (!result.ok) return jsonResponse({ route: null, error: result.reason, providerHttpStatus: result.providerHttpStatus ?? null }, result.reason === 'ROUTING_RATE_LIMITED' ? 429 : 503, result.retryAfterSeconds ? { 'retry-after': String(result.retryAfterSeconds) } : undefined);
   return jsonResponse({ route: result.route, dataMode: 'live' });
 }
-export function GET(request: Request) { return handleRouting(request); }
-export function POST(request: Request) { return handleRouting(request); }
+export function GET(request: Request) { return handleRouting(request, getHostedRuntime()?.routing); }
+export function POST(request: Request) { return handleRouting(request, getHostedRuntime()?.routing); }

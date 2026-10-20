@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowUpRight, CalendarDays, Clock3, MapPin, Navigation, Share2, Trash2, Footprints } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Bus, CalendarDays, Car, Clock3, MapPin, Navigation, Share2, Trash2, Footprints } from 'lucide-react';
 import { arrivalLabels, astanaDateInput, googleWalkingPlanUrl, parseAstanaDateInput } from '@/client/route-timeline';
 import s from './RoutePlan.module.css';
 import type { RoutingStatus, StreetRoute } from '../server/pilot/street-routing';
@@ -90,10 +90,11 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
 
   return <main className={s.screen} aria-label="Маршрут по Астане">
     <div className={s.map}><MapCanvas fitPoints points={points} origin={origin} routeGeometry={street?.geometry} routeAttribution={street?.attribution} activeId={active} onSelect={id => { setActive(id); setExpanded(true); }} /></div>
-    <div className={s.top}><button className={s.back} onClick={onBack}><ArrowLeft size={18} /> На карту</button><h1>Твой путь</h1><span><Footprints size={15} /> Пешком</span></div>
+    <div className={s.top}><button className={s.back} onClick={onBack}><ArrowLeft size={18} /> На карту</button><h1>Твой маршрут</h1></div>
     <section className={s.sheet} data-expanded={expanded} aria-label="План маршрута">
       <button className={s.handle} aria-label={expanded ? 'Свернуть план маршрута' : 'Развернуть план маршрута'} aria-expanded={expanded} onClick={() => setExpanded(!expanded)}><span /></button>
       <div className={s.scroll}>
+        <div className={s.travelModes} role="group" aria-label="Способ передвижения"><button aria-pressed="true"><Footprints size={17} />Пешком</button><button disabled title="Автомобильный расчёт пока не подключён"><Car size={17} />Авто</button><button disabled title="Стоимость и время такси пока не подключены"><Car size={17} />Такси</button><button disabled title="Расписание транспорта пока не подключено"><Bus size={17} />Автобус</button></div><p className={s.modeNote}>Здесь рассчитываем только пеший путь. Другие способы пока недоступны.</p>
         <div className={s.heading}><div><small>Астана · {dateLabel(departure)}{street ? ' · путь по улицам' : ''}</small><h2>{totalMinutes === null ? 'Нужна точка старта' : `Примерно ${totalMinutes} мин`}</h2></div><button className={s.icon} aria-label="Поделиться планом" onClick={() => onShare(departure)}><Share2 size={19} /></button></div>
         <label className={s.departure}><CalendarDays size={19} /><span>Дата и время начала<input aria-label="Дата и время начала маршрута" type="datetime-local" value={astanaDateInput(departure)} onChange={e => { const parsed = parseAstanaDateInput(e.target.value); if (parsed) { setDeparture(parsed); setDateError(''); } else setDateError('Выберите действительные дату и время.'); }} /></span><button type="button" onClick={() => { setDeparture(new Date().toISOString()); setDateError(''); }}>Сейчас</button></label>
         {dateError && <p role="alert" className={s.warning}>{dateError}</p>}
@@ -122,7 +123,7 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
         </section>
         <div className={s.external}><a href={navigation} target="_blank" rel="noreferrer">Google Maps ↗</a><a href={`dgis://2gis.ru/routeSearch/rsType/pedestrian/to/${end.lon},${end.lat}`} target="_blank" rel="noreferrer">2ГИС ↗</a><a href={`https://2gis.kz/astana/search/${encodeURIComponent(end.name)}`} target="_blank" rel="noreferrer">2ГИС в браузере ↗</a><a href={`https://maps.apple.com/?daddr=${end.lat},${end.lon}&dirflg=w`} target="_blank" rel="noreferrer">Apple Maps ↗</a></div>
       </div>
-      <div className={s.actions}><a className={s.begin} href={navigation} target="_blank" rel="noreferrer"><Navigation size={19} />Начать маршрут<ArrowUpRight size={18} /></a><small>Откроется Google Maps с остановками. Выбранная точка старта передастся сервису.</small></div>
+      <div className={s.actions}><a className={s.begin} href={navigation} target="_blank" rel="noreferrer"><Navigation size={19} />Начать маршрут<ArrowUpRight size={18} /></a><small>{origin ? 'Откроется Google Maps с остановками. Выбранная точка старта передастся сервису.' : 'Откроется Google Maps с остановками. Точку старта выберешь там.'}</small></div>
     </section>
   </main>;
 }

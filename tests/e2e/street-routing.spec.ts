@@ -18,7 +18,7 @@ async function routeScreen(page: Page, context: BrowserContext) {
   await page.getByRole('button', { name: 'К условиям подборки', exact: true }).click();
   await page.getByLabel('Свободное время', { exact: true }).fill('720');
   await page.getByRole('button', { name: 'Поделиться геопозицией' }).click();
-  await expect(page.getByText('Точка старта выбрана. Храним только до закрытия страницы.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Старт выбран. Точка хранится только до закрытия страницы.', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Показать подборку' }).click();
   await page.getByRole('article').first().getByRole('button', { name: 'Подробнее', exact: true }).click();
   await page.getByRole('button', { name: 'Оценить путь', exact: true }).click();

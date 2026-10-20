@@ -17,6 +17,7 @@ export type EventRetrieval = {
 const normalize = (text: string) => text.normalize("NFKC").toLocaleLowerCase("ru-RU").replace(/ё/g, "е");
 const rock = /(?:^|[^\p{L}])(?:рок|rock|metal|метал|punk|панк)(?:[^\p{L}]|$)/u;
 const groups = [
+  { query: /культур\p{L}*|\bcultur(?:e|al)\b/gu, content: /культур|театр|спектак|музе|выстав|искус|балет|опера|концерт|музык|лекци|образован|theat|ballet|opera|exhibition|concert|lecture/u },
   { query: /(?:^|[^\p{L}])(?:рок|rock|metal|метал|панк|punk)(?=[^\p{L}]|$)/gu, content: rock },
   { query: /концерт\p{L}*|concert\p{L}*/gu, content: /концерт|concert|музык/u },
   { query: /спектак\p{L}*|театр\p{L}*|theat\p{L}*|қойылым\p{L}*/gu, content: /спектак|театр|theat|қойылым/u },
@@ -40,6 +41,9 @@ const tagPatterns: Record<string, RegExp> = {
   park: /парк|прогул|экскурси/u, garden: /сад|garden/u, viewpoint: /экскурси|архитектур/u,
 };
 const stopWords = new Set("найди найти покажи показать посоветуй предложи подбери подобрать хочу хочется можно куда сходить пойти событие события событий мероприятие мероприятия мероприятий афиша афишу интересное интересные интересных подходит подходящие доступные сегодня завтра послезавтра сейчас ближайшие ближайших ближайшее ближайший ближайшую этой этот неделю недели выходные выходных субботу воскресенье октябрь октября ноябрь ноября декабрь декабря январь января февраль февраля март марта апрель апреля май мая июнь июня июль июля август августа сентябрь сентября астана астане астаны astana find show events event today tomorrow weekend week please something available free бесплатно бесплатные бесплатных тенге теңге kzt бюджет бюджета рублей потратить минут минуты минута часов часа час времени время свободно свободных свободные меня нас двоих двое троих человек человека людей группу компания компанию компанией вечером вечер днем днём утро утром без очень такой такие всего больше меньше тыс тысяч стоимость до под для про после через перед рядом около либо или the and for with that this from what where which there these under before after next have want would like".split(/\s+/u));
+// Ignore request framing, not arbitrary unmatched interests. Category/date/price
+// filters still run independently; e.g. sauna, armwrestling and artist names stay tokens.
+const requestScaffolding = new Set("помоги помогите пожалуйста выбрать выбери выбирать выбор досуг досуга варианты вариант вариантов предложите подскажите подскажи расскажи расскажите уточнить уточнения организатора организатору организаторов подтвержденной подтвержденные подтвержденных подтвержденного актуальной актуальные актуальных доступной доступных афиши афише интересует интересуют help choose suggest options confirmed listings organizer clarify".split(/\s+/u));
 const stem = (word: string) => word.length > 5 ? word.replace(/(?:иями|ами|ями|ого|ему|ому|ыми|ими|ой|ый|ий|ая|яя|ое|ее|ые|ие|ов|ам|ям|ах|ях|ом|ем|ию|ия|ии|а|у|ы|и|я|е|о|ь)$/u, "") : word;
 
 function localDay(now: number): string {
@@ -83,7 +87,7 @@ export function retrieveEventEvidence(data: LiveEventsResult, text: string, cont
   const excludedGroups = mentioned.filter(value => value.matches.every(isNegative)).map(value => value.group);
   let remainder = query.replace(/\b20\d{2}-\d{2}-\d{2}\b/gu, "").replace(/бесплат\p{L}*|тегін|\bfree\b|недел\p{L}*/gu, " ");
   for (const { group } of mentioned) { group.query.lastIndex = 0; remainder = remainder.replace(group.query, " "); }
-  const tokens = [...new Set((remainder.match(/\p{L}{4,}/gu) ?? []).filter(token => !stopWords.has(token)).map(stem))].slice(0, 12);
+  const tokens = [...new Set((remainder.match(/\p{L}{4,}/gu) ?? []).filter(token => !stopWords.has(token) && !requestScaffolding.has(token)).map(stem))].slice(0, 12);
   const excluded: EventRetrieval["excluded"] = [];
   const reject = (event: LiveAstanaEvent, reason: string) => { excluded.push({ eventId: event.id, reason }); return false; };
   const items = data.items.filter(event => {

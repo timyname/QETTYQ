@@ -1,0 +1,36 @@
+name: qettyq
+services:
+  app:
+    image: ${QETTYQ_IMAGE:?Set a verified local image tag}
+    container_name: qettyq-app
+    restart: unless-stopped
+    env_file: /opt/qettyq/secrets/runtime.env
+    environment:
+      QETTYQ_DEPLOYMENT: vps
+      QETTYQ_DATABASE_PATH: /var/lib/qettyq/qettyq.sqlite
+      QETTYQ_D1_LEDGER_EXPORT_PATH: /run/qettyq/d1-ledger.json
+    ports:
+      - "127.0.0.1:3187:3000"
+    networks: [proxy]
+    volumes:
+      - /opt/qettyq/data:/var/lib/qettyq
+      - /opt/qettyq/backups:/var/backups/qettyq
+      - /opt/qettyq/secrets/d1-ledger.json:/run/qettyq/d1-ledger.json:ro
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+      - /app/.next/cache:rw,nosuid,uid=10001,gid=10001,size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 640m
+    cpus: 0.65
+    pids_limit: 120
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"
+networks:
+  proxy:
+    external: true
+    name: proxy_net

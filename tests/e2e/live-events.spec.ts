@@ -36,6 +36,10 @@ test('synthetic_test: афиша фильтрует сегодня, сохран
   const feed = page.getByRole('region', { name: 'Афиша Астаны' });
   await expect(feed).toBeVisible();
   await expect(feed.getByRole('article')).toHaveCount(2);
+  const segments = feed.getByRole('group', { name: 'События', exact: true });
+  await expect(segments.getByRole('button')).toHaveCount(2);
+  await segments.getByRole('button', { name: 'События: 2 из 2' }).click();
+  await expect(segments.getByRole('button', { name: 'События: 2 из 2' })).toHaveAttribute('aria-current', 'step');
   await feed.getByRole('button', { name: 'Сегодня', exact: true }).click();
   await expect(feed.getByRole('button', { name: 'Сегодня', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(feed.getByRole('article')).toHaveCount(1);
@@ -57,6 +61,13 @@ test('synthetic_test: афиша фильтрует сегодня, сохран
   await expect(page.getByRole('link', { name: 'Подробности и запись', exact: true })).toHaveAttribute('href', today.bookingUrl);
   await expect(page.getByRole('link', { name: 'Афиша: Давай Сходим ↗' })).toHaveAttribute('href', today.requiredCredit.url);
   await expect(page.getByRole('button', { name: 'Событие сохранено', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  for (const width of [360, 390, 430]) {
+    await page.setViewportSize({ width, height: 932 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    await page.getByRole('button', { name: 'Назад', exact: true }).scrollIntoViewIfNeeded();
+    await expect(page.getByRole('heading', { name: today.name, exact: true })).toBeInViewport();
+    await page.screenshot({ path: `exports/screenshots/ui-review-38/event-synthetic-${width}.png` });
+  }
 
   const profile = page.getByRole('navigation', { name: 'Основная навигация' }).getByRole('button', { name: 'Профиль', exact: true });
   await profile.click();

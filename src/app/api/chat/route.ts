@@ -4,24 +4,31 @@ import { liveEventsService } from "../../../server/ingestion/live-events";
 import { answerSmartAssistant, type SmartAssistantResult } from "../../../server/pilot/smart-assistant";
 import { getLocalAITestGate, reserveLocalAITestCall } from "../../../server/pilot/ai-test-quota";
 import type { PublicAIRuntime } from "../../../server/pilot/public-ai-runtime";
+import { getHostedRuntime, type HostedRuntime } from "../../../server/pilot/host-runtime";
+import { boundChatPayload } from "../../../server/pilot/chat-history";
 import { chatInputSchema, pilotContextSchema } from "../../../server/pilot/contracts";
 import { apiError, blockCrossSiteMutation, jsonResponse, readJson, requireSession, validationError } from "../../../server/session/http";
 
-export async function handleChat(request: Request, publicRuntime?: PublicAIRuntime) {
+export async function handleChat(request: Request, publicRuntime?: PublicAIRuntime, events: HostedRuntime["events"] = liveEventsService) {
   const blocked = blockCrossSiteMutation(request);
   if (blocked) return blocked;
   const auth = requireSession(request);
   if (!auth.ok) return auth.response;
   const body = await readJson(request);
   if (!body.ok) return body.response;
-  const parsed = chatInputSchema.safeParse(body.value);
+  let payload = body.value;
+  if (payload !== null && typeof payload === "object" && !Array.isArray(payload)) {
+    try { payload = boundChatPayload(payload as Record<string, unknown> & { history?: unknown }); }
+    catch { return apiError("PAYLOAD_TOO_LARGE", 413); }
+  }
+  const parsed = chatInputSchema.safeParse(payload);
   if (!parsed.success) return validationError(parsed.error);
   const now = Date.now();
   auth.session.chatRequestTimes = auth.session.chatRequestTimes.filter((time) => time > now - 60_000);
   if (auth.session.chatRequestTimes.length >= 30) return apiError("RATE_LIMITED", 429);
   auth.session.chatRequestTimes.push(now);
   const context = parsed.data.context ?? auth.session.context ?? pilotContextSchema.parse({});
-  const result = await answerPilotChatWithEvents(parsed.data.text, context, { getEvents: () => liveEventsService.get() });
+  const result = await answerPilotChatWithEvents(parsed.data.text, context, { getEvents: () => events.get() });
   let assistant: SmartAssistantResult = { mode: "deterministic", reply: result.reply, citations: [], model: null, reason: "AI_NOT_REQUESTED" };
   if (parsed.data.useAI) {
     const input = { text: parsed.data.text, history: parsed.data.history, context: result.proposedContext,
@@ -43,4 +50,7 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
     dataMode: result.eventsMeta?.dataMode ?? meta.dataMode, warnings: [...(result.eventsMeta ? [] : meta.warnings), ...warnings] });
 }
 
-export function POST(request: Request) { return handleChat(request); }
+export function POST(request: Request) {
+  const hosted = getHostedRuntime();
+  return handleChat(request, hosted?.ai, hosted?.events);
+}

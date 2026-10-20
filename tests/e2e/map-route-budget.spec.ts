@@ -56,7 +56,7 @@ test('маршрут: время Астаны независимо от timezone
   await conditions(page);
   await page.getByLabel('Свободное время', { exact: true }).fill('720');
   await page.getByRole('button', { name: 'Поделиться геопозицией' }).click();
-  await expect(page.getByText('Точка старта выбрана. Храним только до закрытия страницы.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Старт выбран. Точка хранится только до закрытия страницы.', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Показать подборку' }).click();
   const card = page.getByRole('article').first();
   await card.getByRole('button', { name: 'Подробнее', exact: true }).click();

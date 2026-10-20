@@ -42,7 +42,7 @@ describe('street routing with synthetic provider responses, no network', () => {
     expect(String(url)).not.toContain('routed-car');
     expect(init).toMatchObject({ method: 'GET', redirect: 'manual', cache: 'no-store' });
     expect(new Headers(init?.headers).get('user-agent')).toContain('QETTYQ');
-    expect(new Headers(init?.headers).get('referer')).toBe('https://qettyq-app.ablecorgi64.chatgpt.site/');
+    expect(new Headers(init?.headers).get('referer')).toBe('https://qettyqapp.anamai.kz/');
     expect(new Headers(init?.headers).has('content-type')).toBe(false);
   });
   it('requests pedestrian Valhalla costing explicitly and ORS foot-walking only', async () => {

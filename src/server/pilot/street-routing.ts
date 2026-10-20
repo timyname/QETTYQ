@@ -78,7 +78,7 @@ export function createStreetRouter(deps: { fetcher?: typeof fetch; now?: () => n
       const config = ROUTING_PROVIDERS[provider];
       // Honest application identity and canonical public page, as required by FOSSGIS policy.
       // Do not impersonate a browser, rotate identities or follow a block to another host.
-      const headers: Record<string, string> = { accept: 'application/json', 'user-agent': 'QETTYQ-Astana-pilot/1.0 (+https://qettyq-app.ablecorgi64.chatgpt.site/; https://github.com/timyname/QETTYQ)', referer: 'https://qettyq-app.ablecorgi64.chatgpt.site/' };
+      const headers: Record<string, string> = { accept: 'application/json', 'user-agent': 'QETTYQ-Astana-pilot/1.0 (+https://qettyqapp.anamai.kz/; https://github.com/timyname/QETTYQ)', referer: 'https://qettyqapp.anamai.kz/' };
       if (provider !== 'fossgis_foot') headers['content-type'] = 'application/json';
       if (provider === 'valhalla_demo') headers['x-client-id'] = 'qettyq-astana-pilot';
       if (provider === 'openrouteservice') headers.authorization = key!;

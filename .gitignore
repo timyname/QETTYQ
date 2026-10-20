@@ -14,5 +14,9 @@ tmp/
 .codex-finalizer-*/
 *.inspect.ndjson
 .sites-runtime/
+exports/hetzner-access.png
+exports/hetzner-deploy-approval.png
+exports/ps-dns-qettyq-confirm.png
+exports/ps-dns-qettyq-created.png
 sites/qettyq-app-live/
 design/flows/thumbs/

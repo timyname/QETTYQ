@@ -1,5 +1,21 @@
 # Отчёт проверки
 
+## Приоритетный проход · VPS + UI38 · 20.10.2026
+
+- `pnpm test`: **300/300 PASS**,28файлов. Ранее выявлен1старый Referer expectation после смены canonical URL; исправлен на фактический новый hostname, проверки не отключались.
+- `pnpm test:e2e --workers=2`: **16/16 PASS**,25.5с;6spec. Синтетические event/routing fixtures явно помечены и не считаются live provider proof.
+- `pnpm typecheck`, `pnpm data:validate` (80snapshot POI), `pnpm submission:check`: PASS. `pnpm lint`: exit0,0errors,13старых unused-vars warnings в Penpot scripts.
+- `pnpm build`: PASS. `docker build --platform linux/amd64 --progress plain -t qettyq:vps-20261020-3 .`: PASS (Next16.4.2, Node24.22.0). Первый install выявил, что Docker не копировал reviewed pnpm-workspace.yaml; файл добавлен, strict build-script policy не отключалась. Dynamic path tracing исправлен поддерживаемыми annotations; финальный образ не содержит `.env.local`, `src` или исходных пользовательских документов.
+- Новый public HTTPS health200, HTTP301→HTTPS, Secure/HttpOnly/SameSite cookie; session201 и DELETE200/deleted:true. Certbot certificate18.01.2027; `renew --dry-run --no-random-sleep-on-renew` PASS. `nginx -t` PASS перед graceful reload. Два исходных домена boostseller.kz/anamai.kz остались200.
+- Public `/api/events`:200 live/fresh8, fetchedAt2026-10-20T18:12:11.530Z. Старый Sites `/api/assistant/status`: PUBLIC_AI_DISABLED после env5 publish. Полный D1 ledger export0rows verified post-freeze; импорт в SQLite без reset.
+- Два реальных public GPT-5.5 вызова:200/openai; второй2real event cards +2Sxodim citations. Первый reserve500000microUSD пережил пересоздание app, итог1000000/10000000 зарезервировано,18calls remaining. Cooldown подтверждён. Это резервы, не измеренный фактический долларовый invoice. Никаких hosted tools или неразрешённых новых API.
+- Реальный VPS `/api/routing` POST:200/live/street/fossgis_foot,492м,393.6с,17vertices между публичными POI Арарат/Королевская охота; тестовая сессия удалена. Это не synthetic геометрия и не GPS пользователя.
+- SQLite `PRAGMA integrity_check`:ok. Один app-only backup выполнен и проверен тем же integrity check; renewal/backup timers active. Production screenshot390×844: welcome/swipe/conditions/feed/event/map/plan. Физический Safari/iPhone не проверен.
+- Финальное read-only чтение ledger:3completed reservations/$1.50; публичный счётчик изменяем, дополнительный запрос не приписываем двум контролируемым smoke. DB содержит93venues (80OSM +event venues),14events/occurrences,0hours,0memory_clients; это накопленная история, не14текущих live карточек.
+- SSH cleanup:удалена только одобренная task-key строка; SHA256 остальных authorized_keys совпал с исходным. Повторный BatchMode SSH с временным ключом получил expected255/Permission denied. Чужие ключи и остальные доступы не изменялись.
+
+Исторические результаты ниже не заменяют этот проход.
+
 ## Актуальный проход · live evidence, D1, public UI · 20.10.2026
 
 - `pnpm test`: финально **261/261 PASS**, 23 файла; `pnpm test:e2e --workers=1`: **12/12 PASS**, 18.1 с. Production street-routing HTTP 200 после исправления Cloudflare redirect. Подробности в `docs/agent-reports/A-live-release-20261020.md`.

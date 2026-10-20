@@ -16,6 +16,24 @@ const data = (items: LiveAstanaEvent[], patch: Partial<LiveEventsResult> = {}): 
 const find = (items: LiveAstanaEvent[], text: string, ctx = context) => retrieveEventEvidence(data(items), text, ctx, now);
 
 describe("bounded deterministic event retrieval and evidence", () => {
+  it("accepts a plain events request without requiring its scaffolding in titles", () => {
+    expect(find([item("rock"), item("theatre", { name: "SYNTHETIC TEST · спектакль", category: "Театр" })], "События").items).toHaveLength(2);
+  });
+  it("normalizes polite cultural requests to an observed category without weakening specific interests", () => {
+    const polite = "Помоги выбрать культурный досуг в Астане. Предложи варианты из подтверждённой афиши и подскажи, что уточнить у организатора.";
+    const theatre = item("theatre", { name: "SYNTHETIC TEST · спектакль", category: "Театр" });
+    const exhibition = item("exhibition", { name: "SYNTHETIC TEST · выставка", category: "Выставки" });
+    const sport = item("sport", { name: "SYNTHETIC TEST · вечерняя пробежка", category: "Спорт" });
+    const fixtures = [theatre, exhibition, sport];
+    expect(find(fixtures, polite).items.map(event => event.id)).toEqual(["theatre", "exhibition"]);
+    for (const interest of ["сауна", "армрестлинг", "НесуществующаяГруппа"]) {
+      expect(find(fixtures, `${polite} ${interest}`).items).toEqual([]);
+    }
+    expect(find([theatre, item("rock")], `${polite} Рок концерт`).items.map(event => event.id)).toEqual(["rock"]);
+    expect(find(fixtures, polite, { ...context, goal: "new", likedTags: ["rock", "live_music"] }).items).toEqual([]);
+    expect(find(fixtures, polite, { ...context, budget: 3000, strictBudget: true }).items).toEqual([]);
+    expect(find([theatre, { ...exhibition, startsAt: "2026-10-21T15:00:00Z" }], `${polite} Сегодня`).items.map(event => event.id)).toEqual(["theatre"]);
+  });
   it("finds title words instead of returning every event of the same category", () => {
     const a = item("requested"), b = item("different", { name: "SYNTHETIC TEST · рок концерт другая группа" });
     expect(find([a, b], "Найди концерт Ленинград").items.map(x => x.id)).toEqual([a.id]);

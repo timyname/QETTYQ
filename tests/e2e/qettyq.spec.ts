@@ -7,14 +7,14 @@ test.beforeEach(async ({ page }) => {
 
 async function openSwipes(page: Page) {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /Город ближе/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Не знаешь, как/ })).toBeVisible();
   await page.getByRole("button", { name: "Выбрать свой вайб" }).click();
-  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
+  await expect(page.getByTestId('swipe-card')).toHaveAccessibleName(/, 1 из 15/);
 }
 
 async function finishSwipes(page: Page) {
   for (let index = 0; index < 15; index++) {
-    await expect(page.getByText(`${index + 1}/15`, { exact: true })).toBeVisible();
+    await expect(page.getByTestId('swipe-card')).toHaveAccessibleName(new RegExp(`, ${index + 1} из 15`));
     await page.getByTestId("swipe-card").press(index % 3 === 0 ? "ArrowRight" : "ArrowLeft");
   }
   await expect(page.getByRole("heading", { name: /Сколько времени/ })).toBeVisible();
@@ -32,24 +32,26 @@ test("основной путь: 15 реакций → условия → реа
   await finishSwipes(page);
   await page.getByLabel("Свободное время", { exact: true }).fill("120");
   await page.getByLabel("Бюджет на человека, ₸", { exact: true }).fill("5000");
-  await page.getByLabel("Как провести время", { exact: true }).selectOption("activity");
+  await expect(page.getByLabel('Как провести время', { exact: true })).toHaveCount(0);
   const requestPromise = page.waitForRequest(request => request.url().endsWith("/api/chat") && request.method() === "POST");
   await page.getByRole("button", { name: "Показать подборку" }).click();
-  expect((await requestPromise).postDataJSON().context).toMatchObject({ goal: "activity", minutes: 120, budget: 5000, origin: null });
+  expect((await requestPromise).postDataJSON().context).toMatchObject({ goal: "new", minutes: 120, budget: 5000, origin: null });
   await expect(page.getByRole("heading", { name: "Для тебя", exact: true })).toBeVisible();
-  await expect(page.getByText("События ближайших дат — в афише. Места под твои условия — ниже.")).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Места под твои условия' })).toBeVisible();
 
   const first = page.getByRole("article").first();
   await expect(first).toBeVisible();
   await expect(first.getByText("Иллюстрация категории, не фото места", { exact: true })).toBeVisible();
+  await page.screenshot({ path: 'exports/screenshots/ui-review-38/feed-390.png' });
   await first.getByRole("button", { name: "Сохранить", exact: true }).click();
   await expect(first.getByRole("button", { name: "Убрать из сохранённых" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("link", { name: /OpenStreetMap contributors/ })).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
   await first.getByRole("button", { name: "Подробнее", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Перед тем как идти" })).toBeVisible();
   await expect(page.getByText(/Расписание, язык и наличие мест не подтверждены/)).toBeVisible();
+  await page.screenshot({ path: 'exports/screenshots/ui-review-38/place-detail-390.png' });
   await page.getByRole("button", { name: "Оценить путь", exact: true }).click();
-  await expect(page.getByRole("heading", { name: /Твой путь/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Твой маршрут/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Нужна точка старта" })).toBeVisible();
   await expect(page.getByText("Оставшееся свободное время неизвестно.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Google Maps ↗" }).first()).toHaveAttribute("href", /destination=51\./);
@@ -77,13 +79,13 @@ test("основной путь: 15 реакций → условия → реа
 
 test("строгий нулевой бюджет: честная пустая выдача, ограничения не ослабляются", async ({ page }) => {
   await skipToConditions(page);
-  await page.getByLabel("Как провести время").selectOption("walk");
+  await expect(page.getByLabel('Как провести время')).toHaveCount(0);
   await page.getByLabel("Свободное время", { exact: true }).fill("30");
   await page.getByLabel("Бюджет на человека, ₸", { exact: true }).fill("0");
   await expect(page.getByRole("checkbox", { name: "Не предлагать варианты с неизвестной ценой" })).toBeChecked();
   await page.getByRole("button", { name: "Показать подборку" }).click();
   await expect(page.getByRole("heading", { name: "По этим условиям вариантов не нашли" })).toBeVisible();
-  await expect(page.getByText(/Ограничения не были ослаблены автоматически/)).toBeVisible();
+  await expect(page.getByText(/Мы не ослабляем твои условия автоматически/)).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(0);
   await page.getByRole("button", { name: "Изменить условия", exact: true }).last().click();
   await expect(page.getByLabel("Бюджет на человека, ₸", { exact: true })).toHaveValue("0");
@@ -107,20 +109,20 @@ test("drag: переход через порог не выбирает до от
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
   await page.mouse.move(start.x + 140, start.y, { steps: 10 });
-  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
+  await expect(page.getByTestId('swipe-card')).toHaveAccessibleName(/, 1 из 15/);
   await page.mouse.move(start.x + 12, start.y, { steps: 10 });
   await page.mouse.up();
-  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
+  await expect(page.getByTestId('swipe-card')).toHaveAccessibleName(/, 1 из 15/);
   await expect(page.getByRole("button", { name: "Отменить выбор" })).toBeDisabled();
   // A fresh gesture releases beyond 104px (the 390px viewport threshold is 93.6px).
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
   await page.mouse.move(start.x + 110, start.y, { steps: 10 });
-  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
+  await expect(page.getByTestId('swipe-card')).toHaveAccessibleName(/, 1 из 15/);
   await page.mouse.up();
-  await expect(page.getByText("2/15", { exact: true })).toBeVisible();
+  await expect(page.getByTestId('swipe-card')).toHaveAccessibleName(/, 2 из 15/);
   await page.getByRole("button", { name: "Отменить выбор" }).click();
-  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
+  await expect(page.getByTestId('swipe-card')).toHaveAccessibleName(/, 1 из 15/);
   await expect(page.getByTestId("swipe-card")).toHaveAccessibleName(/Культура и история, 1 из 15/);
 });
 
@@ -139,9 +141,9 @@ test("mobile и reduced motion: полноширинная карточка, д�
   await accessibleLike.focus();
   await expect(accessibleLike).toBeVisible();
   await accessibleLike.press("Enter");
-  await expect(page.getByText("2/15", { exact: true })).toBeVisible();
+  await expect(page.getByTestId('swipe-card')).toHaveAccessibleName(/, 2 из 15/);
   await page.getByRole("button", { name: "Отменить выбор" }).click();
-  await expect(page.getByText("1/15", { exact: true })).toBeVisible();
+  await expect(page.getByTestId('swipe-card')).toHaveAccessibleName(/, 1 из 15/);
   await page.getByRole("button", { name: "Пропустить подбор интересов", exact: true }).click();
   await expect(page.getByRole("button", { name: "К условиям подборки", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "К условиям подборки", exact: true }).click();

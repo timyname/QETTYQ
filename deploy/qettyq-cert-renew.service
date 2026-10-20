@@ -1,0 +1,10 @@
+[Unit]
+Description=Renew only QETTYQ HTTPS certificate
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker exec nginx-proxy /opt/certbot/bin/certbot renew --cert-name qettyqapp.anamai.kz --config-dir /data/qettyq-letsencrypt --work-dir /data/qettyq-certbot-work --logs-dir /data/qettyq-certbot-logs --quiet
+ExecStart=/usr/bin/docker exec nginx-proxy nginx -t
+ExecStart=/usr/bin/docker exec nginx-proxy nginx -s reload

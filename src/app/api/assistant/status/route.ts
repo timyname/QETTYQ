@@ -1,6 +1,7 @@
 import { getAITestStatus } from "../../../../server/pilot/ai-test-quota";
 import { jsonResponse, requireSession } from "../../../../server/session/http";
 import type { PublicAIRuntime } from "../../../../server/pilot/public-ai-runtime";
+import { getHostedRuntime } from "../../../../server/pilot/host-runtime";
 
 export async function handleAssistantStatus(request: Request, publicRuntime?: PublicAIRuntime) {
   if (publicRuntime) {
@@ -11,4 +12,4 @@ export async function handleAssistantStatus(request: Request, publicRuntime?: Pu
   return jsonResponse(await getAITestStatus(request));
 }
 
-export function GET(request: Request) { return handleAssistantStatus(request); }
+export function GET(request: Request) { return handleAssistantStatus(request, getHostedRuntime()?.ai); }

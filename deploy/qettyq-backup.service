@@ -1,0 +1,8 @@
+[Unit]
+Description=Back up QETTYQ SQLite only
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker exec qettyq-app node /app/backup.mjs

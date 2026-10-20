@@ -6,6 +6,7 @@ import type { Map as VectorMap, Marker } from 'maplibre-gl';
 import type { RouteGeometry } from '../server/pilot/street-routing';
 import { CityMap, clusterMapPoints } from './CityMap';
 import { loadQettyqMapStyle } from './map-style';
+import { markerIconPaths } from './map-marker-icons';
 import s from './MapCanvas.module.css';
 
 export type MapCanvasPoint = { id: string; title: string; dateLabel: string; category: string; lat: number; lon: number };
@@ -21,8 +22,7 @@ const animation = () => ({ duration: window.matchMedia('(prefers-reduced-motion:
 function categoryIcon(category: string, document: Document) {
   const svg = document.createElementNS(SVG_NS, 'svg');
   for (const [name, value] of Object.entries({ viewBox: '0 0 24 24', width: '20', height: '20', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.7', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' })) svg.setAttribute(name, value);
-  const key = category.toLowerCase();
-  const paths = /music|концерт|музык|rock/.test(key) ? ['M9 18V5l12-2v13', 'M9 15c-5-2-8 5-3 6 2 0 3-1 3-3', 'M21 13c-5-2-8 5-3 6 2 0 3-1 3-3'] : /cafe|coffee|кафе|кофе|food|restaurant/.test(key) ? ['M4 3h12v11a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V3Z', 'M16 5h2a3 3 0 0 1 0 6h-2', 'M2 22h18'] : /park|garden|парк|walk|прогул/.test(key) ? ['M12 2 4 12h4l-4 6h16l-4-6h4L12 2Z', 'M12 18v4'] : /museum|culture|музей|theatre|театр|arts/.test(key) ? ['M3 9h18L12 3 3 9Z', 'M5 10v8M10 10v8M14 10v8M19 10v8', 'M3 21h18'] : ['M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z', 'M10 10h4M12 8v4'];
+  const paths = markerIconPaths(category);
   paths.forEach(d => { const path = document.createElementNS(SVG_NS, 'path'); path.setAttribute('d', d); svg.appendChild(path); });
   return svg;
 }

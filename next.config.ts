@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   poweredByHeader: false,
   devIndicators: false,
   // Allow only the explicitly selected LAN host for device preview; no wildcard.

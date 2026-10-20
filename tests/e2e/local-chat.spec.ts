@@ -41,7 +41,7 @@ test("чат предлагает контекст, хранит диалог п
   expect(await page.evaluate(() => localStorage.getItem("qettyq.local-memory.v1"))).toContain(message);
   await page.getByRole("button", { name: "Удалить мои данные", exact: true }).click();
   await confirmation.getByRole("button", { name: "Да, удалить данные" }).click();
-  await expect(page.getByRole("heading", { name: /Город ближе/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Не знаешь, как/ })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem("qettyq.local-memory.v1"))).toBeNull();
   expect(providerRequests).toEqual([]);
 });
