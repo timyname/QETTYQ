@@ -13,6 +13,17 @@ import s from './MapCanvas.module.css';
 
 export type MapCanvasPoint = { id: string; title: string; dateLabel: string; category: string; lat: number; lon: number };
 type Coordinates = { lat: number; lon: number };
+/** Resolve measured native/CSS insets as lengths, never parse an unresolved calc(). */
+function deviceInsets(container: HTMLElement) {
+  const shell = container.closest<HTMLElement>('[data-screen]');
+  const top = shell ? Number.parseFloat(getComputedStyle(shell).paddingTop) || 0 : 0;
+  const probe = document.createElement('span');
+  probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;padding-bottom:var(--qettyq-safe-area-bottom,env(safe-area-inset-bottom,0px))';
+  container.appendChild(probe);
+  const bottom = Number.parseFloat(getComputedStyle(probe).paddingBottom) || 0;
+  probe.remove();
+  return { top: Math.max(0, top), bottom: Math.max(0, bottom) };
+}
 export type MapCanvasProps = { points: MapCanvasPoint[]; activeId?: string; onSelect?: (id: string) => void; onPick?: (point: Coordinates) => void; origin?: Coordinates | null; fitPoints?: boolean; routeGeometry?: RouteGeometry | null; routeAttribution?: { text: string; url: string } | null };
 
 const ASTANA: [number, number] = [71.4304, 51.1282];
@@ -89,10 +100,11 @@ export function MapCanvas(props: MapCanvasProps) {
           fittedRoute = line!;
           const box = line!.coordinates.reduce((b, p) => b.extend(p), new gl.LngLatBounds(line!.coordinates[0], line!.coordinates[0]));
           const height = container.clientHeight, css = getComputedStyle(container);
-          const top = Number.parseFloat(css.getPropertyValue('--map-fit-top')) || 150;
+          const insets = deviceInsets(container);
+          const top = (Number.parseFloat(css.getPropertyValue('--map-fit-top')) || 150) + insets.top;
           const ratio = Number.parseFloat(css.getPropertyValue('--map-fit-bottom-ratio')) || .25;
           const offset = Number.parseFloat(css.getPropertyValue('--map-fit-bottom-offset')) || 0;
-          const bottom = Math.max(0, Math.min(height - top - 60, height * ratio + offset));
+          const bottom = Math.max(0, Math.min(height - top - 60, height * ratio + offset + insets.bottom));
           view.fitBounds(box, { maxZoom: 16, duration, padding: { top, bottom, left: 42, right: 42 } });
         }
         const groups = clusterMapPoints(current.points.filter(validCoordinates), point => view.project([point.lon, point.lat]), { width: bounds.width, height: bounds.height }, current.activeId);
@@ -147,8 +159,9 @@ export function MapCanvas(props: MapCanvasProps) {
           const css = getComputedStyle(container);
           const ratio = Number.parseFloat(css.getPropertyValue('--map-fit-bottom-ratio')) || 0;
           const offset = Number.parseFloat(css.getPropertyValue('--map-fit-bottom-offset')) || 0;
-          const top = Number.parseFloat(css.getPropertyValue('--map-fit-top')) || Math.min(150, height * .2);
-          const bottom = ratio ? Math.min(height - top - 60, height * ratio + offset) : Math.min(200, height * .28);
+          const insets = deviceInsets(container);
+          const top = (Number.parseFloat(css.getPropertyValue('--map-fit-top')) || Math.min(150, height * .2)) + insets.top;
+          const bottom = Math.max(0, ratio ? Math.min(height - top - 60, height * ratio + offset + insets.bottom) : Math.min(200 + insets.bottom, height * .28));
           view.fitBounds(box, { maxZoom: 14, duration: 0, padding: { top, bottom, left: 42, right: 42 } });
         }
         render();

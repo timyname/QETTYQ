@@ -3,6 +3,7 @@ import { recommend } from "../../domain/recommend";
 import type { Place } from "../../domain/types";
 import type { PilotContext } from "./contracts";
 import { weeklyOpeningStatus } from "../ingestion/weekly-hours";
+import { getPlaceMedia } from "../media/commons-place-media";
 
 export const pilotPlaces = places as Place[];
 export const catalogCredit = { text: "© OpenStreetMap contributors", url: "https://www.openstreetmap.org/copyright", license: "ODbL" };
@@ -18,6 +19,7 @@ export function publicPlace(place: Place) {
     sourceUrl: place.sourceUrl, retrievedAt: place.retrievedAt,
     cuisines: place.cuisines ?? [],
     coordinateQuality: place.coordinateQuality ?? "observed",
+    media: getPlaceMedia(place.id),
   };
 }
 

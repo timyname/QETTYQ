@@ -315,13 +315,14 @@ for (const language of ['kk', 'en'] as const) for (const viewport of [{ width: 3
       await snap('event');
       await button('Назад').click();
       await tab('Поиск').click();
+      await expect(page.getByText(L('Поиск может использовать OpenAI и Google: им передаётся запрос, но не точная геопозиция. История хранится на устройстве; серверная память включается отдельно.'), { exact: true })).toBeVisible();
       const userText = 'QA: кофе, K-pop и «Балет» — таңдау';
       await page.getByRole('textbox', { name: L('Сообщение помощнику') }).fill(userText);
       const chatRequest = page.waitForRequest(request => request.url().endsWith('/api/chat') && request.method() === 'POST');
       await button('Отправить сообщение').click();
       const payload = (await chatRequest).postDataJSON();
       expect(payload.language).toBe(language);
-      expect(payload.googleConsent).toBe(false);
+      expect(payload.googleConsent).toBe(true);
       expect(payload.useAI).toBe(false);
       await expect(page.getByRole('log').getByText(userText, { exact: true })).toBeVisible();
       await expect(page.getByRole('log').getByText(L('QETTYQ · поиск по каталогу'), { exact: true }).first()).toBeVisible();

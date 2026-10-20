@@ -221,9 +221,29 @@ describe("bounded public assistant, source-evidence RAG without hosted tools", (
     expect(JSON.stringify(request)).toBe(original);
   });
 
+  it.each(["Для неспешного свидания я бы выбрал прогулку. Сравним карточки?", "A walk could be a nice starting point. Prefer something different?", "Серуеннен бастасақ қайтеді? Бірге таңдайық."])("does not reject safe guidance based on arbitrary sentence starters: %s", async message => {
+    const { deps } = publicSetup(output(JSON.stringify({ intent: "advice", evidenceIds: [], message }), { model: "gpt-5.5", service_tier: "default", usage: { input_tokens: 1400, output_tokens: 100 } }));
+    expect(await answerSmartAssistant(input, deps)).toMatchObject({ mode: "openai", reply: message });
+  });
+
   it("does not accept generated public links as trusted source citations", async () => {
     const { deps } = publicSetup(output(JSON.stringify({ intent: "advice", evidenceIds: [], message: "Проверьте https://invented.example/event" }), { model: "gpt-5.5", service_tier: "default", usage: { input_tokens: 1400, output_tokens: 100 } }));
     expect((await answerSmartAssistant(input, deps)).reason).toBe("UNSAFE_OR_UNGROUNDED_REPLY");
+  });
+
+  it.each(["Давай начнём с прогулки. Хочешь сравнить варианты?", "Sounds good. Shall we compare the options?", "Жақсы ой. Бастайық?"])("accepts natural guidance without forcing identical boilerplate: %s", async message => {
+    const { deps } = publicSetup(output(JSON.stringify({ intent: "advice", evidenceIds: [], message }), { model: "gpt-5.5", service_tier: "default", usage: { input_tokens: 1400, output_tokens: 100 } }));
+    expect(await answerSmartAssistant(input, deps)).toMatchObject({ mode: "openai", reply: message, citations: [] });
+  });
+
+  it.each(["Предлагаю выбрать один из парков.", "Да, давай сравним варианты.", "Отлично, давай сравним варианты.", "Например, можно сравнить варианты в Астане."])("does not confuse Russian park inflection or known-city guidance with parking/factual claims: %s", async message => {
+    const { deps } = publicSetup(output(JSON.stringify({ intent: "advice", evidenceIds: [], message }), { model: "gpt-5.5", service_tier: "default", usage: { input_tokens: 1400, output_tokens: 100 } }));
+    expect(await answerSmartAssistant(input, deps)).toMatchObject({ mode: "openai", reply: message, citations: [] });
+  });
+
+  it.each(["Предлагаю кафе, там есть парковка.", "Проверьте паркинг, он доступен."])("still rejects unsupported parking assertions: %s", async message => {
+    const { deps } = publicSetup(output(JSON.stringify({ intent: "advice", evidenceIds: [], message }), { model: "gpt-5.5", service_tier: "default", usage: { input_tokens: 1400, output_tokens: 100 } }));
+    expect(await answerSmartAssistant(input, deps)).toMatchObject({ mode: "deterministic", reason: "UNSAFE_OR_UNGROUNDED_REPLY", validationReason: "UNVERIFIED_FACTS" });
   });
 
   it.each([

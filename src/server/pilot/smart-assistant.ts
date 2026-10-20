@@ -20,7 +20,7 @@ export type SmartAssistantInput = {
 export type SmartAssistantCitation = { url: string; title: string; startIndex?: number; endIndex?: number };
 export type SmartAssistantResult = {
   mode: "openai" | "deterministic"; reply: string; citations: SmartAssistantCitation[];
-  model: string | null; reason: string | null;
+  model: string | null; reason: string | null; validationReason?: string;
 };
 export type SmartAssistantDependencies = {
   env?: SmartAssistantEnvironment;
@@ -53,7 +53,7 @@ const instructions = `Ты помощник QETTYQ для досуга в Аст
 const publicInstructions = instructions.replace(
   "Можешь искать дополнительные сайты и идеи через web_search. Веб-результат — только исследованная идея для проверки, не подтвержденное событие каталога, не запись и не бронь. Не сообщай непроверенные цены/даты/расписания из веба: предложи проверить их у организатора. Ссылайся на источник штатными URL citations. При отсутствии источника не утверждай найденные факты.",
   "Веб-поиск и другие инструменты у тебя выключены. Evidence уже собрано кодом из источников. Используй только эти данные; не называй это самостоятельным поиском в интернете. При пустом evidence честно скажи, что подтвержденных вариантов нет, и помоги уточнить запрос. Ссылки на источники интерфейс приложит из evidence, сам ссылки не придумывай.",
-).replace("Не печатай JSON, id и внутренние поля evidence.", "Верни только JSON по схеме: intent — clarify/advice/explain; evidenceIds — только id карточек из evidence, на которые ты ссылаешься, либо пустой список; message — естественный короткий совет или уточняющий вопрос. В message не пиши факты о событиях: бесплатность, наличие мест, язык, удобства, часы работы, адрес, расписание, время дороги или гарантии. Эти факты показывает только интерфейс. Каждое предложение начинай как совет/уточнение: например «Предлагаю», «Давайте», «Уточните», «Что», «Какой». Не добавляй названия вне evidence.");
+).replace("Не печатай JSON, id и внутренние поля evidence.", "Верни только JSON по схеме: intent — clarify/advice/explain; evidenceIds — только id карточек из evidence, на которые ты ссылаешься, либо пустой список; message — естественный короткий совет или уточняющий вопрос. В message не пиши факты о событиях: бесплатность, наличие мест, язык, удобства, часы работы, адрес, расписание, время дороги или гарантии. Эти факты показывает только интерфейс. Пиши живым разговорным языком без канцелярита и одинаковых вступлений. Можно «Давай», «Хочешь», «Начнём», «Тебе ближе». Не изображай всезнающего человека и не обещай подтверждённую атмосферу заведения. Не добавляй названия вне evidence.");
 const publicFormat = {
   type: "json_schema", name: "qettyq_public_guidance", strict: true,
   schema: {
@@ -167,31 +167,30 @@ function safeReply(reply: string) {
 }
 
 /** Public free prose is guidance, never an alternate factual event record. */
-function publicGuidance(raw: string, input: SmartAssistantInput): { message: string; ids: string[] } | null {
+function publicGuidance(raw: string, input: SmartAssistantInput, diagnostic?: (code: string) => void): { message: string; ids: string[] } | null {
+  const reject = (code: string) => { diagnostic?.(code); return null; };
   let value: unknown;
-  try { value = JSON.parse(raw); } catch { return null; }
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  try { value = JSON.parse(raw); } catch { return reject("JSON_FORMAT"); }
+  if (!value || typeof value !== "object" || Array.isArray(value)) return reject("JSON_FORMAT");
   const data = value as Record<string, unknown>;
   if (Object.keys(data).sort().join(",") !== "evidenceIds,intent,message" || !["clarify", "advice", "explain"].includes(String(data.intent))
-    || typeof data.message !== "string" || data.message.length > 800 || !Array.isArray(data.evidenceIds) || data.evidenceIds.length > 5) return null;
+    || typeof data.message !== "string" || data.message.length > 800 || !Array.isArray(data.evidenceIds) || data.evidenceIds.length > 5) return reject("SCHEMA_FORMAT");
   const candidates = [...input.evidence.items, ...input.evidence.events];
-  if (data.evidenceIds.some(id => typeof id !== "string" || !candidates.some(item => item.id === id))) return null;
+  if (data.evidenceIds.some(id => typeof id !== "string" || !candidates.some(item => item.id === id))) return reject("UNKNOWN_EVIDENCE_ID");
   const message = data.message.trim();
-  if (!safeReply(message) || /https?:\/\/|www\.|\]\(/iu.test(message)) return null;
+  if (!safeReply(message) || /https?:\/\/|www\.|\]\(/iu.test(message)) return reject("TEXT_SAFETY");
   // Even a real evidence URL does not prove these generated claims. Facts stay in cards.
-  const facts = /бесплат|даром|без\s+оплат|вход\s+свобод|тегін|ақысыз|\bfree\b|места?\s+(?:есть|доступ|остал)|билет\p{L}*\s+(?:есть|доступ|законч)|sold\s*out|tickets?\s+(?:are\s+)?available|на\s+(?:русском|казахском|английском)|(?:орыс|қазақ|ағылшын)\s+тіл|in\s+(?:russian|kazakh|english)|розет|wi[\s-]?fi|вай[\s-]?фай|парков|пандус|туалет|террас|wheelchair|parking|socket|outlet|открыт|закрыт|круглосуточ|работает|ашық|жабық|\b(?:opens?|closed)\b|располож|находит|по\s+адрес|located|мекенжай|состоится|проходит|начинается|сегодня|завтра|tomorrow|today|ертең|бүгін|тенге|теңге|\b(?:kzt|dollars?)\b|успеете|успеем|вернуться\s+домой|гарантир|точно\s+подойд|definitely|guaranteed/iu;
-  if (facts.test(message)) return null;
-  // A finite discourse boundary preserves natural questions/advice, not event descriptions.
-  const starts = /^(?:привет|здравствуйте|понимаю|хорошо|помогу|могу\s+помочь|предлагаю|давайте|уточните|проверьте|расскажите|выберите|советую|попробуйте|можно|лучше|что|какой|какая|какие|как|когда|сколько|вам\s+ближе|hello|hi\b|i\s+(?:can|suggest)|let'?s|consider|please|check|tell\s+me|what|which|how|would\s+you|could\s+you|сәлем|түсіндім|жақсы|қалай|қандай|нені|таңдаңыз|нақтылаңыз|айтыңыз|ұсынамын|келіңіз|қарастырайық)/iu;
-  if (message.split(/[.!?]+\s*|\n+/u).filter(Boolean).some(sentence => !starts.test(sentence.trim()))) return null;
+  const facts = /бесплат|даром|без\s+оплат|вход\s+свобод|тегін|ақысыз|\bfree\b|места?\s+(?:есть|доступ|остал)|билет\p{L}*\s+(?:есть|доступ|законч)|sold\s*out|tickets?\s+(?:are\s+)?available|на\s+(?:русском|казахском|английском)|(?:орыс|қазақ|ағылшын)\s+тіл|in\s+(?:russian|kazakh|english)|розет|wi[\s-]?fi|вай[\s-]?фай|парковк|паркинг|пандус|туалет|террас|wheelchair|parking|socket|outlet|открыт|закрыт|круглосуточ|работает|ашық|жабық|\b(?:opens?|closed)\b|располож|находит|по\s+адрес|located|мекенжай|состоится|проходит|начинается|сегодня|завтра|tomorrow|today|ертең|бүгін|тенге|теңге|\b(?:kzt|dollars?)\b|успеете|успеем|вернуться\s+домой|гарантир|точно\s+подойд|definitely|guaranteed/iu;
+  if (facts.test(message)) return reject("UNVERIFIED_FACTS");
+  // Wording is not a factual boundary: validate facts/evidence, not sentence starters.
   const known = candidates.map(item => item.name.normalize("NFKC").toLocaleLowerCase("ru-RU"));
   for (const quoted of message.matchAll(/[«“"]([^»”"]+)[»”"]/gu)) {
-    if (!known.some(name => name.includes(quoted[1].normalize("NFKC").toLocaleLowerCase("ru-RU")))) return null;
+    if (!known.some(name => name.includes(quoted[1].normalize("NFKC").toLocaleLowerCase("ru-RU")))) return reject("UNKNOWN_QUOTED_NAME");
   }
   const withoutNames = candidates.reduce((text, candidate) => text.replaceAll(candidate.name, ""), message);
   const sentenceStarts = new Set([...withoutNames.matchAll(/(?:^|[.!?]\s+|\n)(\p{Lu}\p{L}*)/gu)].map(match => match[1]));
-  const allowed = new Set(["Астана", "Astana", "QETTYQ", "I"]);
-  for (const token of withoutNames.match(/\p{Lu}[\p{L}-]*/gu) ?? []) if (!sentenceStarts.has(token) && !allowed.has(token)) return null;
+  const allowed = new Set(["Астана", "Астане", "Астаны", "Астану", "Астаной", "Астанада", "Астананың", "Астананы", "Астанаға", "Astana", "QETTYQ", "I"]);
+  for (const token of withoutNames.match(/\p{Lu}[\p{L}-]*/gu) ?? []) if (!sentenceStarts.has(token) && !allowed.has(token)) return reject("UNKNOWN_PROPER_NAME");
   return { message, ids: [...new Set(data.evidenceIds as string[])] };
 }
 
@@ -257,8 +256,9 @@ export async function answerSmartAssistant(input: SmartAssistantInput, deps: Sma
       }
     }
     if (isPublic) {
-      const guidance = publicGuidance(reply, input);
-      if (!guidance) return fallback("UNSAFE_OR_UNGROUNDED_REPLY");
+      let validationReason: string | undefined;
+      const guidance = publicGuidance(reply, input, code => { validationReason = code; });
+      if (!guidance) return { ...fallback("UNSAFE_OR_UNGROUNDED_REPLY"), validationReason };
       const sent = JSON.parse(content) as { evidence: { items: { id: string }[]; events: { id: string }[] } };
       const sentIds = new Set([...sent.evidence.items, ...sent.evidence.events].map(item => item.id));
       if (guidance.ids.some(id => !sentIds.has(id))) return fallback("UNSAFE_OR_UNGROUNDED_REPLY");

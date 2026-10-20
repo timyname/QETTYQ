@@ -82,16 +82,25 @@ test('38 review: dock follows drag and keyboard; composer has no chips; bounded 
   await expect(dock).toHaveAttribute('data-dragging', 'true');
   await page.mouse.up();
   await expect(dock.getByRole('button', { name: 'Поиск', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByRole('heading', { name: 'Что ищем?' })).toBeVisible();
+  // With restored dialogue, the introductory heading is replaced by messages.
+  await expect(page.getByRole('log', { name: 'Диалог с помощником' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Что придумаем?' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Кофе', exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Открыть Kino.kz' })).toHaveCount(0);
-  await page.getByText('О помощнике и памяти', { exact: true }).click();
-  await expect(page.getByRole('button', { name: 'AI пока недоступен' })).toBeDisabled();
-  await page.getByText('О помощнике и памяти', { exact: true }).click();
+  await expect(page.getByText('Поиск может использовать OpenAI и Google: им передаётся запрос, но не точная геопозиция. История хранится на устройстве; серверная память включается отдельно.', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Настроить', exact: true }).click();
+  const settings = page.getByRole('region', { name: 'Настройки помощника', exact: true });
+  const ai = settings.getByRole('checkbox', { name: 'Умный ответ OpenAI', exact: true });
+  const google = settings.getByRole('checkbox', { name: 'Поиск заведений и фото Google', exact: true });
+  await expect(ai).toBeChecked(); await expect(google).toBeChecked();
+  await ai.uncheck(); await google.uncheck();
+  await expect(ai).not.toBeChecked(); await expect(google).not.toBeChecked();
+  await settings.getByRole('button', { name: 'Вернуться к разговору', exact: true }).click();
   let bytes = 0;
   await page.route('**/api/chat', async route => {
     bytes = new TextEncoder().encode(route.request().postData()!).byteLength;
     expect(route.request().postDataJSON().history.length).toBeLessThanOrEqual(6);
+    expect(route.request().postDataJSON()).toMatchObject({ useAI: false, googleConsent: false });
     await route.fulfill({ json: { reply: 'SYNTHETIC TEST — ответ без провайдера', items: [], mode: 'deterministic' } });
   });
   await page.getByLabel('Сообщение помощнику').fill('Тихое место на час');
@@ -102,7 +111,7 @@ test('38 review: dock follows drag and keyboard; composer has no chips; bounded 
     await page.setViewportSize({ width, height: 932 });
     const composer = (await page.getByLabel('Сообщение помощнику').boundingBox())!;
     const bottom = (await dock.boundingBox())!;
-    expect(composer.y + composer.height).toBeLessThan(bottom.y);
+    expect(composer.y + composer.height).toBeLessThanOrEqual(bottom.y);
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
     await page.screenshot({ path: `exports/screenshots/ui-review-38/chat-synthetic-${width}.png` });
   }

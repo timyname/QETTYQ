@@ -72,7 +72,7 @@ for (const language of languages) test(`${language.code}: first-run language, al
   expect(errors).toEqual([]);
 });
 
-test('Google: explicit consent, English shell, original names, third-party credit, no OSM/photo/plan', async ({ page }) => {
+test('Google: disclosed defaults, explicit settings opt-out/enable, English shell, original names and credit, no OSM/photo/plan', async ({ page }) => {
   await page.route('**/api/events', route => route.fulfill({ json: { items: [], dataMode: 'unavailable', freshness: 'unavailable', fetchedAt: null } }));
   await page.route('**/api/assistant/status', route => route.fulfill({ json: { available: false, reason: 'API_KEY_MISSING', localTestOnly: false } }));
   const requests: Array<Record<string, unknown>> = [];
@@ -85,13 +85,20 @@ test('Google: explicit consent, English shell, original names, third-party credi
   await expect(page.getByRole('button', { name: 'Find your vibe' })).toBeEnabled();
   await page.getByRole('button', { name: 'QETTYQ — home' }).click();
   await page.getByRole('navigation').getByRole('button', { name: 'Search', exact: true }).click();
+  const disclosure = page.getByText('Search may use OpenAI and Google: they receive your query, not your precise location. History stays on this device; server memory is enabled separately.', { exact: true });
+  await expect(disclosure).toBeVisible();
+  await disclosure.locator('..').getByRole('button', { name: 'Settings', exact: true }).click();
+  const settings = page.getByRole('region', { name: 'Assistant settings', exact: true });
+  const google = settings.getByRole('checkbox', { name: 'Google places and photos', exact: true });
+  await expect(google).toBeChecked(); await google.uncheck();
+  await settings.getByRole('button', { name: 'Back to the conversation', exact: true }).click();
   await page.getByLabel('Message the assistant').fill('Кофе');
   await page.getByRole('button', { name: 'Send message', exact: true }).click();
   await expect(page.getByText('Google search requires separate consent.')).toBeVisible();
   expect(requests[0]).toMatchObject({ language: 'en', googleConsent: false, useAI: false });
-  await page.getByText('About the assistant and memory', { exact: true }).click();
-  await page.getByRole('checkbox', { name: 'I allow my query to be sent to Google to find places' }).check();
-  await page.getByText('About the assistant and memory', { exact: true }).click();
+  await page.locator('[data-screen] > header').getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(google).not.toBeChecked(); await google.check();
+  await settings.getByRole('button', { name: 'Back to the conversation', exact: true }).click();
   await page.getByLabel('Message the assistant').fill('Кофе');
   await page.getByRole('button', { name: 'Send message', exact: true }).click();
   const results = page.getByRole('region', { name: 'Google Maps results' });

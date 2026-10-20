@@ -66,7 +66,7 @@ test("основной путь: 15 реакций → условия → реа
   await expect(dock.getByRole("button")).toHaveCount(4);
   await expect(dock.getByRole("button", { name: "Для тебя", exact: true })).toHaveAttribute("aria-current", "page");
   await dock.getByRole("button", { name: "Поиск", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Что ищем?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Что придумаем?" })).toBeVisible();
   await expect(dock.getByRole("button", { name: "Поиск", exact: true })).toHaveAttribute("aria-current", "page");
   await dock.getByRole("button", { name: "Карта", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Город на карте" })).toBeVisible();

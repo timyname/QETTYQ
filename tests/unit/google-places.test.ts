@@ -12,14 +12,14 @@ describe("Google Places boundary (synthetic responses, no real key/API)", () => 
     expect((await createGooglePlacesRuntime({ enabled: true, approved: true, fetcher, reserve }).search(request)).reason).toBe("GOOGLE_SERVER_KEY_REQUIRED");
     expect((await createGooglePlacesRuntime({ key: "unit-test-only", enabled: true, approved: true, fetcher }).search(request)).reason).toBe("GOOGLE_BUDGET_STORAGE_UNAVAILABLE");
   });
-  it("returns live mapless attributed cards, never OSM coordinates/photos or menu guarantees", async () => {
+  it("returns live mapless attributed cards, never OSM coordinates or menu guarantees", async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ places: [{ id: "synthetic-google-id", displayName: { text: "SYNTHETIC TEST ramen" }, formattedAddress: "SYNTHETIC TEST address", googleMapsUri: "https://maps.google.com/?cid=123", location: { latitude: 51.13, longitude: 71.43 }, currentOpeningHours: { weekdayDescriptions: ["SYNTHETIC TEST Monday"] }, attributions: [{ provider: "SYNTHETIC TEST credit", providerUri: "https://example.org" }] }] })));
     const result = await createGooglePlacesRuntime({ key: "unit-test-only", enabled: true, approved: true, fetcher, reserve: () => true }).search(request);
     expect(result).toMatchObject({ status: "live", storage: "no_store", mapDisplay: "external_google_only", attribution: { text: "Google Maps" } });
     expect(result.items[0]).toMatchObject({ cuisineOrDishConfirmed: false, thirdPartyAttributions: [{ name: "SYNTHETIC TEST credit", url: "https://example.org/" }] });
     expect(result.items[0]).not.toHaveProperty("lat"); expect(result.items[0]).not.toHaveProperty("location");
     const init = fetcher.mock.calls[0][1]!; expect(new Headers(init.headers).get("X-Goog-FieldMask")).toBe(GOOGLE_PLACES_FIELDS);
-    expect(GOOGLE_PLACES_FIELDS).not.toMatch(/\*|photos|reviews|rating/); expect(init.cache).toBe("no-store");
+    expect(GOOGLE_PLACES_FIELDS).not.toMatch(/\*|reviews|rating/); expect(GOOGLE_PLACES_FIELDS).toContain("places.photos"); expect(init.cache).toBe("no-store");
   });
   it.each(["51.12345,71.45678", "51,123456 71,654321", "+51.12 +71,45"])("retains reservation on failure, redacts %s and never retries", async coordinates => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response("private provider details", { status: 403 })), reserve = vi.fn().mockReturnValue(true);

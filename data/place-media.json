@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "policy": "Only individually reviewed, licensed, exact-place photographs. Missing rights or identity means no image. No Google photo is stored here.",
+  "records": [
+    {
+      "placeId": "osm:way:1196402246",
+      "src": "/assets/places/astana-botanical-garden-acalypha-2026.jpg",
+      "alt": "Acalypha hispida в оранжерее Ботанического сада Астаны. Фото 28 июня 2026 года.",
+      "author": "Nurken",
+      "credit": "Nurken · Wikimedia Commons · CC BY-SA 4.0",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Acalypha_hispida_at_the_Astana_Botanical_Garden_(1).jpg",
+      "fileTitle": "File:Acalypha hispida at the Astana Botanical Garden (1).jpg",
+      "fileCategories": [
+        "Astana botanical garden greenhouses",
+        "Astana botanical garden by Nurken, 2026"
+      ],
+      "width": 1280,
+      "height": 960,
+      "bytes": 610835,
+      "sha256": "5a7223e40c2633b1aa44128e4915019d45392c4015ed5119635ac498ecf95a1b",
+      "reviewedSha256": "5a7223e40c2633b1aa44128e4915019d45392c4015ed5119635ac498ecf95a1b",
+      "changes": "Commons thumbnail resized to 1280×960; no crop, retouching or AI alteration.",
+      "fetchedAt": "2026-10-20T21:22:35.871Z",
+      "photographedAt": "2026-06-28 19:39:56",
+      "identityProof": {
+        "osmUrl": "https://www.openstreetmap.org/way/1196402246",
+        "osmTag": "wikimedia_commons",
+        "osmTagValue": "Category:Astana botanical garden",
+        "commonsCategory": "Category:Astana botanical garden",
+        "categoryVerified": true,
+        "categoryEvidenceUrl": "https://commons.wikimedia.org/wiki/Category:Astana_botanical_garden",
+        "sourceAsOf": "2026-10-19T20:21:11Z"
+      },
+      "rights": {
+        "status": "approved",
+        "reviewedAt": "2026-10-20T21:22:01Z",
+        "reviewExpiresAt": null,
+        "photographLicenseVerified": true,
+        "visualVerified": true,
+        "subjectRights": "nature_no_protected_work",
+        "allowStore": true,
+        "allowDisplay": true,
+        "allowRedistribute": true,
+        "notes": "File-specific CC BY-SA 4.0 and own-work author verified via Commons page and imageinfo. Exact Botanical Garden Q104866948 appears on file page; greenhouse is a subcategory of the OSM-linked venue category. Native decoded thumbnail visually inspected: plant close-up, no modern architectural/artistic work used as subject. Real dated plant photo, not a current availability claim or generated illustration. Preserve attribution, license and ShareAlike for this media."
+      },
+      "commonsOriginalSha1": "66d0e76444bf8c84d41d27cbe19f661255dfa527",
+      "importedAt": "2026-10-20T21:24:28.546Z"
+    },
+    {
+      "placeId": "osm:node:4894937300",
+      "src": "/assets/places/astana-national-museum-hipparion-2026.jpg",
+      "alt": "Экспонат Hipparion в Национальном музее Республики Казахстан. Фото 7 мая 2026 года.",
+      "author": "PlainVector",
+      "credit": "PlainVector · Wikimedia Commons · CC0 1.0",
+      "license": "CC0 1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hipparion_de_Christol,_1832.jpg",
+      "fileTitle": "File:Hipparion de Christol, 1832.jpg",
+      "fileCategories": [
+        "National Museum of the Republic of Kazakhstan"
+      ],
+      "width": 1280,
+      "height": 960,
+      "bytes": 338702,
+      "sha256": "61d336597582b9dbb076bd649955c4f674f2ab1cb8881b9667f0e956f3f5b05f",
+      "reviewedSha256": "61d336597582b9dbb076bd649955c4f674f2ab1cb8881b9667f0e956f3f5b05f",
+      "changes": "Commons thumbnail resized to 1280×960; no crop, retouching or AI alteration.",
+      "fetchedAt": "2026-10-20T21:22:35.940Z",
+      "photographedAt": "2026-05-07",
+      "identityProof": {
+        "osmUrl": "https://www.openstreetmap.org/node/4894937300",
+        "osmTag": "wikimedia_commons",
+        "osmTagValue": "Category:National Museum of the Republic of Kazakhstan",
+        "commonsCategory": "Category:National Museum of the Republic of Kazakhstan",
+        "categoryVerified": true,
+        "categoryEvidenceUrl": "https://commons.wikimedia.org/wiki/Category:National_Museum_of_the_Republic_of_Kazakhstan",
+        "sourceAsOf": "2026-10-19T20:21:11Z"
+      },
+      "rights": {
+        "status": "approved",
+        "reviewedAt": "2026-10-20T21:22:01Z",
+        "reviewExpiresAt": null,
+        "photographLicenseVerified": true,
+        "visualVerified": true,
+        "subjectRights": "nature_no_protected_work",
+        "allowStore": true,
+        "allowDisplay": true,
+        "allowRedistribute": true,
+        "notes": "Commons imageinfo identifies photographer PlainVector, own work and explicit CC0 dedication. File category exactly matches OSM-linked museum. Native decoded thumbnail visually inspected: natural-history skeletal exhibit, no protected modern building facade/artwork as subject. Small background visitors are incidental and not used for endorsement. The photo does not establish current exhibit availability. Museum facade photos remain excluded for separate architectural-rights review."
+      },
+      "commonsOriginalSha1": "bfdb7e38a43ab4e6160cca2aeef6b9e9366ff2bf",
+      "importedAt": "2026-10-20T21:24:28.618Z"
+    }
+  ]
+}

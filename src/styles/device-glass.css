@@ -1,0 +1,22 @@
+/* QETTYQ device/glass primitives. Import once in each web/native entry point.
+   Native values are measured by WKWebView; CSS env() is the browser fallback. */
+:root {
+  --qettyq-device-top: var(--qettyq-safe-area-top, env(safe-area-inset-top, 0px));
+  --qettyq-device-bottom: var(--qettyq-safe-area-bottom, env(safe-area-inset-bottom, 0px));
+  --qettyq-pearl: #f4f6f2;
+  --qettyq-paper: #ffffff;
+  --qettyq-ink: #101915;
+  --qettyq-jade: #0b6e5d;
+  --qettyq-deep: #0b332d;
+  --qettyq-lime: #cffc55;
+  --qettyq-muted: #52685d;
+  --qettyq-font: Manrope, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --qettyq-control-radius: 20px;
+  --qettyq-panel-radius: 28px;
+  --qettyq-glass-fill: linear-gradient(160deg, #ffffffee 0%, #ffffffb8 48%, #f2f8efca 100%);
+  --qettyq-glass-edge: #ffffffed;
+  --qettyq-glass-reflection: inset 0 1px 0 #ffffff, inset 0 -1px 0 #ffffff70;
+  --qettyq-glass-shadow: 0 5px 18px #163b2912, 0 1px 3px #163b290a;
+  --qettyq-glass-blur: 22px;
+  --qettyq-press-time: 150ms;
+}

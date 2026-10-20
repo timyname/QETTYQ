@@ -3,6 +3,32 @@ import { ORGANIZER_TRANSLATIONS } from './i18n-organizer';
 import { POLICY_TRANSLATIONS } from './i18n-policy';
 import { ROUTE_TRANSLATIONS } from './i18n-route';
 const rows = `
+Что придумаем?|Не ойластырамыз?|What shall we do?
+Свидание, ужин или что-то новое? Расскажи, что задумал. Я уточню детали и покажу варианты с источниками.|Кездесу, кешкі ас әлде жаңа бір нәрсе ме? Ойыңды айт. Мәліметтерді нақтылап, дереккөздері бар нұсқаларды көрсетемін.|A date, dinner or something new? Tell me what you have in mind. I'll ask a little more and suggest options with sources.
+ПОМОЩНИК QETTYQ|QETTYQ КӨМЕКШІСІ|QETTYQ ASSISTANT
+Я помогу найти место для свидания, ужина или нового впечатления. Если деталей не хватает — спрошу. Варианты покажу с источниками, без выдуманных цен и расписаний.|Кездесуге, кешкі асқа немесе жаңа әсерге лайық орын табуға көмектесемін. Мәлімет жетпесе, сұраймын. Баға мен кестені ойдан шығармай, дереккөздері бар нұсқаларды көрсетемін.|I'll help find a place for a date, dinner or something new. If I need a little more detail, I'll ask. Suggestions come with sources, not invented prices or schedules.
+Идея для свидания|Кездесуге идея|An idea for a date
+Где поужинать?|Кешкі асты қайда ішеміз?|Where shall we have dinner?
+Что происходит сегодня?|Бүгін не болып жатыр?|What's on today?
+Спроси, куда сходить…|Қайда баруға болатынын сұра…|Ask me where to go…
+Поиск может использовать OpenAI и Google: им передаётся запрос, но не точная геопозиция. История хранится на устройстве; серверная память включается отдельно.|Іздеу OpenAI мен Google-ды қолдануы мүмкін: оларға сұрау жіберіледі, бірақ нақты геолокация емес. Тарих құрылғыда сақталады; серверлік жад бөлек қосылады.|Search may use OpenAI and Google: they receive your query, not your precise location. History stays on this device; server memory is enabled separately.
+Настроить|Баптау|Settings
+Настройки помощника|Көмекші баптаулары|Assistant settings
+Помощник|Көмекші|Assistant
+Можно искать с AI и Google или оставить только каталог QETTYQ. Эти настройки не включают долговременную память.|AI мен Google арқылы іздеуге немесе тек QETTYQ каталогын қалдыруға болады. Бұл баптаулар ұзақ мерзімді жадты қоспайды.|Use AI and Google, or just the QETTYQ catalogue. These settings do not enable long-term memory.
+Умный ответ OpenAI|OpenAI ақылды жауабы|Smart replies with OpenAI
+Поиск заведений и фото Google|Google арқылы орындар мен фото іздеу|Google places and photos
+OpenAI получает запрос и ограниченную историю без точной геопозиции. Google получает поисковый запрос и город; фото загружаются с его серверов. Ничего не отправляется до твоего сообщения.|OpenAI сұрауды және нақты геолокациясыз шектеулі тарихты алады. Google іздеу сұрауы мен қаланы алады; фотолар оның серверлерінен жүктеледі. Хабарлама жібермейінше ештеңе жіберілмейді.|OpenAI receives your query and limited history without precise location. Google receives the search query and city; photos load from its servers. Nothing is sent until you send a message.
+Лимиты пилота сохраняются. При недоступности AI продолжим по проверенному каталогу.|Пилот лимиттері сақталады. AI қолжетімсіз болса, тексерілген каталог арқылы жалғастырамыз.|Pilot limits still apply. If AI is unavailable, we'll use the verified catalogue.
+Вернуться к разговору|Әңгімеге оралу|Back to the conversation
+Сейчас мы гуляем по Астане. Другие города добавим, когда для них будут проверенные места и события.|Қазір Астананы аралап жүрміз. Басқа қалаларды тексерілген орындар мен оқиғалар болғанда қосамыз.|We're exploring Astana for now. More cities will follow when we have verified places and events for them.
+Фото в Google Maps|Google Maps-тағы фото|Photo on Google Maps
+Фото места|Орынның фотосы|Place photo
+· Астана|· Астана|· Astana
+Автор фото:|Фото авторы:|Photo by:
+Источник фото|Фото дереккөзі|Photo source
+Кадрирование для карточки.|Карточкаға сай қиылған.|Cropped to fit the card.
+При загрузке фото Google получает технические данные устройства. Фото не сохраняются в QETTYQ.|Фото жүктелгенде Google құрылғының техникалық деректерін алады. Фотолар QETTYQ ішінде сақталмайды.|When photos load, Google receives technical device data. Photos are not stored in QETTYQ.
 Загружаем карту…|Карта жүктелуде…|Loading the map…
 AI снова доступен через минуту. Поиск по каталогу работает сейчас.|AI бір минуттан кейін қолжетімді. Каталогтан қазір іздеуге болады.|AI is available again in a minute. Catalogue search works now.
 Дневной лимит AI исчерпан. Можно продолжить поиск по каталогу.|AI күндік лимиті аяқталды. Каталогтан іздеуді жалғастыруға болады.|The daily AI limit is reached. You can still search the catalogue.

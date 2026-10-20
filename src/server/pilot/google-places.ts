@@ -1,14 +1,15 @@
 import { redactDecimalCoordinates } from "./location-redaction";
+import { loadGooglePlacePhoto, type GooglePlacePhoto } from "./google-place-photos";
 
 export const GOOGLE_PLACES_APPROVAL_ID = "qettyq-google-10usd-20261020-v1";
 export const GOOGLE_PLACES_CAP_MICRO_USD = 10_000_000;
 export const GOOGLE_PLACES_RESERVE_MICRO_USD = 100_000;
-// Fixed Text Search Enterprise fields, <=$35/1000 at reviewed global list price
-// (2026-10-20). Reserve$0.10/request, never refund/reset, max100requests. No
-// SDK/map loads/photos/details/pagination. App cap, not an account-wide Google cap.
-export const GOOGLE_PLACES_FIELDS = "places.id,places.displayName,places.formattedAddress,places.googleMapsUri,places.location,places.currentOpeningHours,places.regularOpeningHours,places.attributions";
+// Reviewed 2026-10-21: one Enterprise search ($0.035) + <=5 photos
+// ($0.007 each) <=$0.070. The EXISTING $0.10 reservation covers the whole
+// bundle, with no refunds, retries, pagination or ledger reset. Cap stays $10.
+export const GOOGLE_PLACES_FIELDS = "places.id,places.displayName,places.formattedAddress,places.googleMapsUri,places.location,places.currentOpeningHours,places.regularOpeningHours,places.attributions,places.photos";
 export type GooglePlaceCard = { id: string; name: string; address: string | null; googleMapsUrl: string;
-  openingHoursText: string[]; cuisineOrDishConfirmed: false; thirdPartyAttributions: { name: string; url: string | null }[] };
+  openingHoursText: string[]; cuisineOrDishConfirmed: false; thirdPartyAttributions: { name: string; url: string | null }[]; photo: GooglePlacePhoto | null };
 export type GooglePlacesResult = { status: "live" | "unavailable" | "consent_required"; reason: string | null;
   items: GooglePlaceCard[]; attribution: { text: "Google Maps"; url: "https://maps.google.com" }; storage: "no_store"; mapDisplay: "external_google_only" };
 export type GooglePlacesRuntime = {
@@ -49,7 +50,7 @@ export function createGooglePlacesRuntime(options: { key?: string; enabled: bool
       const raw = await response.text(); if (new TextEncoder().encode(raw).byteLength > 256_000) return unavailableGooglePlaces("GOOGLE_RESPONSE_INVALID");
       const body = JSON.parse(raw) as { places?: Record<string, unknown>[] };
       if (!Array.isArray(body.places)) return { ...unavailableGooglePlaces(), status: "live", reason: null };
-      const items = body.places.slice(0, 5).flatMap(place => {
+      const parsed = body.places.slice(0, 5).flatMap(place => {
         const location = place.location as { latitude?: number; longitude?: number } | undefined;
         const mapsUrl = url(place.googleMapsUri), name = (place.displayName as { text?: unknown } | undefined)?.text;
         const mapsLink = mapsUrl ? new URL(mapsUrl) : null;
@@ -64,8 +65,11 @@ export function createGooglePlacesRuntime(options: { key?: string; enabled: bool
         });
         return [{ id: place.id.slice(0, 200), name: name.slice(0, 300), address: typeof place.formattedAddress === "string" ? place.formattedAddress.slice(0, 500) : null,
           googleMapsUrl: mapsUrl, openingHoursText: (hours?.weekdayDescriptions ?? []).filter((value): value is string => typeof value === "string").slice(0, 7),
-          cuisineOrDishConfirmed: false as const, thirdPartyAttributions }];
+          cuisineOrDishConfirmed: false as const, thirdPartyAttributions, photos: place.photos }];
       });
+      const items = await Promise.all(parsed.map(async ({ photos, ...item }) => ({ ...item,
+        photo: await loadGooglePlacePhoto(item.id, photos, { key: options.key!.trim(), fetcher: options.fetcher ?? fetch }),
+      })));
       // No response cache, persistence, embedding, LLM transfer or OSM coordinates.
       return { ...unavailableGooglePlaces(), status: "live", reason: null, items };
     } catch { return unavailableGooglePlaces("GOOGLE_PROVIDER_UNAVAILABLE"); }

@@ -228,7 +228,115 @@
 .app[data-screen=map]>.notice,.app[data-screen=map]>.error{top:260px;right:66px}.app[data-screen=plan]>.notice,.app[data-screen=plan]>.error{top:228px;right:66px}
 @media(max-width:375px){.app .welcomeCopy h1{font-size:31px}.welcomeCopy{left:20px;right:20px}.app .heroTitle h1{font-size:30px}.detailBody{padding-inline:14px}.factPills{gap:4px}.factPills>div{padding:9px 7px}.factPills b{font-size:10px}.feedCardBody{padding:16px}.feedCardBody h2{font-size:24px}}
 .languageScreen{position:relative;isolation:isolate;width:min(100%,430px);height:100dvh;margin:0 auto;overflow:hidden;background:#dce9e6;font-family:Manrope,Arial,sans-serif;color:#fff}.languageScreen>img{object-fit:cover}.languageShade{position:absolute;inset:0;background:linear-gradient(180deg,#071c1a08 15%,#071c1a10 45%,#071c1aeb 100%)}.languageScreen>section{position:absolute;left:24px;right:24px;bottom:max(32px,env(safe-area-inset-bottom))}.languageScreen h1{font-size:31px;line-height:1.15;letter-spacing:-1px;margin:0 0 24px;max-width:340px;text-wrap:balance}.languageScreen section>div{display:grid;gap:10px}.languageScreen button{display:block;width:100%;min-height:54px;border:1px solid #ffffffdf;border-radius:22px;background:linear-gradient(145deg,#fffffff5,#ffffffc9);box-shadow:inset 0 1px 0 #fff,0 6px 24px #071c1a15;backdrop-filter:blur(22px);color:#0b332d;font:700 16px Manrope,Arial,sans-serif;cursor:pointer}.languageScreen button:first-child{background:linear-gradient(145deg,#e9ffb4,#cffc55);border-color:#f5ffdf}.languageScreen button:focus-visible{outline:3px solid #cffc55;outline-offset:3px}.languageScreen button:active{transform:scale(.985)}
-.app:not([data-screen=map]):not([data-screen=plan]):not([data-screen=welcome]):not([data-screen=detail]):not([data-screen=event])>.notice,.app:not([data-screen=map]):not([data-screen=plan]):not([data-screen=welcome]):not([data-screen=detail]):not([data-screen=event])>.error{position:relative;top:auto;left:auto;right:auto;flex:0 0 auto;margin:0 14px 8px}
+.app:not([data-screen=map]):not([data-screen=plan]):not([data-screen=welcome]):not([data-screen=detail]):not([data-screen=event]):not([data-screen=feed])>.notice,.app:not([data-screen=map]):not([data-screen=plan]):not([data-screen=welcome]):not([data-screen=detail]):not([data-screen=event]):not([data-screen=feed])>.error{position:relative;top:auto;left:auto;right:auto;flex:0 0 auto;margin:0 14px 8px}
 .memoryScope{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #c7d8cd80}.memoryScope>div{flex:1}.memoryScope b{font-size:13px}.memoryScope p{font-size:11px!important;margin:5px 0!important;line-height:1.5!important}.memoryScope small{font-size:9px;color:#64736d}.app .memoryToggle{flex:none;width:48px;height:30px;padding:3px;border:1px solid #bacdbd;border-radius:20px;background:#d6e0d7;box-shadow:inset 0 1px 2px #0b332d14;cursor:pointer}.memoryToggle>span{display:block;width:22px;height:22px;border-radius:50%;background:white;box-shadow:0 1px 4px #0b332d25;transition:transform .2s}.app .memoryToggle[aria-pressed=true]{background:#cffc55;border-color:#b0db4d}.memoryToggle[aria-pressed=true]>span{transform:translateX(18px)}.panel:has(.memoryScope)>label{display:grid;gap:8px}.googleResults h2{font-size:18px}.googleResults .panel{padding:14px;margin:10px 0}.googleResults h3{font-size:16px;line-height:1.4;margin:0}.googleResults p{font-size:12px}.googleResults summary{font-size:11px;min-height:36px;cursor:pointer}.googleResults>small{display:block;color:var(--muted);font-size:10px}.assistantSettings .check{font-size:10px;margin:12px 0 6px;align-items:flex-start}
 .googleCredits{display:flex;flex-wrap:wrap;gap:2px 12px}
 .miniImage>.miniDisclosure{position:absolute;z-index:2;left:2px;right:2px;bottom:2px;padding:2px 1px;text-align:center;border-radius:4px;background:#0b332dba;color:white;font-size:8px;line-height:1.2;white-space:nowrap}
+
+/* Device glass · one shared inset owner and one control vocabulary. */
+.app,.languageScreen {
+  --device-top:var(--qettyq-safe-area-top,env(safe-area-inset-top,0px));
+  --device-bottom:var(--qettyq-safe-area-bottom,env(safe-area-inset-bottom,0px));
+  --glass-fill:var(--qettyq-glass-fill,linear-gradient(160deg,#ffffffee,#ffffffb8 48%,#f2f8efca));
+  --glass-edge:var(--qettyq-glass-edge,#ffffffed);
+  --glass-shine:var(--qettyq-glass-reflection,inset 0 1px 0 #fff,inset 0 -1px 0 #ffffff70);
+  --glass-depth:var(--qettyq-glass-shadow,0 5px 18px #163b2912,0 1px 3px #163b290a);
+  --glass-blur:var(--qettyq-glass-blur,22px);
+  font-family:var(--qettyq-font,Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif);
+}
+.app {box-sizing:border-box;padding-top:var(--device-top);--dock-space:calc(100px + var(--device-bottom));}
+.app:is([data-screen=welcome],[data-screen=swipe],[data-screen=detail],[data-screen=event]) {padding-top:0;}
+.app>.header {height:72px;flex-basis:72px;padding:10px 18px;gap:10px;}
+.app:is([data-screen=welcome],[data-screen=map],[data-screen=plan])>.header {top:var(--device-top);}
+.app .logo {min-height:44px;display:inline-flex;align-items:center;letter-spacing:-1.2px;font-size:23px;}
+.app .city {min-height:44px;padding-inline:13px;color:#0b332d;-webkit-text-fill-color:#0b332d;border-radius:24px;appearance:none;-webkit-appearance:none;}
+.app .city>* {color:inherit;-webkit-text-fill-color:inherit;}
+.app :is(.round,.secondary,.city,.chips button) {background:var(--glass-fill);border-color:var(--glass-edge);box-shadow:var(--glass-shine),var(--glass-depth);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(135%);backdrop-filter:blur(var(--glass-blur)) saturate(135%);}
+.app :is(.primary,.secondary,.danger) {min-height:52px;border-radius:20px;line-height:1.3;}
+.app .primary {color:var(--deep);border-color:#f3ffdb;background:linear-gradient(160deg,#edffc1,#d9ff82 52%,#cffc55);box-shadow:var(--glass-shine),inset 0 -1px 1px #89b43b38,0 6px 18px #779b3420;}
+.app .round {width:48px;height:48px;min-width:48px;min-height:48px;border-radius:50%;}
+.app :is(.primary,.secondary,.round,.city,.rowButton,.textButton,.back),.languageScreen button {transition:transform var(--qettyq-press-time,150ms) ease,box-shadow var(--qettyq-press-time,150ms) ease;}
+.app :is(.primary,.secondary,.round,.city,.rowButton,.textButton,.back):active:not(:disabled),.languageScreen button:active {transform:translateY(1px) scale(.985);}
+.app button:disabled {opacity:.55;}
+.app :is(.panel,.assistant,.mini) {border-radius:24px;background:linear-gradient(155deg,#fffffff0,#f8fcf3da);box-shadow:var(--glass-shine),0 6px 20px #153d2508;}
+.app :is(.textButton,.back,.originControls .textButton,.feedDiagnostics summary,.assistantSettings summary,.googleResults summary,.compactCredit,.chips button) {min-height:44px;}
+.app .notice button,.app .error button,.app .mapClose {min-width:44px;min-height:44px;align-items:center;justify-content:center;}
+.app .mapClose {right:2px;top:2px;border-radius:50%;}
+.app[data-screen]>.dock {height:78px;bottom:calc(var(--device-bottom) + 12px);left:14px;right:14px;padding:8px;border-radius:28px;background:var(--glass-fill);box-shadow:var(--glass-shine),0 8px 28px #163b291c;-webkit-backdrop-filter:blur(26px) saturate(140%);backdrop-filter:blur(26px) saturate(140%);}
+.app .dock button {min-height:60px;min-width:44px;font-size:10px!important;gap:5px;color:#65776e;}
+.app .dock button[aria-current=page] {color:var(--deep);}
+.app .dock .dockHighlight {left:8px;top:8px;bottom:8px;width:calc((100% - 16px)/4);border-radius:22px;background:linear-gradient(160deg,#eaffbd,#d8ff82 55%,#cffc55);box-shadow:var(--glass-shine),0 3px 12px #789d361a;}
+.app[data-screen=feed]>.header {position:absolute;top:var(--device-top);left:0;right:0;background:linear-gradient(180deg,#f4f6f2c2,#f4f6f28a);box-shadow:inset 0 -1px 0 #ffffff70;-webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);}
+.app[data-screen=feed]>main.feed {position:absolute;inset:0;margin:0!important;padding:calc(var(--device-top) + 74px) 16px calc(var(--dock-space) + 18px);overflow-y:auto;scroll-padding-top:calc(var(--device-top) + 80px);}
+.app[data-screen=feed]>.header:before {content:'';position:absolute;left:0;right:0;top:calc(-1 * var(--device-top));height:var(--device-top);background:#f4f6f2b3;-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);pointer-events:none;}
+.app>.notice,.app>.error {border:1px solid #fffffff0;border-left:3px solid #89b957;border-radius:20px;background:linear-gradient(150deg,#fffffff5,#f1f8e9ed);color:#244827;box-shadow:var(--glass-shine),0 5px 18px #163b2914;}
+.app>.error {border-left-color:#b8634e;color:#813c2c;background:linear-gradient(150deg,#fffaf8f5,#fff0e9ef);}
+.noticeIcon {display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:#d9edcb;color:#365c35;}
+.error .noticeIcon {background:#f7ddd2;color:#813c2c;}
+.noticeText {flex:1;min-width:0;}
+.app[data-screen=feed]>.notice,.app[data-screen=feed]>.error {position:absolute;top:calc(var(--device-top) + 80px);left:14px;right:14px;margin:0;max-height:88px;}
+.app[data-screen=feed]:has(>.notice,>.error)>main.feed {padding-top:calc(var(--device-top) + 176px);}
+@supports((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .app[data-screen]>.dock {background:linear-gradient(160deg,#ffffffb3,#f4faf166);-webkit-backdrop-filter:blur(26px) saturate(150%);backdrop-filter:blur(26px) saturate(150%);}
+}
+.welcomeCopy {bottom:calc(var(--device-bottom) + 24px);}
+.languageScreen>section {bottom:calc(var(--device-bottom) + 24px);}
+.languageScreen button {border-radius:22px;background:var(--glass-fill);box-shadow:var(--glass-shine),var(--glass-depth);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);}
+.swipeTop {top:calc(var(--device-top) + 12px);}
+.swipeBottom {bottom:calc(var(--device-bottom) + 20px);}
+.swipeTitle {bottom:calc(var(--device-bottom) + 112px);}
+.accessibleActions {top:calc(var(--device-top) + 80px);}
+.app .detailHero .heroBack,.app .detailHero>.save {top:calc(var(--device-top) + 12px);}
+.app .detailHero :is(.heroBack,.save) {width:48px;min-height:48px;color:#fff;background:linear-gradient(150deg,#0b332d70,#0b332d38);border-color:#ffffffa0;box-shadow:inset 0 1px 0 #ffffff55,0 5px 18px #071c1a16;}
+.app .mapScreen .mapToolbar {top:calc(var(--device-top) + 110px);border-radius:26px;background:var(--glass-fill);}
+.app .mapScreen .mapToolbar .chips button {min-height:44px;padding-inline:11px;}
+.app .mapScreen .mapViewport {--map-controls-top:calc(var(--device-top) + 278px);--map-notice-top:calc(var(--device-top) + 324px);}
+.app .mapScreen .mapViewport :global(.maplibregl-ctrl-bottom-left) {top:calc(var(--device-top) + 78px);font-size:9px;}
+.app .mapScreen .mapViewport :global(.maplibregl-ctrl-attrib) {font-size:9px;line-height:1.45;}
+.app .mapScreen .mapViewport :global(.leaflet-bottom) {top:calc(var(--device-top) + 78px);bottom:auto;}
+.app .mapScreen .mapViewport :global(.leaflet-control-attribution) {bottom:auto;font-size:9px;}
+.app .locate {left:16px;right:auto;top:calc(var(--device-top) + 278px);width:44px;height:44px;min-width:44px;min-height:44px;}
+.app .mapScreen .mapSheet {bottom:calc(var(--dock-space) + 8px);border-radius:26px;max-height:34dvh;}
+.app[data-screen=map]:not(:has(>.dock)) .mapSheet {bottom:calc(var(--device-bottom) + 14px);}
+.app[data-screen=map]>.notice,.app[data-screen=map]>.error {top:calc(var(--device-top) + 266px);}
+.app[data-screen=plan]>.notice,.app[data-screen=plan]>.error {top:calc(var(--device-top) + 236px);}
+.app .composer form {border-radius:28px;background:var(--glass-fill);box-shadow:var(--glass-shine),0 5px 18px #163b2912;}
+.app .composer form input {font-size:16px!important;border-radius:24px!important;}
+.app .composer form button {width:44px;height:44px;min-width:44px;min-height:44px;}
+.app[data-keyboard-open=true] .composer {padding-bottom:8px;}
+/* Search is one measured glass plate: composer above the dock, not a second
+   floating card. The parent observes its real height as disclosure wraps. */
+.app[data-screen=chat][data-chat-layout=dock-composer]>.chat {min-height:0;margin-bottom:calc(var(--qettyq-chat-footer-height,148px) + var(--device-bottom) + 24px);}
+.app .chatDockPanel {position:absolute;z-index:110;left:14px;right:14px;bottom:calc(var(--device-bottom) + 12px);border:1px solid var(--glass-edge);border-radius:28px;background:var(--glass-fill);box-shadow:var(--glass-shine),0 8px 28px #163b291c;-webkit-backdrop-filter:blur(26px) saturate(145%);backdrop-filter:blur(26px) saturate(145%);animation:chatPlateReveal220 220ms cubic-bezier(.22,.8,.2,1);}
+@keyframes chatPlateReveal220 {from{opacity:.6;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.app .chatDockPanel>.composer {position:relative;z-index:1;bottom:auto;padding:8px 8px 0;border:0;border-radius:28px 28px 0 0;background:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;}
+.app .chatDockPanel .composer form {border:0;background:transparent;padding:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;}
+.app .chatDockPanel .composer form input {min-height:48px;padding:12px 14px;background:#ffffff5c!important;box-shadow:inset 0 0 0 1px #ffffffb3;}
+.app .chatDockPanel>.dock {position:relative;inset:auto;width:100%;height:78px;margin:0;padding:8px;border:0;border-radius:0 0 28px 28px;background:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;}
+.chatIntro {padding:16px 2px 18px;}
+.app .chatIntro h1 {font-size:28px;line-height:1.15;letter-spacing:-.8px;margin:0 0 10px;}
+.app .chatIntro p {font-size:13px;line-height:1.55;margin:0;color:var(--muted);max-width:340px;}
+.chatSuggestions {display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0;}
+.app .chatSuggestions button {min-height:44px;padding:10px 14px;border:1px solid var(--glass-edge);border-radius:20px;color:var(--deep);background:var(--glass-fill);box-shadow:var(--glass-shine),0 3px 10px #163b290a;font-size:12px;line-height:1.35;text-align:left;}
+.providerDisclosure {display:flex;align-items:center;gap:8px;padding:2px 6px 8px;color:#52685d;font-size:10px;line-height:1.45;}
+.providerDisclosure>p,.app .providerDisclosure p {flex:1;font-size:10px;line-height:1.45;margin:0;}
+.app .providerDisclosure button {flex:none;min-width:44px;min-height:44px;padding:6px 8px;border:0;border-radius:16px;background:#ffffff70;color:var(--jade);font-size:11px;font-weight:700;}
+.app[data-screen=chat][data-chat-layout=dock-composer][data-keyboard-open=true]>.chat {margin-bottom:calc(var(--qettyq-chat-footer-height,68px) + 8px);}
+.app[data-keyboard-open=true]>.chatDockPanel {left:0;right:0;bottom:0;border-radius:24px 24px 0 0;border-bottom:0;padding-bottom:8px;}
+.app[data-keyboard-open=true] .chatDockPanel>.composer {padding-bottom:0;}
+.app[data-screen=chat]>.notice,.app[data-screen=chat]>.error {font-size:11px;}
+.app .memoryToggle {position:relative;min-height:44px;height:44px;border:0!important;padding:11px 3px;background:transparent!important;box-shadow:none;}
+.app .memoryToggle:before {content:'';position:absolute;inset:7px 0;border:1px solid #b8ccbe;border-radius:18px;background:#d6e0d7;box-shadow:inset 0 1px 2px #0b332d14;}
+.app .memoryToggle[aria-pressed=true]:before {background:var(--lime);border-color:#b0db4d;}
+.memoryToggle>span {position:relative;z-index:1;}
+@supports(corner-shape:squircle) {
+  .app :is(.primary,.secondary,.danger,.panel,.mini,.dock,.dockHighlight,.mapToolbar,.mapSheet,.chatDockPanel,.chatSuggestions button),.languageScreen button {corner-shape:squircle;}
+}
+@media(pointer:coarse) {.app input:not([type=checkbox]):not([type=range]),.app select {font-size:16px;}}
+@media(max-height:600px) {.app>.header {height:62px;flex-basis:62px;}.app .mapScreen .mapToolbar {top:calc(var(--device-top) + 100px);}.app .mapScreen .mapViewport {--map-controls-top:calc(var(--device-top) + 258px);}.app .locate {top:calc(var(--device-top) + 258px);}.swipeTitle h1 {font-size:30px!important;}.swipeTitle p {font-size:12px;}.swipeTitle {bottom:calc(var(--device-bottom) + 90px);}}
+@media(min-width:600px) and (max-height:600px) {
+  .app[data-screen=plan] {width:min(100%,900px);}
+  .app[data-screen=plan]>.header {padding-left:max(18px,var(--qettyq-safe-area-left,env(safe-area-inset-left,0px)));padding-right:max(18px,var(--qettyq-safe-area-right,env(safe-area-inset-right,0px)));}
+  .app[data-screen=plan]>.dock {left:max(14px,var(--qettyq-safe-area-left,env(safe-area-inset-left,0px)));right:max(14px,var(--qettyq-safe-area-right,env(safe-area-inset-right,0px)));}
+}
+@media(prefers-reduced-motion:reduce) {.app button,.languageScreen button {transition:none;}.app .chatDockPanel {animation:none;}}

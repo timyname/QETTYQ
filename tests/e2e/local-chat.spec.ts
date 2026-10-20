@@ -25,9 +25,8 @@ test("чат предлагает контекст, хранит диалог п
   expect(providerRequests).toEqual([]);
 
   await page.reload();
-  await expect(page.getByRole("button", { name: "Выбрать свой вайб" })).toBeEnabled();
-  await page.getByRole("button", { name: "QETTYQ — на главную" }).click();
-  await page.getByRole("navigation", { name: "Основная навигация" }).getByRole("button", { name: "Поиск", exact: true }).click();
+  await expect(page.locator('[data-screen]')).toHaveAttribute('data-screen', 'chat');
+  await expect(page.getByRole("navigation", { name: "Основная навигация" }).getByRole("button", { name: "Поиск", exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByText(message, { exact: true })).toBeVisible();
   await expect(page.getByText("QETTYQ · поиск по каталогу", { exact: true })).toBeVisible();
   const restored = await page.evaluate(() => JSON.parse(localStorage.getItem("qettyq.local-memory.v1") ?? "null"));

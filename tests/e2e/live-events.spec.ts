@@ -77,9 +77,7 @@ test('synthetic_test: афиша фильтрует сегодня, сохран
   await expect(page.getByRole('heading', { name: 'Сохранённое', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: new RegExp(today.name) })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Выбрать свой вайб' })).toBeEnabled();
-  await page.getByRole('button', { name: 'QETTYQ — на главную' }).click();
-  await profile.click();
-  await page.getByRole('button', { name: /Сохранённые места/ }).click();
+  await expect(page.locator('[data-screen="saved"]')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Сохранённое', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: new RegExp(today.name) })).toBeVisible();
 });

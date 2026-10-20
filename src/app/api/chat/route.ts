@@ -1,5 +1,6 @@
 import { catalogMeta } from "../../../server/pilot/catalog";
-import { answerPilotChatWithEvents, parseContext } from "../../../server/pilot/chat";
+import { prepareLeisureDialogue, filterDialogueCandidates } from "../../../server/assistant/leisure-dialogue";
+import { answerPilotChatWithEvents, parseContext, positiveCategoryQuery } from "../../../server/pilot/chat";
 import { answerReasonedAssistant } from "../../../server/pilot/reasoned-assistant";
 import { localizedClarification, localizedSearchReply } from "../../../server/pilot/chat-language";
 import { requestedFoodMatch } from "../../../server/pilot/food-search";
@@ -39,8 +40,31 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   const context = parsed.data.context ?? auth.session.context ?? pilotContextSchema.parse(preferences ? {
     likedTags: preferences.likedTags, goal: preferences.goal, minutes: preferences.minutes, budget: preferences.budget,
   } : {});
-  const history = [...(saved?.history ?? []), ...parsed.data.history].filter((entry, index, all) => index === all.findIndex(other => entry.role === other.role && entry.text === other.text)).slice(-6);
-  let result = await answerPilotChatWithEvents(parsed.data.text, context, { getEvents: () => events.get() });
+  // Prefer the current bounded transcript. Global text deduplication can erase a
+  // later correction (e.g. 2000 -> 3000 -> 2000); never treat assistant text as fact.
+  const history = (parsed.data.history.length ? parsed.data.history : saved?.history ?? []).slice(-6);
+  const dialogue = prepareLeisureDialogue({ text: parsed.data.text, history, context, language: parsed.data.language, now });
+  const remember = async (reply: string, mode: "openai" | "deterministic") => {
+    if (!memory) return false;
+    try { return (await memory.recordExchange(request, { userMessageId: crypto.randomUUID(), userText: parsed.data.text,
+      assistantMessageId: crypto.randomUUID(), assistantText: reply, mode })).stored; }
+    catch { return false; }
+  };
+  if (dialogue.action === "clarify") {
+    return jsonResponse({ ...catalogMeta(), reply: dialogue.reply, proposedContext: dialogue.context,
+      items: [], events: [], eventEvidence: [], eventsMeta: null, citations: [], steps: [], suggestions: [],
+      mode: "deterministic", generationMode: "deterministic", reasoningMode: "deterministic", model: null,
+      reason: "DIALOGUE_CLARIFICATION", questions: dialogue.questions, warnings: dialogue.warnings,
+      memoryStored: await remember(dialogue.reply, "deterministic"), language: parsed.data.language });
+  }
+  const retrievalText = dialogue.retrievalText, effectiveContext = dialogue.context;
+  let result = await answerPilotChatWithEvents(retrievalText, effectiveContext, { getEvents: () => events.get() });
+  const constrain = () => {
+    result.items = filterDialogueCandidates(result.items, dialogue);
+    result.events = filterDialogueCandidates(result.events, dialogue);
+    result.eventEvidence = result.eventEvidence.filter(evidence => result.events.some(event => event.id === evidence.eventId));
+  };
+  constrain();
   result.reply = localizedSearchReply(parsed.data.language, result);
   let assistant: SmartAssistantResult = { mode: "deterministic", reply: result.reply, citations: [], model: null, reason: "AI_NOT_REQUESTED" };
   let googlePlaces: GooglePlacesResult | undefined;
@@ -49,21 +73,28 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
     const input = { text: parsed.data.text, language: parsed.data.language, history, context: result.proposedContext,
       evidence: { items: result.items, events: result.events, eventEvidence: result.eventEvidence, reply: result.reply } };
     if (publicRuntime) {
-      const reasoned = await answerReasonedAssistant({ ...input, language: parsed.data.language }, publicRuntime.dependencies(auth.session.id, request.headers.get('idempotency-key') ?? crypto.randomUUID()), async plan => {
-        if (plan.intent === "general" || plan.intent === "clarify") result = { ...result, reply: localizedClarification(parsed.data.language), items: [], events: [], eventEvidence: [], eventsMeta: null };
-        if (plan.intent === "events") result = await answerPilotChatWithEvents(parsed.data.text, context, {
+      const reasoned = await answerReasonedAssistant({ ...input, language: parsed.data.language }, publicRuntime.dependencies(auth.session.id, request.headers.get('idempotency-key') ?? crypto.randomUUID()), async proposedPlan => {
+        // Explicit user dialogue is authoritative. A model cannot turn an agreed
+        // walk into dining (and spend Google's quota) or silently replace events.
+        const knownIntent = dialogue.intent === "date"
+          ? effectiveContext.goal === "food" ? "food" : result.eventsMeta ? "events" : "places"
+          : dialogue.intent;
+        const contradicts = knownIntent !== "general" && proposedPlan.intent !== knownIntent;
+        const plan = contradicts ? { ...proposedPlan, intent: knownIntent as "food" | "events" | "places", query: retrievalText.slice(0, 240), cuisineOrDish: null } : proposedPlan;
+        if ((plan.intent === "general" || plan.intent === "clarify") && dialogue.intent === "general") result = { ...result, reply: localizedClarification(parsed.data.language), items: [], events: [], eventEvidence: [], eventsMeta: null };
+        if (plan.intent === "events") result = await answerPilotChatWithEvents(retrievalText, effectiveContext, {
           getEvents: () => events.get(), forceEvents: true, semanticText: plan.query,
         });
         if (plan.intent === "places" && result.items.length) {
           // Re-query only the already admissible pool; model terms cannot widen it.
           const ids = new Set(result.items.map(item => item.id));
-          result = { ...result, items: searchPilotPlaces(result.proposedContext, plan.query, pilotPlaces.filter(place => ids.has(place.id))), events: [], eventEvidence: [], eventsMeta: null };
+          result = { ...result, items: searchPilotPlaces(result.proposedContext, positiveCategoryQuery(plan.query), pilotPlaces.filter(place => ids.has(place.id))), events: [], eventEvidence: [], eventsMeta: null };
         }
         if (plan.intent === "food") {
           // The planner routes meaning; original text still owns money/time limits.
-          const foodContext = parseContext(parsed.data.text, { ...context, goal: "food" });
+          const foodContext = parseContext(retrievalText, { ...effectiveContext, goal: "food" });
           const query = plan.cuisineOrDish ?? plan.query;
-          const candidates = pilotPlaces.filter(place => requestedFoodMatch(place, parsed.data.text, plan.cuisineOrDish));
+          const candidates = filterDialogueCandidates(pilotPlaces, dialogue).filter(place => requestedFoodMatch(place, retrievalText, plan.cuisineOrDish));
           const items = searchPilotPlaces(foodContext, query, candidates);
           result = { ...result, proposedContext: foodContext, items, events: [], eventEvidence: [], eventsMeta: null };
           const google = getGooglePlacesRuntime();
@@ -73,7 +104,8 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
             ? await google.search({ query, language: parsed.data.language, consent: true, requestId: crypto.randomUUID() })
             : unavailableGooglePlaces(parsed.data.googleConsent ? "GOOGLE_SERVER_KEY_REQUIRED" : "GOOGLE_CONSENT_REQUIRED", parsed.data.googleConsent);
         }
-        if (plan.intent !== "general" && plan.intent !== "clarify") result.reply = localizedSearchReply(parsed.data.language, result);
+        constrain();
+        if (plan.intent !== "general" && plan.intent !== "clarify" || dialogue.intent !== "general") result.reply = localizedSearchReply(parsed.data.language, result);
         // A person's consent never grants a data source new LLM rights.
         const allowed = (id: string) => events.canSendToLlm ? events.canSendToLlm(id) : ["osm-overpass-poi", "sxodim-astana-noncommercial"].includes(id);
         const withheld = result.items.length > 0 && !allowed("osm-overpass-poi") || result.events.some(event => !allowed(event.provenance.sourceId));
@@ -95,21 +127,16 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
     googlePlaces = result.proposedContext.strictBudget && result.proposedContext.budget !== null
       ? unavailableGooglePlaces("GOOGLE_PRICE_NOT_VERIFIED")
       : parsed.data.googleConsent && google
-      ? await google.search({ query: parsed.data.text, language: parsed.data.language, consent: true, requestId: crypto.randomUUID() })
+      ? await google.search({ query: retrievalText.slice(0, 240), language: parsed.data.language, consent: true, requestId: crypto.randomUUID() })
       : unavailableGooglePlaces(parsed.data.googleConsent ? "GOOGLE_SERVER_KEY_REQUIRED" : "GOOGLE_CONSENT_REQUIRED", parsed.data.googleConsent);
   }
   const meta = catalogMeta();
-  let memoryStored = false;
-  if (memory) {
-    try { memoryStored = (await memory.recordExchange(request, { userMessageId: crypto.randomUUID(), userText: parsed.data.text,
-      assistantMessageId: crypto.randomUUID(), assistantText: assistant.reply, mode: assistant.mode })).stored; }
-    catch { /* no provider retry or misleading saved promise */ }
-  }
+  const memoryStored = await remember(assistant.reply, assistant.mode);
   const warnings = assistant.mode === "openai"
     ? result.warnings.filter(warning => !warning.startsWith("Без внешнего AI:"))
     : result.warnings;
   return jsonResponse({ ...meta, ...result, ...assistant, generationMode: assistant.mode, reasoningMode, googlePlaces, memoryStored, language: parsed.data.language,
-    dataMode: result.eventsMeta?.dataMode ?? meta.dataMode, warnings: [...(result.eventsMeta ? [] : meta.warnings), ...warnings] });
+    dataMode: result.eventsMeta?.dataMode ?? meta.dataMode, warnings: [...(result.eventsMeta ? [] : meta.warnings), ...warnings, ...dialogue.warnings] });
 }
 
 export function POST(request: Request) {
