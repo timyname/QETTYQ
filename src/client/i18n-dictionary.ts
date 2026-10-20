@@ -1,6 +1,7 @@
 /** UI copy only. Do not add event titles, addresses or user messages here. */
 import { ORGANIZER_TRANSLATIONS } from './i18n-organizer';
 import { POLICY_TRANSLATIONS } from './i18n-policy';
+import { ROUTE_TRANSLATIONS } from './i18n-route';
 const rows = `
 Загружаем карту…|Карта жүктелуде…|Loading the map…
 AI снова доступен через минуту. Поиск по каталогу работает сейчас.|AI бір минуттан кейін қолжетімді. Каталогтан қазір іздеуге болады.|AI is available again in a minute. Catalogue search works now.
@@ -418,4 +419,4 @@ English|Ағылшынша|English
 Расписание и цены уточняйте перед посещением.|Бармас бұрын кесте мен бағаларды нақтыла.|Check schedules and prices before visiting.
 `;
 
-export const UI_TRANSLATIONS: Record<string, readonly [string, string]> = { ...ORGANIZER_TRANSLATIONS, ...POLICY_TRANSLATIONS, ...Object.fromEntries(rows.trim().split('\n').map(row => { const [ru, kk, en] = row.split('|'); if (!ru || !kk || !en) throw new Error(`Invalid UI dictionary row: ${ru}`); return [ru, [kk, en]]; })) };
+export const UI_TRANSLATIONS: Record<string, readonly [string, string]> = { ...ORGANIZER_TRANSLATIONS, ...POLICY_TRANSLATIONS, ...ROUTE_TRANSLATIONS, ...Object.fromEntries(rows.trim().split('\n').map(row => { const [ru, kk, en] = row.split('|'); if (!ru || !kk || !en) throw new Error(`Invalid UI dictionary row: ${ru}`); return [ru, [kk, en]]; })) };

@@ -13,15 +13,22 @@ const MAX_OCCURRENCES = 50;
 export type LiveAstanaEvent = {
   id: string; name: string; cityId: "astana"; category: string | null;
   venueName: string | null; address: string | null; lat: number | null; lon: number | null;
+  coordinateQuality?: "observed" | "derived" | "unknown";
+  coordinateProvenance?: { sourceUrl: string; fetchedAt: string; quality: "observed" | "derived"; methodId: string | null };
+  coordinateMatch?: { lat: number; lon: number; sourceUrl: string; asOf: string; quality: "derived";
+    method: "osm-exact-address-v1"; precision: "building_or_address_point" };
   startsAt: string; endsAt: string | null; timeZone: "Asia/Almaty";
   durationMinutes: number | null; contentLanguage: "ru" | "kk" | "en" | "und";
+  contentLanguages?: ("ru" | "kk" | "en" | "und")[];
   priceFromKzt: number | null;
-  price: { kind: "unknown" | "exact" | "from"; minMinor: number | null; currency: "KZT" | null; basis: "unknown" };
+  price: { kind: "unknown" | "exact" | "from"; minMinor: number | null; currency: "KZT" | null; basis: "unknown" | "person" | "group" };
+  priceEvidence?: { offerId: string; sourceUrl: string; fetchedAt: string; expiresAt: string } | null;
   status: "scheduled" | "unknown"; availability: "unknown";
   bookingUrl: string | null; contactUrl: string; organizerUrl?: string | null; image: null;
-  requiredCredit: { text: "Давай Сходим"; url: string };
+  requiredCredit: { text: string; url: string };
   fetchedAt: string;
-  provenance: { sourceId: "sxodim-astana-noncommercial"; sourceUrl: string; parserVersion: "sxodim-jsonld-v1"; scheduleQuality: "observed"; priceQuality: "observed" | "unknown" | "conflicting" };
+  expiresAt?: string; dataMode?: "live" | "snapshot"; freshness?: "fresh" | "stale";
+  provenance: { sourceId: string; sourceUrl: string; parserVersion: "sxodim-jsonld-v1" | "qettyq-data-hub-v1"; scheduleQuality: "observed"; priceQuality: "observed" | "unknown" | "conflicting" };
   warnings: string[];
 };
 export type SxodimSnapshot = {

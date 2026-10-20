@@ -1,0 +1,21 @@
+/** Compact route-panel copy. Source place names remain unchanged. */
+export const ROUTE_TRANSLATIONS: Record<string, readonly [string, string]> = {
+  'Остановки:': ['Аялдамалар:', 'Stops:'],
+  'Расстояние неизвестно': ['Қашықтық белгісіз', 'Distance unknown'],
+  'Выбери старт для оценки дороги.': ['Жолды бағалау үшін бастауды таңда.', 'Choose a start to estimate travel.'],
+  'Время — оценка, посещения не подтверждены.': ['Уақыт — бағалау, барулар расталмаған.', 'Time is estimated; visits are unconfirmed.'],
+  'Оценка по прямой, не путь по улицам.': ['Түзу сызықпен бағалау, көше арқылы жол емес.', 'Straight-line estimate, not a street route.'],
+  'Стоимость уточняется.': ['Бағасын нақтылау керек.', 'Check the cost.'],
+  'План превышает выбранные ограничения.': ['Жоспар таңдалған шектеулерден асады.', 'The plan exceeds your selected limits.'],
+  'Остановки и условия': ['Аялдамалар мен шарттар', 'Stops and conditions'],
+  'Обновляем маршрут…': ['Маршрут жаңартылуда…', 'Updating the route…'],
+  'Точка определена по адресу OpenStreetMap, не подтверждена организатором. Вход уточняйте.': ['Нүкте OpenStreetMap мекенжайы бойынша анықталды, ұйымдастырушы растамаған. Кіру орнын нақтылаңыз.', 'The point was matched to an OpenStreetMap address, not confirmed by the organiser. Check the entrance.'],
+  'Поиск заведений Google требует отдельного согласия и доступного лимита. Доступность зависит от настроек Google API.': ['Google арқылы орын іздеу үшін бөлек келісім мен қолжетімді лимит қажет. Қолжетімділік Google API баптауларына байланысты.', 'Google place search requires separate consent and available quota. Availability depends on Google API settings.'],
+  'При использовании поиска Google действуют условия Google Maps и политика конфиденциальности Google.': ['Google іздеуін пайдаланғанда Google Maps шарттары мен Google құпиялық саясаты қолданылады.', 'Google Maps terms and the Google privacy policy apply when using Google search.'],
+  'Условия Google Maps': ['Google Maps шарттары', 'Google Maps terms'],
+  'Политика конфиденциальности Google': ['Google құпиялық саясаты', 'Google privacy policy'],
+  'Источник цены': ['Баға дереккөзі', 'Price source'],
+  'Источник цены ↗': ['Баға дереккөзі ↗', 'Price source ↗'],
+  'Каталог Астаны содержит 749 мест OpenStreetMap: у 265 опубликованы часы работы. Снимок данных — 19 октября 2026 года; это не полная живая база города.': ['Астана каталогында OpenStreetMap-тің 749 орны бар: 265 орынның жұмыс уақыты жарияланған. Деректер көшірмесі — 2026 жылғы 19 қазан; бұл қаланың толық тірі базасы емес.', 'The Astana catalogue contains 749 OpenStreetMap places; 265 have published opening hours. The snapshot is dated 19 October 2026; this is not a complete live city database.'],
+  'Афиша обновляется на сервере каждый час и по запросу через общий лимит источника. Подборка не охватывает все события города.': ['Афиша серверде әр сағат сайын және сұрау бойынша дереккөздің ортақ лимиті арқылы жаңартылады. Іріктеу қаладағы барлық іс-шараны қамтымайды.', 'Listings refresh on the server every hour and on request, within the source’s shared limit. The feed does not cover every event in the city.'],
+};

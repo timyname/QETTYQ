@@ -1,0 +1,78 @@
+{
+  "source": {
+    "url": "https://download.geofabrik.de/asia/kazakhstan-261019.osm.pbf",
+    "asOf": "2026-10-19T20:21:11Z",
+    "retrievedAt": "2026-10-20T20:18:57Z",
+    "license": "ODbL-1.0"
+  },
+  "importerVersion": "qettyq-osmium-city-v1",
+  "pbfBytes": 224644381,
+  "pbfSha256": "4c4d1c67224a49ddc94161a0eeccc698e2b5eb899df8dd74a9efb5259700e1cf",
+  "bounds": {
+    "south": 51.02,
+    "west": 71.3,
+    "north": 51.22,
+    "east": 71.6
+  },
+  "limits": {
+    "maxPlaces": 800,
+    "maxAddresses": 30000,
+    "maxFeatures": 200000
+  },
+  "featuresRead": 31123,
+  "excludedGeometryOrIdentity": 5,
+  "eligiblePlaces": 749,
+  "records": 749,
+  "previousRecords": 80,
+  "previousIdsRetained": 80,
+  "previousIdsUpdatedFromExtract": 80,
+  "staleRetainedIds": [],
+  "withHours": 265,
+  "withCuisine": 222,
+  "withAddress": 118,
+  "addresses": 29517,
+  "coordinateQuality": {
+    "observed": 613,
+    "derived": 136
+  },
+  "addressCoordinateQuality": {
+    "observed": 373,
+    "derived": 29144
+  },
+  "categoryCounts": {
+    "arts_centre": 6,
+    "attraction": 16,
+    "cafe": 316,
+    "cinema": 9,
+    "fast_food": 122,
+    "fitness_centre": 13,
+    "gallery": 2,
+    "garden": 4,
+    "ice_cream": 4,
+    "library": 7,
+    "museum": 8,
+    "park": 35,
+    "restaurant": 171,
+    "sports_centre": 21,
+    "stadium": 6,
+    "theatre": 9
+  },
+  "attribution": "© OpenStreetMap contributors",
+  "licenseUrl": "https://www.openstreetmap.org/copyright",
+  "notes": [
+    "Snapshot, not live business hours; source.asOf is the raw extract cutoff, not retrieval time.",
+    "Polygon centroids are derived approximate geometry points, not entrances; missing geometry is omitted.",
+    "opening_hours/cuisine/name translations are unmodified observed tags; missing values remain unknown.",
+    "durationMinutes is an inherited deterministic planning default, not an observed visit duration.",
+    "No prices, photographs, residents, owners or personal contact fields were imported.",
+    "Address index retains ambiguous distinct points; consumer must reject non-unique exact matches."
+  ],
+  "streetAliases": {
+    "method": "exact-normalized-observed-highway-names-v1",
+    "streetFeatures": 35358,
+    "namedRoadsRead": 4604,
+    "observedStreetKeys": 2412,
+    "enrichedAddresses": 25959,
+    "rule": "Only exact normalized addr:street ↔ observed highway name/name:kk/name:ru/name:en; conflicting same-language names quarantined; no transliteration or inferred aliases."
+  }
+}

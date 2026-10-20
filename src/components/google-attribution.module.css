@@ -1,0 +1,13 @@
+/* Official text attribution for these compact, mapless mobile result cards.
+   https://developers.google.com/maps/documentation/places/web-service/policies */
+.attribution {
+  display: inline-block;
+  font-family: Arial, sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: normal;
+  white-space: nowrap;
+  color: #1f1f1f;
+  margin: 8px 0;
+}

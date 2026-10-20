@@ -23,7 +23,9 @@ test('policy pages are directly accessible and localised without the app languag
   await expect(page.getByLabel('Interface language')).toHaveValue('en');
   await expect(page.getByRole('heading', { name: 'Where the data comes from' })).toBeVisible();
   await expect(page.getByText(/code limits, not the actual number/)).toBeVisible();
-  await expect(page.getByText(/unavailable without a server key/)).toBeVisible();
+  await expect(page.getByText('Google place search requires separate consent and available quota. Availability depends on Google API settings.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Google Maps terms', exact: true })).toHaveAttribute('href', 'https://maps.google.com/help/terms_maps/');
+  await expect(page.getByRole('link', { name: 'Google privacy policy', exact: true })).toHaveAttribute('href', 'https://policies.google.com/privacy');
   await expect(page.getByRole('link', { name: 'Давай Сходим · sxodim.com/astana' })).toHaveAttribute('href', 'https://sxodim.com/astana');
   await page.getByLabel('Interface language').selectOption('kk');
   await expect(page.getByRole('heading', { name: 'Деректер қайдан алынады' })).toBeVisible();

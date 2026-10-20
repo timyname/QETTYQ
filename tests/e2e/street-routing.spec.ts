@@ -61,6 +61,7 @@ test('улицы: явное согласие, одна 401-сессия, мет
     expect(action!.y + action!.height).toBeLessThanOrEqual(dock!.y);
     await page.screenshot({ path: `exports/screenshots/routing-synthetic/foot-${width}.png` });
   }
+  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click();
   await page.getByRole('button', { name: 'Убрать дорожный расчёт' }).click();
   await expect(button).toBeDisabled();
   await expect(page.locator('[data-route-quality="street"]')).toHaveCount(0);

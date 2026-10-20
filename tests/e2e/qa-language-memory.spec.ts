@@ -243,10 +243,11 @@ test('route invalidation: adding a stop and shortening time cannot retain an ear
   await page.getByRole('article').nth(1).getByRole('button', { name: 'Подробнее', exact: true }).click();
   await page.getByRole('button', { name: 'В мой план', exact: true }).click();
   await page.getByRole('button', { name: /Открыть план · 2 мест/ }).click();
+  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click();
   await expect(sheet.getByText(/Пеший маршрут рассчитан SYNTHETIC QA/)).toHaveCount(0);
   await expect(sheet.getByRole('checkbox', { name: 'Разрешаю передать выбранные точки для этого расчёта' })).not.toBeChecked();
   await expect(sheet.getByRole('listitem')).toHaveCount(3);
-  await sheet.getByRole('button', { name: 'Изменить', exact: true }).click();
+  await sheet.getByRole('button', { name: 'Изменить условия', exact: true }).click();
   await page.getByLabel('Свободное время', { exact: true }).fill('20');
   await page.getByRole('button', { name: 'Показать подборку', exact: true }).click();
   await nav(page, 'Карта').click();

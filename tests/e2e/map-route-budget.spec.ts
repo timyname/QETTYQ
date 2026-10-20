@@ -66,6 +66,7 @@ test('маршрут: время Астаны независимо от timezone
   const plan = page.getByRole('main', { name: 'Маршрут по Астане' });
   const sheet = page.getByRole('region', { name: 'План маршрута' });
   await expect(plan).toBeVisible();
+  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click();
   const departure = page.getByLabel('Дата и время начала маршрута', { exact: true });
   await expect(departure).toHaveValue('2026-10-20T10:00');
   await departure.fill('2026-10-23T18:30');
@@ -76,7 +77,6 @@ test('маршрут: время Астаны независимо от timezone
   const cta = page.getByRole('link', { name: 'Начать маршрут', exact: true });
   await expect(cta).toHaveAttribute('href', /origin=51\.1282%2C71\.4304/);
   await expect(cta).toHaveAttribute('href', /travelmode=walking/);
-  await page.getByRole('button', { name: 'Развернуть план маршрута' }).click();
   await expect(page.getByRole('button', { name: 'Свернуть план маршрута' })).toHaveAttribute('aria-expanded', 'true');
   const note = sheet.getByText('На карте — точки плана, не линия дороги. Время пешком оценено по прямой; точный путь уточнит навигация. Посещения — проектная оценка, не бронь.', { exact: true });
   await note.scrollIntoViewIfNeeded();

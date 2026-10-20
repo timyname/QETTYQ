@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { execFileSync } from "node:child_process";
 import { initializeVpsRuntime, type VpsRuntime } from "../../src/server/vps/runtime";
 import { getHostedRuntime, setHostedRuntime } from "../../src/server/pilot/host-runtime";
 import { openDatastore } from "../../src/server/datastore/sqlite";
@@ -11,6 +12,9 @@ import { PUBLIC_AI_APPROVAL_ID, PUBLIC_AI_RESERVATION_SQL } from "../../src/serv
 import baseline from "../../data/livedata/sxodim-astana-2026-10-20.json";
 import baselinePlaces from "../../data/places.json";
 import type { SxodimSnapshot } from "../../src/server/ingestion/sxodim-live";
+import { hubHash } from "../../src/server/data-hub/repository";
+import { POST as postHubBatch } from "../../src/app/api/internal/data-hub/batches/route";
+import { GET as getHubCatalog } from "../../src/app/api/data-hub/catalog/route";
 
 let directory: string;
 let runtime: VpsRuntime | undefined;
@@ -27,6 +31,56 @@ const proof = () => ({ source: "cloudflare-d1", sourceFrozen: true, approvalId: 
 function exportProof(value: unknown = proof()) { const path = join(directory, "verified-d1-export.json"); writeFileSync(path, JSON.stringify(value), { mode: 0o600 }); env.QETTYQ_D1_LEDGER_EXPORT_PATH = path; }
 
 describe("controlled VPS initialization — no providers/network", () => {
+  it("executes the local read-only readiness/review CLI without credentials or source grants", () => {
+    runtime = initializeVpsRuntime({ env, now: () => time, loadEvents: vi.fn() });
+    const run = (args: string[]) => JSON.parse(execFileSync(process.execPath, ["--import", "tsx", "src/server/data-hub/cli.ts", ...args], {
+      cwd: process.cwd(), encoding: "utf8", env: { PATH: process.env.PATH ?? "", NODE_ENV: "test" }, stdio: ["ignore", "pipe", "pipe"],
+    }));
+    expect(run(["readiness", "--db", env.QETTYQ_DATABASE_PATH!])).toMatchObject({ installed: true, enabledProducers: 0, threadsApproved: false });
+    const reviewPath = join(directory, "synthetic-review.json");
+    writeFileSync(reviewPath, JSON.stringify({ schemaVersion: 1, sourceId: "threads-candidate", policyUrl: "https://www.threads.com/",
+      reviewedAt: new Date(time).toISOString(), approvalReference: "SYNTHETIC TEST ONLY — NOT APPROVAL",
+      sourceHosts: ["www.threads.com"], allowedUses: { persist: false, display: false, sendToLlm: false }, mediaApproved: false }));
+    expect(run(["review-source", reviewPath])).toMatchObject({ applied: false, requiresSeparateOwnerApproval: true });
+    expect(run(["readiness", "--db", env.QETTYQ_DATABASE_PATH!])).toHaveProperty("threadsApproved", false);
+  });
+  it("keeps Data Hub unavailable without a configured hash and rejects malformed hash without leaking it", async () => {
+    expect((await postHubBatch(new Request("https://qettyq.example/api/internal/data-hub/batches", { method: "POST" }))).status).toBe(503);
+    runtime = initializeVpsRuntime({ env, now: () => time, loadEvents: vi.fn() });
+    expect(runtime.dataHub).toBeUndefined(); expect(runtime.diagnostics.dataHubConfigured).toBe(false);
+    expect((await getHubCatalog(new Request("https://qettyq.example/api/data-hub/catalog"))).status).toBe(503);
+    runtime.close(); env.QETTYQ_HUB_THREADS_TOKEN_SHA256 = "invalid-not-a-sha256";
+    runtime = initializeVpsRuntime({ env, now: () => time, loadEvents: vi.fn() });
+    expect(runtime.dataHub).toBeUndefined(); expect(JSON.stringify(runtime.diagnostics)).not.toContain("invalid-not-a-sha256");
+  });
+  it("wires durable hash-only scoped machine inbox, quarantines unknown Threads and keeps public feed empty after restart", async () => {
+    const token = "synthetic-runtime-threads-machine-token-only";
+    env.QETTYQ_HUB_THREADS_TOKEN_SHA256 = hubHash(token);
+    runtime = initializeVpsRuntime({ env, now: () => time, loadEvents: vi.fn() });
+    expect(runtime.dataHub).toBeDefined(); expect(runtime.diagnostics.dataHubConfigured).toBe(true);
+    expect((await postHubBatch(new Request("https://qettyq.example/api/internal/data-hub/batches", { method: "POST" }))).status).toBe(401);
+    const payload = { schemaVersion: 1, batchId: "synthetic-vps-batch", records: [{ kind: "place", sourceId: "threads-candidate", externalId: "synthetic-place", revision: 1,
+      sourceUrl: "https://www.threads.com/@synthetic/post/test", fetchedAt: new Date(time).toISOString(), expiresAt: new Date(time + 3600_000).toISOString(),
+      dataMode: "snapshot", facts: { cityId: "astana", name: "SYNTHETIC TEST", category: null, address: null, coordinates: null, openingHours: null, tags: [] }, provenance: [], media: [] }] };
+    const request = () => new Request("https://qettyq.example/api/internal/data-hub/batches", { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(payload) });
+    const response = await postHubBatch(request());
+    expect(response.status).toBe(202); expect(await response.json()).toMatchObject({ accepted: 0, quarantined: 1 });
+    const publicResponse = await getHubCatalog(new Request("https://qettyq.example/api/data-hub/catalog?city=astana"));
+    expect(publicResponse.status).toBe(200);
+    const output = await publicResponse.json(); expect(output).toMatchObject({ places: [], events: [] });
+    expect(JSON.stringify(output)).not.toMatch(/synthetic-place|threads-candidate|token_hash|quarantined|source_hosts_json/);
+    const database = openDatastore({ path: env.QETTYQ_DATABASE_PATH });
+    try {
+      expect(database.prepare("SELECT payload_json FROM qettyq_hub_records").get()?.payload_json).toBeNull();
+      expect(database.prepare("SELECT COUNT(*) AS count FROM data_sources WHERE id='threads-candidate'").get()?.count).toBe(0);
+    } finally { database.close(); }
+    runtime.close(); runtime = initializeVpsRuntime({ env, now: () => time, loadEvents: vi.fn() });
+    expect((await postHubBatch(request())).status).toBe(200);
+    expect((await getHubCatalog(new Request("https://qettyq.example/api/data-hub/catalog?city=almaty"))).status).toBe(400);
+    runtime.close(); delete env.QETTYQ_HUB_THREADS_TOKEN_SHA256;
+    runtime = initializeVpsRuntime({ env, now: () => time, loadEvents: vi.fn() });
+    expect(runtime.dataHub).toBeUndefined();
+  });
   it("imports the actual baseline, registers node-free bridge and consented memory service without exposing unrelated keys", async () => {
     const loadEvents = vi.fn<() => Promise<SxodimSnapshot>>();
     runtime = initializeVpsRuntime({ env, now: () => time, loadEvents });

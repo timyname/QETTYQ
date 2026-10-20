@@ -55,6 +55,7 @@ test("основной путь: 15 реакций → условия → реа
   await page.getByRole("button", { name: "Оценить путь", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Твой маршрут/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Нужна точка старта" })).toBeVisible();
+  await page.getByRole("button", { name: "Развернуть план маршрута" }).click();
   await expect(page.getByText("Оставшееся свободное время неизвестно.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Google Maps ↗" }).first()).toHaveAttribute("href", /destination=51\./);
   await expect(page.getByRole("link", { name: "2ГИС ↗", exact: true }).first()).toHaveAttribute("href", /^dgis:\/\/2gis.ru\/routeSearch\/rsType\/pedestrian\/to\//);
