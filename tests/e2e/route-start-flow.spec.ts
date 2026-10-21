@@ -2,8 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 import { pilotPlaces, publicPlace } from '../../src/server/pilot/catalog';
 
 /** All data and geometry are synthetic fixtures. No provider, paid or otherwise, is contacted. */
-async function fixture(page: Page, mode: 'ready' | 'unavailable' | 'error', unknownDuration = false) {
+async function fixture(page: Page, mode: 'ready' | 'unavailable' | 'error', unknownDuration = false, estimatedTimeExceeded = false) {
   let calls = 0;
+  const routePoints: Array<Array<{ lat: number; lon: number }>> = [];
   const places = pilotPlaces.slice(0, 3).map(publicPlace);
   await page.route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
@@ -24,12 +25,16 @@ async function fixture(page: Page, mode: 'ready' | 'unavailable' | 'error', unkn
       calls++;
       if (mode === 'error') return route.fulfill({ status: 503, json: { route: null, error: 'ROUTING_TIMEOUT' } });
       const points = body.points as Array<{ lat: number; lon: number }>;
-      return respond({ dataMode: 'synthetic_test', route: { quality: 'street', profile: 'foot', provider: 'fossgis_foot', fetchedAt: '2026-10-21T00:00:00Z', geometry: { type: 'LineString', coordinates: points.map(p => [p.lon, p.lat]) }, distanceMeters: 1200, durationSeconds: 1200, legs: points.slice(1).map(() => ({ distanceMeters: 1200, durationSeconds: 1200 })), attribution: { text: 'SYNTHETIC walking route', url: 'https://routing.openstreetmap.de/about.html' }, warnings: [] } });
+      routePoints.push(points);
+      return respond({ dataMode: 'synthetic_test', route: { quality: 'street', profile: 'foot', provider: 'fossgis_foot', fetchedAt: '2026-10-21T00:00:00Z', geometry: { type: 'LineString', coordinates: points.map(p => [p.lon, p.lat]) }, distanceMeters: 1200, durationSeconds: 1200, legs: points.slice(1).map(() => ({ distanceMeters: 1200 / (points.length - 1), durationSeconds: 1200 / (points.length - 1) })), attribution: { text: 'SYNTHETIC walking route', url: 'https://routing.openstreetmap.de/about.html' }, warnings: [] } });
     }
-    if (url.pathname === '/api/plans') return respond({ plan: { id: 'synthetic-route-plan', stops: places.filter(p => body?.placeIds?.includes(p.id)).map(p => ({ ...p, durationMinutes: unknownDuration ? null : 55, durationState: unknownDuration ? 'unknown' : 'estimated' })), totalMinutes: body.context.origin && !unknownDuration ? 202 : null, travelMinutes: body.context.origin ? 147 : null, remainingMinutes: body.context.origin ? 518 : null, distanceKm: body.context.origin ? 9.1 : null, visitMinutes: unknownDuration ? null : 55, budget: { min: null, max: null }, feasibility: 'uncertain', legs: body.context.origin ? [{ estimatedMinutes: 147, distanceKm: 9.1 }] : [] } });
+    if (url.pathname === '/api/plans') {
+      const stops = (body.placeIds as string[]).flatMap(id => { const found = places.find(p => p.id === id); return found ? [{ ...found, durationMinutes: unknownDuration ? null : 55, durationState: unknownDuration ? 'unknown' : 'estimated' }] : []; });
+      return respond({ plan: { id: 'synthetic-route-plan', stops, totalMinutes: body.context.origin && !unknownDuration ? 147 + stops.length * 55 : null, travelMinutes: body.context.origin ? 147 : null, remainingMinutes: body.context.origin ? estimatedTimeExceeded ? -82 : 518 : null, distanceKm: body.context.origin ? 9.1 : null, visitMinutes: unknownDuration ? null : stops.length * 55, budget: { min: null, max: null }, feasibility: estimatedTimeExceeded ? 'infeasible' : 'uncertain', constraintViolations: { time: estimatedTimeExceeded, budget: false }, legs: body.context.origin ? stops.map(() => ({ estimatedMinutes: 147 / stops.length, distanceKm: 9.1 / stops.length })) : [] } });
+    }
     return route.fulfill({ status: 503, json: { error: { code: 'QA_OFFLINE_UNHANDLED_API' } } });
   });
-  return () => calls;
+  return Object.assign(() => calls, { routePoints });
 }
 
 async function openPlan(page: Page, withOrigin = true) {
@@ -50,13 +55,9 @@ test.beforeEach(async ({ context }) => {
   await context.setGeolocation({ latitude: 51.1282, longitude: 71.4304 });
 });
 
-test('build explicitly, then start; hours appear and compact map return restores all places', async ({ page }) => {
+test('automatically builds exactly once, then starts; hours and compact map return remain correct', async ({ page }) => {
   const calls = await fixture(page, 'ready');
   await openPlan(page);
-  await expect(page.getByRole('heading', { name: 'Примерно 3 ч 22 мин', exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveCount(0);
-  expect(calls()).toBe(0);
-  await page.getByRole('button', { name: 'Проложить маршрут', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveAttribute('href', /2gis\.ru\/directions\/tab\/pedestrian/);
   await expect(page.getByRole('heading', { name: 'Примерно 1 ч 15 мин', exact: true })).toBeVisible();
   await page.screenshot({ path: 'output/playwright/route-start-flow/calculated-synthetic.png' });
@@ -73,7 +74,6 @@ test('build explicitly, then start; hours appear and compact map return restores
 for (const mode of ['unavailable', 'error'] as const) test(`${mode}: no fake street route, explicit external alternative, no automatic retries`, async ({ page }) => {
   const calls = await fixture(page, mode);
   await openPlan(page);
-  if (mode === 'error') await page.getByRole('button', { name: 'Проложить маршрут', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Открыть в 2ГИС без расчёта', exact: true })).toBeVisible();
   await expect(page.locator('[data-route-quality="street"]')).toHaveCount(0);
@@ -94,9 +94,57 @@ test('unknown origin asks for a start and never silently calls routing', async (
 test('successful street calculation never invents an unknown visit duration', async ({ page }) => {
   const calls = await fixture(page, 'ready', true);
   await openPlan(page);
-  await page.getByRole('button', { name: 'Проложить маршрут', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Время нужно уточнить', exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'План маршрута', exact: true }).getByText(/Длительность уточняется/).first()).toBeVisible();
   expect(calls()).toBe(1);
+});
+
+test('street time that fits clears an obsolete straight-line time violation', async ({ page }) => {
+  const calls = await fixture(page, 'ready', false, true);
+  await openPlan(page);
+  await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Примерно 1 ч 15 мин', exact: true })).toBeVisible();
+  await expect(page.getByText('План превышает выбранные ограничения.', { exact: true })).toHaveCount(0);
+  expect(calls()).toBe(1);
+});
+
+test('three added stops survive Evaluate on the third; inline reorder recalculates ordered legs once', async ({ page }) => {
+  const calls = await fixture(page, 'ready');
+  const planRequests: string[][] = [];
+  page.on('request', request => { if (new URL(request.url()).pathname === '/api/plans' && request.method() === 'POST') planRequests.push(request.postDataJSON().placeIds); });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Русский', exact: true }).click();
+  await page.getByRole('button', { name: 'Выбрать свой вайб', exact: true }).click();
+  await page.getByRole('button', { name: 'Пропустить подбор интересов', exact: true }).click();
+  await page.getByRole('button', { name: 'К условиям подборки', exact: true }).click();
+  await page.getByRole('button', { name: 'Поделиться геопозицией', exact: true }).click();
+  await page.getByRole('button', { name: 'Показать подборку', exact: true }).click();
+  const selected = pilotPlaces.slice(0, 3).map(publicPlace);
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole('article').nth(i).getByRole('button', { name: 'Подробнее', exact: true }).click();
+    await page.getByRole('button', { name: 'В мой план', exact: true }).click();
+    if (i < 2) await page.getByRole('button', { name: 'Назад', exact: true }).click();
+  }
+  await page.getByRole('button', { name: 'Оценить путь', exact: true }).click();
+  await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click();
+  const sheet = page.getByRole('region', { name: 'План маршрута', exact: true });
+  await expect(sheet.locator('[data-stop-index]')).toHaveCount(3);
+  expect(planRequests.at(-1)).toEqual(selected.map(p => p.id));
+  await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toBeVisible();
+  expect(calls()).toBe(1);
+  expect(calls.routePoints[0]).toEqual([{ lat: 51.1282, lon: 71.4304 }, ...selected.map(p => ({ lat: p.lat, lon: p.lon }))]);
+  await expect(sheet.locator('[data-route-leg]')).toHaveCount(3);
+  await expect(sheet.locator('[data-route-leg="0"]')).toContainText('A → B');
+  await expect(sheet.locator('[data-route-leg="1"]')).toContainText('B → C');
+  await expect(sheet.locator('#route-details > details')).not.toHaveAttribute('open');
+  await sheet.getByRole('button', { name: `Опустить ${selected[0].name} ниже`, exact: true }).click();
+  await expect.poll(() => calls()).toBe(2);
+  const reordered = [selected[1], selected[0], selected[2]];
+  expect(planRequests.at(-1)).toEqual(reordered.map(p => p.id));
+  expect(calls.routePoints[1]).toEqual([{ lat: 51.1282, lon: 71.4304 }, ...reordered.map(p => ({ lat: p.lat, lon: p.lon }))]);
+  await expect(sheet.locator('[data-stop-index="0"]')).toContainText(selected[1].name);
+  await page.getByRole('button', { name: 'Свернуть план маршрута', exact: true }).click();
+  await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click();
+  expect(calls()).toBe(2);
 });

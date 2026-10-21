@@ -265,8 +265,6 @@ test('route collapsed/expanded portrait and landscape preserve reachable scroll 
   await expect(plan).toHaveCount(0); await tapTarget(bubble);
   await page.screenshot({ path: `${imageDirectory}/route-collapsed-430.png` });
   await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click(); await showRouteOptions(page);
-  await expect(start).toHaveCount(0);
-  await page.getByRole('button', { name: 'Проложить маршрут', exact: true }).click();
   await expect(start).toHaveAttribute('href', /2gis\.ru\/directions\/tab\/pedestrian\/points\/71\.4304,51\.1282\|/);
   const external = plan.getByText('Выбранные точки передаются провайдеру только при расчёте или открытии навигации.', { exact: false });
   await external.scrollIntoViewIfNeeded(); await expect(external).toBeVisible();
@@ -383,8 +381,6 @@ test('native-inset expanded route keeps mandatory routing credit exposed after e
   await page.getByRole('article').first().getByRole('button', { name: 'Подробнее', exact: true }).click();
   await page.getByRole('button', { name: 'Оценить путь', exact: true }).click();
   await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click(); await showRouteOptions(page);
-  await page.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек', exact: true }).check();
-  await page.getByRole('button', { name: 'Проложить маршрут', exact: true }).click();
   const credit = page.getByRole('link', { name: 'FOSSGIS / OSRM Foot · synthetic_test', exact: true });
   await expect(credit).toBeVisible();
   expect(await credit.evaluate(element => {

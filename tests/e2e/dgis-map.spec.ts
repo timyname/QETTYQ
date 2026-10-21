@@ -194,10 +194,9 @@ test('only validated street geometry creates jade route and halo on MapGL', asyn
   const nativeCredit = await page.locator('[data-qa-dgis-credit]').boundingBox();
   const back = await page.getByRole('button', { name: 'На карту', exact: true }).boundingBox();
   expect(nativeCredit!.y + nativeCredit!.height).toBeLessThanOrEqual(back!.y);
-  await expect(page.locator('[data-map-engine="2gis"]')).toHaveAttribute('data-route-quality', 'none');
   await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click();
   await page.locator('#route-details > details > summary').click();
-  await page.getByRole('button', { name: 'Рассчитать путь по улицам', exact: true }).click();
+  // Opening a complete plan calculates once automatically; retain geometry checks.
   await expect(page.locator('[data-map-engine="2gis"]')).toHaveAttribute('data-route-quality', 'street');
   const lines = await page.evaluate(() => (window as unknown as { dgisQa: { lines: Array<{ color: string; width: number; coordinates: number[][] }> } }).dgisQa.lines);
   expect(lines).toEqual(expect.arrayContaining([expect.objectContaining({ color: '#0B6E5D', width: 5 }), expect.objectContaining({ color: '#F4F6F2', width: 9 })]));

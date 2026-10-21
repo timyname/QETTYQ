@@ -85,6 +85,9 @@
 .timeline li[data-dragged=true]{background:#dff6bf;border-radius:14px;outline:1px solid #90b958;}
 .stopTitle{min-height:44px;align-items:center;}
 .reorderActions{display:flex;gap:2px;margin:3px 0 0;}
+.timeline .leg{display:flex;align-items:center;gap:4px;color:#42645b;font-size:10px;margin:0 0 2px;line-height:1.45;}
+.timeline .reorderActions{gap:6px;margin-top:4px;}
+.timeline .reorderActions button{background:#ffffff9c;border:1px solid #fff;}
 .reorderActions button,.dragHandle{display:grid;place-items:center;width:44px;height:44px;flex:none;padding:0;border:0;background:transparent;color:#42645b;border-radius:14px;}
 .dragHandle{touch-action:none;cursor:grab;}
 .dragHandle:active{cursor:grabbing;}

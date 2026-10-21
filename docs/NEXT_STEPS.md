@@ -1,5 +1,12 @@
 # Следующие шаги
 
+## После multi-stop v12 · 21.10.2026
+
+- Закрыто в web: потеря2–3точек при Evaluate, видимая перестановка, автоматическая street line, отдельные переходы/посещения, обновлённый share/time warning.646 unit/integration и83 E2E PASS; public Chrome smoke PASS.
+- Native: нужен установленный новый bundle и отдельный физический проход2–3точки/hold-drag/клавиатура. Private compile не закрывает этот gate.
+- Продолжение RAG: R0-аудит готов (`RAG_BASELINE.md`); далее R1 frozen gold/offline eval и R2 private trace с TTL/session deletion. Они ещё не реализованы. До embeddings — fail-closed source capabilities/expiry/revoke, без расширения allow_llm в embed.
+- Реальные фото остаются отдельным P0:2approvedCommons POI,12review candidates,1private Sxodim poster; это не публичное фото-покрытие. Нужны permitted adapters и проверка identity/rights перед публикацией. Бюджеты Google/OpenAI не увеличивать, SSH не удалять.
+
 ## iPhone-проход по скриншотам · 21.10.2026
 
 - [x] Скачан1реальный JPEG точного события прямо со страницы Sxodim для закрытой проверки; источник/SHA/manifest сохранены в ignored review. Это не публичный импорт в карточки. Следующая стадия — согласованный автоимпорт и источники фото сайтов заведений/соцсетей, как повторно запросил владелец.

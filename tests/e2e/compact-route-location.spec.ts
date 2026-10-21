@@ -144,10 +144,12 @@ test('denied location keeps the map visible and offers a manual alternative', as
 
 test('chosen departure survives GPS/manual start refresh while each refresh clears street geometry', async ({ page, context }) => {
   let calls = 0;
+  const pending: Array<() => void> = [];
   await page.route('**/api/routing', async r => {
     if (r.request().method() === 'GET') return r.fulfill({ json: { available: true, provider: 'fossgis_foot', label: 'SYNTHETIC TEST — no provider call', localDemo: true, reason: null } });
     calls++;
     const { points } = r.request().postDataJSON() as { points: Array<{ lat: number; lon: number }> };
+    if (calls > 1) await new Promise<void>(resolve => pending.push(resolve));
     return r.fulfill({ json: { dataMode: 'synthetic_test', route: { quality: 'street', profile: 'foot', provider: 'fossgis_foot', fetchedAt: new Date().toISOString(), geometry: { type: 'LineString', coordinates: points.map(p => [p.lon, p.lat]) }, distanceMeters: 1000, durationSeconds: 600, legs: points.slice(1).map(() => ({ distanceMeters: 1000, durationSeconds: 600 })), attribution: { text: 'FOSSGIS / OSRM Foot · synthetic_test', url: 'https://routing.openstreetmap.de/about.html' }, warnings: [] } } });
   });
   await page.goto('/');
@@ -166,8 +168,6 @@ test('chosen departure survives GPS/manual start refresh while each refresh clea
   const geometry = page.locator('[data-map-engine][data-route-quality="street"]');
   const expand = async () => { await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click(); await showRouteOptions(page); };
   const calculate = async () => {
-    await sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
-    await sheet.getByRole('button', { name: 'Проложить маршрут', exact: true }).click();
     await expect(geometry).toBeVisible();
   };
   await expand();
@@ -180,6 +180,8 @@ test('chosen departure survives GPS/manual start refresh while each refresh clea
   await expand();
   await expect(date).toHaveValue('2026-11-05T18:30');
   await expect(sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' })).toBeChecked();
+  await expect.poll(() => pending.length).toBe(1);
+  pending.shift()!();
   await calculate();
   await sheet.getByRole('button', { name: 'Изменить точку старта', exact: true }).first().click();
   await chooseMapPoint(page);
@@ -188,5 +190,8 @@ test('chosen departure survives GPS/manual start refresh while each refresh clea
   await expand();
   await expect(date).toHaveValue('2026-11-05T18:30');
   await expect(sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' })).toBeChecked();
-  expect(calls).toBe(2);
+  await expect.poll(() => pending.length).toBe(1);
+  pending.shift()!();
+  await calculate();
+  expect(calls).toBe(3);
 });

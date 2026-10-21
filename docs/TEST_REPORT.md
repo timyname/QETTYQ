@@ -1,5 +1,13 @@
 # Отчёт проверки
 
+## Multi-stop v12 · 21.10.2026
+
+- `pnpm test`:646/646PASS,57files. Scoped ESLint и `pnpm typecheck` PASS.
+- `PORT=3039 pnpm exec playwright test --workers=2 --output=output/playwright/multistop-v12-results --reporter=line`:83/83PASS,2.5min, exit0; clean single Next process. Новая regression: добавить3→Evaluateтретьего→all3→inline reorder→ordered routePOST. Существующие реальные HTTP/SQLite/hold-drag/unknown/provider-failure проверки сохранены.
+- Immutable Docker tree `f37cb450e835102733652b18ce3334fd64e98e8f` Next build PASS. Private native Vite compile PASS7.48s, large-chunk warning остаётся. Нет утверждения об установке/проверке на физическом iPhone.
+- Production healthy vps12,211.1MiB/640MiB, backupverified,SSHdigest unchanged. Actual Chrome three-stop evaluate/reorder/new street geometry PASS,22.4km,8h17m including estimated visits/buffer; старт — публичный музей, не GPS пользователя. Два бесплатных FOSSGIS запроса,Google/OpenAI0. Источники/фото не расширены.
+- Артефакт: `exports/screenshots/multistop-v12/live-three-stops-reordered.png`. Подробные команды/границы: `agent-reports/A-multistop-release-20261021.md`.
+
 ## Скриншоты iPhone / native Origin / map search · 21.10.2026
 
 - Финальный `pnpm test`:641/641PASS,55files. `pnpm typecheck` PASS; scopedESLint map/search/PilotApp/API/tests PASS. Первичный rootlint поймал Date.now() в callback, заменено монотонной request revision; правило не отключали.

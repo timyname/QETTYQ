@@ -113,6 +113,8 @@ for (const viewport of [{ width: 360, height: 800 }, { width: 390, height: 844 }
         const unsupported = sheet.getByRole('button', { name, exact: true });
         if (await unsupported.count()) await expect(unsupported).toBeDisabled();
       }
+      await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toBeVisible();
+      await sheet.getByRole('button', { name: 'Убрать дорожный расчёт', exact: true }).click();
       await expect(sheet.getByText(/На карте — точки плана, не линия дороги/)).toBeVisible();
       await expect(sheet.getByText('Запас времени 1 ч 48 мин', { exact: true })).toBeVisible();
       await capture(page, viewport.width, 'plan');
@@ -226,6 +228,12 @@ for (const viewport of [{ width: 360, height: 800 }, { width: 390, height: 844 }
 test('route invalidation: adding a stop and shortening time cannot retain an earlier street result', async ({ page, context }) => {
   test.setTimeout(90_000);
   await offline(page);
+  let holdRouting = false;
+  const pending: Array<() => void> = [];
+  await page.route('**/api/routing', async route => {
+    if (route.request().method() === 'POST' && holdRouting) await new Promise<void>(resolve => pending.push(resolve));
+    await route.fallback();
+  });
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: 51.1282, longitude: 71.4304 });
   await page.goto('/');
@@ -240,19 +248,21 @@ test('route invalidation: adding a stop and shortening time cannot retain an ear
   await page.getByRole('button', { name: /Открыть план · 1 мест/ }).click();
   const sheet = page.getByRole('region', { name: 'План маршрута' });
   await page.getByRole('button', { name: 'Развернуть план маршрута' }).click(); await showRouteOptions(page);
-  await sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
-  await sheet.getByRole('button', { name: 'Проложить маршрут', exact: true }).click();
   await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toBeVisible();
   await page.getByRole('button', { name: 'Свернуть план маршрута', exact: true }).click();
   await page.getByRole('button', { name: 'На карту', exact: true }).click();
   await nav(page, 'Для тебя').click();
   await page.getByRole('article').nth(1).getByRole('button', { name: 'Подробнее', exact: true }).click();
   await page.getByRole('button', { name: 'В мой план', exact: true }).click();
+  holdRouting = true;
   await page.getByRole('button', { name: /Открыть план · 2 мест/ }).click();
   await page.getByRole('button', { name: 'Развернуть план маршрута' }).click(); await showRouteOptions(page);
   await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toHaveCount(0);
   await expect(sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' })).toBeChecked();
   await expect(sheet.locator('#route-details > ol > li')).toHaveCount(3);
+  await expect.poll(() => pending.length).toBe(1);
+  pending.shift()!();
+  await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toBeVisible();
   await sheet.getByRole('button', { name: 'Изменить условия', exact: true }).click();
   await page.getByLabel('Свободное время', { exact: true }).fill('20');
   await page.getByRole('button', { name: 'Показать подборку', exact: true }).click();
@@ -261,6 +271,9 @@ test('route invalidation: adding a stop and shortening time cannot retain an ear
   await expect(sheet).toBeVisible(); await showRouteOptions(page);
   await expect(sheet.getByText(/Этот план превышает выбранные ограничения/)).toBeVisible();
   await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toHaveCount(0);
+  await expect.poll(() => pending.length).toBe(1);
+  pending.shift()!();
+  await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toBeVisible();
   await page.screenshot({ path: `output/playwright/qa-locales-memory-${stamp}/390-plan-after-time-edit.png` });
 });
 

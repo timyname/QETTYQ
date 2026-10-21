@@ -35,6 +35,7 @@ export function calculateMixedPlan(stops: PlanStop[], context: PilotContext) {
     distanceKm: context.origin ? legs.reduce((sum, leg) => sum + leg.distanceKm, 0) : null,
     budget: { min: budgetMin, max: budgetMax, currency: "KZT" as const, basis: context.budgetBasis, partySize: context.partySize },
     feasibility: exceedsTime || exceedsBudget ? "infeasible" as const : "uncertain" as const,
+    constraintViolations: { time: exceedsTime, budget: exceedsBudget },
     warnings: [
       "Это сохранённый план, не бронь и не билет.",
       "Пешеходное время оценено по прямому расстоянию при 4,5 км/ч. Дорожная геометрия недоступна — линию навигации рисовать нельзя.",

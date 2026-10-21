@@ -1,5 +1,7 @@
 /** Compact route-panel copy. Source place names remain unchanged. */
 export const ROUTE_TRANSLATIONS: Record<string, readonly [string, string]> = {
+  'по улицам': ['көшелермен', 'along streets'],
+  'по прямой': ['түзу сызықпен', 'in a straight line'],
   'Примерно': ['Шамамен', 'About'],
   'посещение': ['бару', 'visit'],
   'До начала:': ['Басталуына дейін:', 'Until the start:'],

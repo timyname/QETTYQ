@@ -42,8 +42,11 @@ test('улицы: явное согласие, одна 401-сессия, мет
     await r.fulfill({ json: { dataMode: 'synthetic_test', route: { quality: 'street', profile: 'foot', provider: 'fossgis_foot', fetchedAt: '2026-10-20T00:00:00Z', geometry: { type: 'LineString', coordinates }, distanceMeters: 960, durationSeconds: 720, legs: [{ distanceMeters: 960, durationSeconds: 720 }], attribution: { text: 'FOSSGIS / OSRM Foot · synthetic_test', url: 'https://routing.openstreetmap.de/about.html' }, warnings: [] } } });
   });
   await routeScreen(page, context);
+  await expect(page.getByText(/Источник: FOSSGIS/)).toBeVisible();
+  expect(calls).toBe(2); // One automatic calculation, with one pre-provider auth renewal.
+  await page.getByRole('button', { name: 'Убрать дорожный расчёт', exact: true }).click();
   const button = page.getByRole('button', { name: 'Проложить маршрут', exact: true });
-  await expect(button).toBeEnabled(); expect(calls).toBe(0);
+  await expect(button).toBeEnabled(); expect(calls).toBe(2);
   const consent = page.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' });
   await expect(consent).toBeChecked(); await consent.uncheck(); await expect(button).toBeDisabled();
   await page.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
@@ -52,7 +55,7 @@ test('улицы: явное согласие, одна 401-сессия, мет
   await expect(page.getByText('≈12 мин по улицам', { exact: true })).toBeVisible();
   await expect(page.locator('[data-map-engine][data-route-quality="street"]')).toBeVisible({ timeout: 20_000 });
   await expect(page.locator('.maplibregl-canvas:visible, .leaflet-container:visible').first()).toBeVisible({ timeout: 20_000 });
-  expect(calls).toBe(2);
+  expect(calls).toBe(3);
   await expect(page.getByRole('link', { name: 'Исправить карту', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Свернуть план маршрута' }).click();
   for (const width of [360, 390, 430]) {
@@ -75,7 +78,7 @@ test('улицы: явное согласие, одна 401-сессия, мет
   await dock.getByRole('button', { name: 'Для тебя', exact: true }).click();
   await page.setViewportSize({ width: 360, height: 844 });
   expect(errors.filter(e => /getBoundingClientRect|MapCanvas|resize/i.test(e))).toEqual([]);
-  expect(calls).toBe(2);
+  expect(calls).toBe(3);
 });
 
 test('отказ провайдера не рисует линию и не повторяет запрос автоматически', async ({ page, context }) => {
@@ -85,8 +88,6 @@ test('отказ провайдера не рисует линию и не по�
     calls++; await r.fulfill({ status: 503, json: { route: null, error: 'ROUTING_TIMEOUT' } });
   });
   await routeScreen(page, context);
-  await page.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
-  await page.getByRole('button', { name: 'Проложить маршрут', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Путь по улицам сейчас недоступен.' })).toBeVisible();
   await expect(page.locator('[data-route-quality="street"]')).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveCount(0);
