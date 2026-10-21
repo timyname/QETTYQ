@@ -1,6 +1,6 @@
 import { approvedDgisStyleId } from '../../client/dgis-theme';
 export type BrowserMapConfig = { enabled: false; provider: 'openstreetmap' }
-  | { enabled: true; provider: '2gis'; browserKey: string; styleId?: string };
+  | { enabled: true; provider: '2gis'; browserKey: string; allowedOrigins: string[]; styleId?: string };
 
 /** Never implicitly fall back to a server credential. Owner approved temporary
  * demo reuse on 2026-10-21, subject to an additional exact flag and expiry.
@@ -17,5 +17,7 @@ export function browserMapConfig(env: Record<string, string | undefined>, now = 
       || !Number.isFinite(now) || expiry <= now || expiry - now > 31 * 86400_000) return { enabled: false, provider: 'openstreetmap' };
   }
   const styleId = approvedDgisStyleId(env.QETTYQ_2GIS_MAP_STYLE_ID);
-  return { enabled: true, provider: '2gis', browserKey: key, ...(styleId ? { styleId } : {}) };
+  // Native origin requires separate owner approval and matching provider setup.
+  return { enabled: true, provider: '2gis', browserKey: key,
+    allowedOrigins: ['https://qettyqapp.anamai.kz', ...(env.QETTYQ_2GIS_NATIVE_ORIGIN_APPROVED === 'true' ? ['capacitor://localhost'] : [])], ...(styleId ? { styleId } : {}) };
 }

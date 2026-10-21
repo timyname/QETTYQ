@@ -1,0 +1,6 @@
+.form {display:flex;align-items:center;gap:8px;}
+.form input {flex:1;min-width:0;font-size:16px!important;}
+.form button {flex:none;min-width:44px;min-height:44px;padding:8px;border:1px solid #fff;border-radius:50%;background:#cffc55;color:#0b332d;display:grid;place-items:center;}
+.results {display:grid;gap:4px;max-height:min(32dvh,240px);overflow-y:auto;margin:8px 0 0;padding:0;list-style:none;overscroll-behavior:contain;}
+.results button {width:100%;display:grid;gap:3px;text-align:left;min-height:48px;padding:9px 10px;background:#ffffffc9;border:1px solid #fff;border-radius:14px;color:#0b332d;}
+.results small,.message {font-size:11px;line-height:1.4;color:#52685d;}

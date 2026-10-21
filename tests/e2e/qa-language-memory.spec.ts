@@ -1,4 +1,5 @@
 import { showRouteOptions } from './route-ui-helpers';
+import { formatDurationMinutes } from '../../src/client/format-duration';
 import { expect, test, type Page } from '@playwright/test';
 import { createServer } from 'node:http';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -113,10 +114,10 @@ for (const viewport of [{ width: 360, height: 800 }, { width: 390, height: 844 }
         if (await unsupported.count()) await expect(unsupported).toBeDisabled();
       }
       await expect(sheet.getByText(/На карте — точки плана, не линия дороги/)).toBeVisible();
-      await expect(sheet.getByText('Запас времени 108 мин', { exact: true })).toBeVisible();
+      await expect(sheet.getByText('Запас времени 1 ч 48 мин', { exact: true })).toBeVisible();
       await capture(page, viewport.width, 'plan');
       await sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
-      await sheet.getByRole('button', { name: 'Рассчитать путь по улицам', exact: true }).click();
+      await sheet.getByRole('button', { name: 'Проложить маршрут', exact: true }).click();
       await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toBeVisible();
       await page.screenshot({ path: `output/playwright/qa-locales-memory-${stamp}/${viewport.width}-plan-street-SYNTHETIC.png` });
       const actionBox = await page.getByRole('link', { name: 'Начать маршрут', exact: true }).boundingBox();
@@ -125,6 +126,7 @@ for (const viewport of [{ width: 360, height: 800 }, { width: 390, height: 844 }
       await sheet.getByRole('button', { name: 'Убрать дорожный расчёт', exact: true }).click();
       await expect(sheet.getByText(/На карте — точки плана, не линия дороги/)).toBeVisible();
       await expect(sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' })).toBeChecked();
+      await page.getByRole('button', { name: 'Свернуть план маршрута', exact: true }).click();
       await page.getByRole('button', { name: 'На карту', exact: true }).click();
       await expect(page.locator('.maplibregl-canvas, .leaflet-container').first()).toBeVisible({ timeout: 20_000 });
       // Keep required attribution visible; no hiding CSS or removed credits in tests.
@@ -239,8 +241,9 @@ test('route invalidation: adding a stop and shortening time cannot retain an ear
   const sheet = page.getByRole('region', { name: 'План маршрута' });
   await page.getByRole('button', { name: 'Развернуть план маршрута' }).click(); await showRouteOptions(page);
   await sheet.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
-  await sheet.getByRole('button', { name: 'Рассчитать путь по улицам', exact: true }).click();
+  await sheet.getByRole('button', { name: 'Проложить маршрут', exact: true }).click();
   await expect(sheet.getByText(/Источник: SYNTHETIC QA/)).toBeVisible();
+  await page.getByRole('button', { name: 'Свернуть план маршрута', exact: true }).click();
   await page.getByRole('button', { name: 'На карту', exact: true }).click();
   await nav(page, 'Для тебя').click();
   await page.getByRole('article').nth(1).getByRole('button', { name: 'Подробнее', exact: true }).click();
@@ -301,13 +304,14 @@ for (const language of ['kk', 'en'] as const) for (const viewport of [{ width: 3
       await button('Оценить путь').click();
       await button('Развернуть план маршрута').click(); await showRouteOptions(page);
       const routeSheet = page.getByRole('region', { name: L('План маршрута'), exact: true });
-      await expect(routeSheet.getByText(`${L('Запас времени')} 108 ${L('мин')}`, { exact: true })).toBeVisible();
+      await expect(routeSheet.getByText(`${L('Запас времени')} ${formatDurationMinutes(108, language)}`, { exact: true })).toBeVisible();
       if (language === 'kk') {
         await expect(routeSheet).toContainText('қазан');
         await expect(routeSheet).not.toContainText(/\bM\d{1,2}\b/u);
       }
       await snap('plan');
       await expect(page.locator('.maplibregl-ctrl-attrib, .leaflet-control-attribution').first()).toBeVisible({ timeout: 20_000 });
+      await button('Свернуть план маршрута').click();
       await button('На карту').click();
       await expect(page.locator('.maplibregl-canvas, .leaflet-container').first()).toBeVisible({ timeout: 20_000 });
       await snap('map');

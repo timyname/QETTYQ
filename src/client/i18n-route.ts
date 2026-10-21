@@ -1,5 +1,15 @@
 /** Compact route-panel copy. Source place names remain unchanged. */
 export const ROUTE_TRANSLATIONS: Record<string, readonly [string, string]> = {
+  'Примерно': ['Шамамен', 'About'],
+  'посещение': ['бару', 'visit'],
+  'До начала:': ['Басталуына дейін:', 'Until the start:'],
+  'Опоздание по расчёту:': ['Есеп бойынша кешігу:', 'Estimated lateness:'],
+  'Все места и события на карте': ['Картадағы барлық орындар мен іс-шаралар', 'All places and events on the map'],
+  'Проложить маршрут': ['Маршрут құру', 'Build route'],
+  'Проверяем дорожный расчёт…': ['Жол есебін тексерудеміз…', 'Checking route availability…'],
+  'Дорожный расчёт сейчас недоступен. Можно построить путь в 2ГИС.': ['Жол есебі қазір қолжетімсіз. Жолды 2GIS-те құруға болады.', 'Route calculation is unavailable. You can build the route in 2GIS.'],
+  'Открыть в 2ГИС без расчёта': ['Есепсіз 2GIS-те ашу', 'Open in 2GIS without calculation'],
+  'Включи дорожный расчёт в параметрах плана.': ['Жоспар параметрлерінде жол есебін қос.', 'Enable route calculation in the plan settings.'],
   'Остановки:': ['Аялдамалар:', 'Stops:'],
   'Расстояние неизвестно': ['Қашықтық белгісіз', 'Distance unknown'],
   'Выбери старт для оценки дороги.': ['Жолды бағалау үшін бастауды таңда.', 'Choose a start to estimate travel.'],

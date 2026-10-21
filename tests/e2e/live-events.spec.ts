@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
+import { showRouteOptions } from './route-ui-helpers';
 
 // Synthetic browser fixture only. No real event, availability, price or provider
 // integration is asserted by this test. Real-source smoke is a separate check.
@@ -83,8 +84,10 @@ test('synthetic_test: афиша фильтрует сегодня, сохран
   await expect(page.getByRole('button', { name: new RegExp(today.name) })).toBeVisible();
 });
 
-test('synthetic geocoded event is selectable on the map and routable without invented duration or generated photo', async ({ page }) => {
+test('synthetic geocoded event is selectable on the map and routable without invented duration or generated photo', async ({ page, context }) => {
   await installOfflineTestGuards(page);
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: 51.13, longitude: 71.44 });
   const event = { ...today, lat: 51.1282, lon: 71.4304 };
   // Isolate the event marker instead of asserting that a 749-POI cluster is an
   // individual marker before zoom. Clustering is separately tested by MapCanvas.
@@ -109,6 +112,12 @@ test('synthetic geocoded event is selectable on the map and routable without inv
   const sheet = page.getByRole('region', { name: 'План маршрута', exact: true });
   await expect(sheet).toContainText('Длительность уточняется');
   await expect(sheet).not.toContainText(/посещение [≈]?0 мин/);
-  await expect(sheet.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveAttribute('href', /2gis\.ru\/directions\/tab\/pedestrian\/points\/\|71\.4304,51\.1282/);
+  await expect(sheet.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveCount(0);
+  await showRouteOptions(page);
+  await sheet.getByRole('button', { name: 'Моё местоположение', exact: true }).click();
+  // The fixture intentionally retains this plan ID; refreshing its origin keeps
+  // the same expanded component, rather than creating a new collapsed plan.
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByRole('link', { name: 'Открыть в 2ГИС без расчёта', exact: true })).toHaveAttribute('href', /2gis\.ru\/directions\/tab\/pedestrian\/points\/71\.44,51\.13\|71\.4304,51\.1282/);
   await page.screenshot({ path: 'output/playwright/qa-route-refresh/event-unknown-duration.png' });
 });

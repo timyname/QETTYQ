@@ -5,6 +5,7 @@ import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
 // Provider failures are deterministic here; real-source smoke is recorded separately.
 test.beforeEach(async ({ page }) => {
   await installOfflineTestGuards(page);
+  await page.route('**/api/routing', route => route.fulfill({ json: { available: false, provider: 'fossgis_foot', label: 'SYNTHETIC disabled', reason: 'QA_DISABLED', localDemo: false } }));
   await page.route('**/api/events', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [], dataMode: 'unavailable', freshness: 'unavailable', fetchedAt: null }) }));
 });
 
@@ -30,7 +31,9 @@ async function skipToConditions(page: Page) {
   await expect(page.getByRole("heading", { name: /Сколько времени/ })).toBeVisible();
 }
 
-test("основной путь: 15 реакций → условия → реальные карточки → детали → план и навигация", async ({ page }) => {
+test("основной путь: 15 реакций → условия → реальные карточки → детали → план и навигация", async ({ page, context }) => {
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: 51.1282, longitude: 71.4304 });
   await openSwipes(page);
   await finishSwipes(page);
   await page.getByLabel("Свободное время", { exact: true }).fill("120");
@@ -58,7 +61,10 @@ test("основной путь: 15 реакций → условия → реа
   await page.getByRole("button", { name: "Развернуть план маршрута" }).click(); await showRouteOptions(page);
   await expect(page.getByText("Оставшееся свободное время неизвестно.")).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Нужна точка старта', exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveAttribute('href', /^https:\/\/2gis.ru\/directions\/tab\/pedestrian\/points\/\|71\.[^,]+,51\./);
+  await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveCount(0);
+  await page.getByRole('region', { name: 'План маршрута', exact: true }).getByRole('button', { name: 'Моё местоположение', exact: true }).click();
+  await page.getByRole('button', { name: 'Развернуть план маршрута', exact: true }).click();
+  await expect(page.getByRole('link', { name: 'Открыть в 2ГИС без расчёта', exact: true })).toHaveAttribute('href', /^https:\/\/2gis.ru\/directions\/tab\/pedestrian\/points\/71\.4304,51\.1282\|71\.[^,]+,51\./);
   await expect(page.getByRole('link', { name: /Google Maps|Apple Maps|2ГИС ↗/ })).toHaveCount(0);
   await page.getByRole("button", { name: "QETTYQ — на главную" }).click();
 

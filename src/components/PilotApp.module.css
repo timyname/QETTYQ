@@ -343,3 +343,116 @@
 @media(prefers-reduced-motion:reduce) {.app button,.languageScreen button {transition:none;}.app .chatDockPanel {animation:none;}}
 .mapQuickActions{position:absolute;z-index:20;left:16px;right:84px;bottom:calc(112px + var(--device-bottom));display:flex;gap:6px;flex-wrap:wrap}.mapQuickActions button{min-height:44px;padding:9px 12px;border:1px solid #ffffffed;border-radius:18px;background:#f5faf1e8;color:var(--deep);backdrop-filter:blur(16px);font-size:11px}
 .mapPlanToggle{position:absolute;z-index:30;right:16px;bottom:calc(112px + var(--device-bottom));display:grid;place-items:center;width:56px;height:56px;padding:0;border:1px solid #ffffffed;border-radius:50%;background:#f5faf1ed;color:var(--deep);box-shadow:0 6px 24px #123b292e;backdrop-filter:blur(18px)}.mapPlanToggle span{position:absolute;right:-2px;top:-2px;display:grid;place-items:center;width:21px;height:21px;border-radius:50%;background:var(--lime);font-size:11px;font-weight:800}.mapPlanToggle:focus-visible{outline:3px solid var(--jade);outline-offset:3px}
+
+/* The safe area protects controls, never crops the scene. Keep the map and
+   reading scrollers full-bleed; only the individual floating islands use glass. */
+.app:is([data-screen=feed],[data-screen=chat],[data-screen=map],[data-screen=plan]) {
+  padding-top:0;
+}
+.app:is([data-screen=feed],[data-screen=chat],[data-screen=map],[data-screen=plan])>.header {
+  position:absolute;
+  top:var(--device-top);
+  left:0;
+  right:0;
+  z-index:40;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  pointer-events:none;
+}
+.app:is([data-screen=feed],[data-screen=chat],[data-screen=map],[data-screen=plan])>.header::before,
+.app:is([data-screen=feed],[data-screen=chat],[data-screen=map],[data-screen=plan])>.header::after {
+  content:none;
+}
+.app[data-screen=chat][data-chat-layout=dock-composer]>.chat {
+  position:absolute;
+  inset:0;
+  margin:0!important;
+  padding:0;
+  background:transparent;
+}
+.app[data-screen=chat] .messages {
+  padding-top:calc(var(--device-top) + 80px);
+  padding-bottom:calc(var(--qettyq-chat-footer-height,148px) + var(--device-bottom) + 28px);
+  scroll-padding-top:calc(var(--device-top) + 80px);
+  scroll-padding-bottom:calc(var(--qettyq-chat-footer-height,148px) + var(--device-bottom) + 28px);
+}
+.app[data-screen=chat][data-keyboard-open=true] .messages {
+  padding-top:calc(var(--device-top) + 66px);
+  padding-bottom:calc(var(--qettyq-chat-footer-height,68px) + 16px);
+  scroll-padding-top:calc(var(--device-top) + 66px);
+  scroll-padding-bottom:calc(var(--qettyq-chat-footer-height,68px) + 16px);
+}
+/* A 16px input prevents iOS focus zoom without disabling user pinch zoom. */
+.app[data-screen] input:not([type=checkbox]):not([type=range]),
+.app[data-screen] select,
+.app[data-screen] textarea {
+  font-size:16px!important;
+}
+.app[data-screen=map][data-map-keyboard-open=true]>.dock {
+  visibility:hidden;
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(16px);
+}
+.app[data-screen=map][data-map-keyboard-open=true] :is(.mapQuickActions,.mapPlanToggle,.mapSheet) {
+  visibility:hidden;
+  pointer-events:none;
+}
+.app[data-screen=map][data-map-keyboard-open=true] .mapToolbar {
+  max-height:calc(100% - var(--device-top) - 120px);
+  overflow:auto;
+  overscroll-behavior:contain;
+}
+@media(prefers-reduced-motion:no-preference) {
+  .app[data-screen=map]>.dock {
+    transition:opacity 160ms ease,transform 200ms cubic-bezier(.22,.8,.2,1),visibility 200ms;
+  }
+}
+
+/* Missing media is a compact editorial card, not a photo-sized dark void.
+   The state is supplied from verified media metadata, never inferred from a URL. */
+.carousel>.rail:has(>.feedCard[data-photo-state=none]):not(:has(>.feedCard[data-photo-state=real])) {
+  height:auto;
+  align-items:stretch;
+}
+.feedCard[data-photo-state=none] {
+  height:auto;
+  min-height:264px;
+  border:1px solid var(--glass-edge);
+  background:linear-gradient(155deg,#fffffff0,#ecf4e9dd);
+}
+.feedCard[data-photo-state=none]>.picture {
+  height:80px;
+  min-height:80px;
+  margin:0;
+  background:#deebe2;
+}
+.feedCard[data-photo-state=none]>.picture::after {content:none;}
+.feedCard[data-photo-state=none]>.picture>div[role=img] {
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  padding:24px 20px 12px;
+  color:var(--jade);
+  background:transparent;
+}
+.feedCard[data-photo-state=none]>.picture>div[role=img]>svg {width:24px;height:24px;}
+.feedCard[data-photo-state=none]>.picture>div[role=img]>span {font-size:12px;}
+.feedCard[data-photo-state=none]>.picture small {
+  top:10px;
+  left:20px;
+  color:var(--muted);
+  text-shadow:none;
+}
+.feedCard[data-photo-state=none]>.feedCardBody {
+  position:relative;
+  padding:14px 18px 18px;
+  color:var(--ink);
+}
+.feedCard[data-photo-state=none] .feedCardBody p {color:var(--muted);}
+.feedCard[data-photo-state=none] .feedCardBody h2 {padding-right:0;}

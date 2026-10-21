@@ -1,0 +1,230 @@
+{
+  "version": 1,
+  "sourceAsOf": "2026-10-19T20:21:11Z",
+  "places": 749,
+  "candidates": [
+    {
+      "placeId": "osm:node:12613308529",
+      "name": "I'm Feel Good Restaraunts",
+      "osmUrl": "https://www.openstreetmap.org/node/12613308529",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "image",
+          "value": "https://www.sostav.ru/images/news/2023/11/23/vkzxtb2m.jpg",
+          "reviewUrl": "https://www.sostav.ru/images/news/2023/11/23/vkzxtb2m.jpg"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    },
+    {
+      "placeId": "osm:node:4894937300",
+      "name": "Национальный музей Республики Казахстан",
+      "osmUrl": "https://www.openstreetmap.org/node/4894937300",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "wikimedia_commons",
+          "value": "Category:National Museum of the Republic of Kazakhstan",
+          "reviewUrl": "https://commons.wikimedia.org/wiki/Category%3ANational_Museum_of_the_Republic_of_Kazakhstan"
+        },
+        {
+          "tag": "wikidata",
+          "value": "Q18405670",
+          "reviewUrl": "https://www.wikidata.org/wiki/Q18405670"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    },
+    {
+      "placeId": "osm:way:1196402246",
+      "name": "Ботанический сад",
+      "osmUrl": "https://www.openstreetmap.org/way/1196402246",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "wikimedia_commons",
+          "value": "Category:Astana botanical garden",
+          "reviewUrl": "https://commons.wikimedia.org/wiki/Category%3AAstana_botanical_garden"
+        },
+        {
+          "tag": "wikidata",
+          "value": "Q104866948",
+          "reviewUrl": "https://www.wikidata.org/wiki/Q104866948"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    },
+    {
+      "placeId": "osm:way:1460088073",
+      "name": "Астана Арена",
+      "osmUrl": "https://www.openstreetmap.org/way/1460088073",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "wikimedia_commons",
+          "value": "Category:Astana Arena",
+          "reviewUrl": "https://commons.wikimedia.org/wiki/Category%3AAstana_Arena"
+        },
+        {
+          "tag": "wikidata",
+          "value": "Q746559",
+          "reviewUrl": "https://www.wikidata.org/wiki/Q746559"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    },
+    {
+      "placeId": "osm:way:1460537088",
+      "name": "Astana Musical",
+      "osmUrl": "https://www.openstreetmap.org/way/1460537088",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "wikidata",
+          "value": "Q573362",
+          "reviewUrl": "https://www.wikidata.org/wiki/Q573362"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    },
+    {
+      "placeId": "osm:way:1460700597",
+      "name": "Этно-мемориальный комплекс Карта Казахстана Атамекен",
+      "osmUrl": "https://www.openstreetmap.org/way/1460700597",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "wikidata",
+          "value": "Q1454511",
+          "reviewUrl": "https://www.wikidata.org/wiki/Q1454511"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    },
+    {
+      "placeId": "osm:way:166265821",
+      "name": "Сарыарка",
+      "osmUrl": "https://www.openstreetmap.org/way/166265821",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "wikimedia_commons",
+          "value": "Category:Saryarka Velodrome",
+          "reviewUrl": "https://commons.wikimedia.org/wiki/Category%3ASaryarka_Velodrome"
+        },
+        {
+          "tag": "wikidata",
+          "value": "Q4408858",
+          "reviewUrl": "https://www.wikidata.org/wiki/Q4408858"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    },
+    {
+      "placeId": "osm:way:166267459",
+      "name": "Ледовый дворец Алау",
+      "osmUrl": "https://www.openstreetmap.org/way/166267459",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "wikidata",
+          "value": "Q1072092",
+          "reviewUrl": "https://www.wikidata.org/wiki/Q1072092"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    },
+    {
+      "placeId": "osm:way:549307755",
+      "name": "Триумфальная арка Мангилик Ел",
+      "osmUrl": "https://www.openstreetmap.org/way/549307755",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "wikidata",
+          "value": "Q42422896",
+          "reviewUrl": "https://www.wikidata.org/wiki/Q42422896"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    },
+    {
+      "placeId": "osm:way:663143306",
+      "name": "Барыс Арена",
+      "osmUrl": "https://www.openstreetmap.org/way/663143306",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "wikimedia_commons",
+          "value": "Category:Barys Arena",
+          "reviewUrl": "https://commons.wikimedia.org/wiki/Category%3ABarys_Arena"
+        },
+        {
+          "tag": "wikidata",
+          "value": "Q16632800",
+          "reviewUrl": "https://www.wikidata.org/wiki/Q16632800"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    },
+    {
+      "placeId": "osm:way:69232075",
+      "name": "Парк Жетысу",
+      "osmUrl": "https://www.openstreetmap.org/way/69232075",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "wikidata",
+          "value": "Q104866925",
+          "reviewUrl": "https://www.wikidata.org/wiki/Q104866925"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    },
+    {
+      "placeId": "osm:way:917478479",
+      "name": "Астана Опера",
+      "osmUrl": "https://www.openstreetmap.org/way/917478479",
+      "sourceAsOf": "2026-10-19T20:21:11Z",
+      "links": [
+        {
+          "tag": "wikimedia_commons",
+          "value": "Category:Astana Opera",
+          "reviewUrl": "https://commons.wikimedia.org/wiki/Category%3AAstana_Opera"
+        },
+        {
+          "tag": "wikidata",
+          "value": "Q21371563",
+          "reviewUrl": "https://www.wikidata.org/wiki/Q21371563"
+        }
+      ],
+      "state": "needs_file_identity_and_rights_review",
+      "allowDownload": false,
+      "allowDisplay": false
+    }
+  ],
+  "policy": "Review queue only: no permission, automatic image fetch or UI display inferred from OSM links."
+}

@@ -5,9 +5,26 @@ import { approvedBrowserMapKey, dgisBounds, dgisRouteBounds, DGIS_SDK_URL } from
 
 const publicKey = 'SYNTHETIC-public-mapgl-key-only';
 const privateKey = 'SYNTHETIC-private-server-key-only';
+const productionOrigin = 'https://qettyqapp.anamai.kz';
+const allowedOrigins = [productionOrigin];
 afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); });
 
 describe('dedicated approved 2GIS browser map credential boundary (synthetic, no SDK requests)', () => {
+  it('keeps an older native bundle on OSM before its SDK can show an invalid-key panel', async () => {
+    vi.stubEnv('QETTYQ_2GIS_NATIVE_ORIGIN_APPROVED', 'false');
+    vi.stubEnv('QETTYQ_2GIS_BROWSER_KEY', publicKey); vi.stubEnv('QETTYQ_2GIS_BROWSER_KEY_APPROVED', 'true');
+    const response = GET(new Request('https://qettyqapp.anamai.kz/api/maps/config', { headers: { 'x-qettyq-client': 'ios-bundled-pilot-v0.2' } }));
+    expect(await response.json()).toEqual({ enabled: false, provider: 'openstreetmap' });
+  });
+  it('allows only the explicitly approved native origin after separate provider setup', () => {
+    const env = { QETTYQ_2GIS_BROWSER_KEY: publicKey, QETTYQ_2GIS_BROWSER_KEY_APPROVED: 'true', QETTYQ_2GIS_NATIVE_ORIGIN_APPROVED: 'true' };
+    const config = browserMapConfig(env);
+    expect(config).toMatchObject({ allowedOrigins: [productionOrigin, 'capacitor://localhost'] });
+    expect(approvedBrowserMapKey(config, 'capacitor://localhost')).toBe(publicKey);
+    expect(approvedBrowserMapKey(config, 'capacitor://other')).toBeNull();
+    expect(approvedBrowserMapKey(config, 'null')).toBeNull();
+    expect(approvedBrowserMapKey(browserMapConfig({ ...env, QETTYQ_2GIS_NATIVE_ORIGIN_APPROVED: 'false' }), 'capacitor://localhost')).toBeNull();
+  });
   it('is disabled by default and never falls through to the server Search key', () => {
     expect(browserMapConfig({ '2GIS_API_KEY': privateKey })).toEqual({ enabled: false, provider: 'openstreetmap' });
     expect(browserMapConfig({ '2GIS_API_KEY': privateKey, QETTYQ_2GIS_BROWSER_KEY_APPROVED: 'true' })).toEqual({ enabled: false, provider: 'openstreetmap' });
@@ -18,7 +35,7 @@ describe('dedicated approved 2GIS browser map credential boundary (synthetic, no
   });
   it('exposes only an explicitly approved separate public key', () => {
     const config = browserMapConfig({ '2GIS_API_KEY': privateKey, QETTYQ_2GIS_BROWSER_KEY: publicKey, QETTYQ_2GIS_BROWSER_KEY_APPROVED: 'true' });
-    expect(config).toEqual({ enabled: true, provider: '2gis', browserKey: publicKey });
+    expect(config).toEqual({ enabled: true, provider: '2gis', browserKey: publicKey, allowedOrigins });
     expect(JSON.stringify(config)).not.toContain(privateKey);
   });
   it('rejects an accidental duplicate of the private server credential', () => {
@@ -27,7 +44,7 @@ describe('dedicated approved 2GIS browser map credential boundary (synthetic, no
   it('permits explicitly approved temporary demo reuse, never implicit reuse', () => {
     const now = Date.parse('2026-10-21T00:00:00Z');
     const env = { '2GIS_API_KEY': privateKey, QETTYQ_2GIS_BROWSER_KEY: privateKey, QETTYQ_2GIS_BROWSER_KEY_APPROVED: 'true', QETTYQ_2GIS_REUSE_DEMO_KEY_APPROVED: 'true', QETTYQ_2GIS_DEMO_PUBLIC_UNTIL: '2026-11-20T19:00:00Z' };
-    expect(browserMapConfig(env, now)).toEqual({ enabled: true, provider: '2gis', browserKey: privateKey });
+    expect(browserMapConfig(env, now)).toEqual({ enabled: true, provider: '2gis', browserKey: privateKey, allowedOrigins });
     for (const flag of ['false', 'TRUE', '1', undefined]) expect(browserMapConfig({ ...env, QETTYQ_2GIS_REUSE_DEMO_KEY_APPROVED: flag }, now).enabled).toBe(false);
     for (const expiry of ['', 'invalid', '2026-10-20T00:00:00Z', '2027-10-21T00:00:00Z']) expect(browserMapConfig({ ...env, QETTYQ_2GIS_DEMO_PUBLIC_UNTIL: expiry }, now).enabled).toBe(false);
     expect(browserMapConfig(env, Date.parse(env.QETTYQ_2GIS_DEMO_PUBLIC_UNTIL)).enabled).toBe(false);
@@ -46,7 +63,7 @@ describe('dedicated approved 2GIS browser map credential boundary (synthetic, no
   });
   it('the route returns the dedicated key only after approval', async () => {
     vi.stubEnv('2GIS_API_KEY', privateKey); vi.stubEnv('QETTYQ_2GIS_BROWSER_KEY', publicKey); vi.stubEnv('QETTYQ_2GIS_BROWSER_KEY_APPROVED', 'true');
-    expect(await GET().json()).toEqual({ enabled: true, provider: '2gis', browserKey: publicKey });
+    expect(await GET().json()).toEqual({ enabled: true, provider: '2gis', browserKey: publicKey, allowedOrigins });
   });
   it.each([null, undefined, [], {}, { enabled: 'true', provider: '2gis', browserKey: publicKey },
     { enabled: false, provider: '2gis', browserKey: publicKey }, { enabled: true, provider: 'google', browserKey: publicKey },
@@ -54,9 +71,24 @@ describe('dedicated approved 2GIS browser map credential boundary (synthetic, no
     expect(approvedBrowserMapKey(config)).toBeNull();
   });
   it('client accepts only the approved-provider shape and fixed SDK URL contains no key', () => {
-    expect(approvedBrowserMapKey({ enabled: true, provider: '2gis', browserKey: publicKey })).toBe(publicKey);
+    expect(approvedBrowserMapKey({ enabled: true, provider: '2gis', browserKey: publicKey, allowedOrigins }, productionOrigin)).toBe(publicKey);
     expect(DGIS_SDK_URL).toBe('https://mapgl.2gis.com/api/js/v1.78.0');
     expect(new URL(DGIS_SDK_URL).search).toBe('');
+  });
+  it.each(['capacitor://localhost', 'http://localhost', 'http://localhost:4176', 'null', '',
+    'https://qettyq-app.ablecorgi64.chatgpt.site', 'https://qettyqapp.anamai.kz.evil.example', 'https://qettyqapp.anamai.kz:444'])('rejects unapproved runtime origin %s before SDK initialization', origin => {
+    expect(approvedBrowserMapKey({ enabled: true, provider: '2gis', browserKey: publicKey, allowedOrigins }, origin)).toBeNull();
+  });
+  it.each([undefined, [], ['*'], ['capacitor://localhost'], [productionOrigin + '/'], [productionOrigin, 123], Array(11).fill(productionOrigin)])('rejects absent or malformed origin permissions %j', origins => {
+    expect(approvedBrowserMapKey({ enabled: true, provider: '2gis', browserKey: publicKey, allowedOrigins: origins }, productionOrigin)).toBeNull();
+  });
+  it('does not accept legacy enabled config without explicit origin permissions', () => {
+    expect(approvedBrowserMapKey({ enabled: true, provider: '2gis', browserKey: publicKey }, productionOrigin)).toBeNull();
+  });
+  it('permits explicit loopback origins for offline synthetic SDK fixtures only', () => {
+    const origin = 'http://127.0.0.1:3037';
+    expect(approvedBrowserMapKey({ enabled: true, provider: '2gis', browserKey: publicKey, allowedOrigins: [origin] }, origin)).toBe(publicKey);
+    expect(approvedBrowserMapKey({ enabled: true, provider: '2gis', browserKey: publicKey, allowedOrigins: ['http://evil.example'] }, 'http://evil.example')).toBeNull();
   });
 });
 

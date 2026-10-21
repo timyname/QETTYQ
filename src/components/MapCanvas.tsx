@@ -18,16 +18,15 @@ export type MapCanvasPoint = { id: string; title: string; dateLabel: string; cat
 type Coordinates = { lat: number; lon: number };
 /** Resolve measured native/CSS insets as lengths, never parse an unresolved calc(). */
 function deviceInsets(container: HTMLElement) {
-  const shell = container.closest<HTMLElement>('[data-screen]');
-  const top = shell ? Number.parseFloat(getComputedStyle(shell).paddingTop) || 0 : 0;
   const probe = document.createElement('span');
-  probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;padding-bottom:var(--qettyq-safe-area-bottom,env(safe-area-inset-bottom,0px))';
+  probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;padding-top:var(--qettyq-safe-area-top,env(safe-area-inset-top,0px));padding-bottom:var(--qettyq-safe-area-bottom,env(safe-area-inset-bottom,0px))';
   container.appendChild(probe);
+  const top = Number.parseFloat(getComputedStyle(probe).paddingTop) || 0;
   const bottom = Number.parseFloat(getComputedStyle(probe).paddingBottom) || 0;
   probe.remove();
   return { top: Math.max(0, top), bottom: Math.max(0, bottom) };
 }
-export type MapCanvasProps = { points: MapCanvasPoint[]; activeId?: string; onSelect?: (id: string) => void; onPick?: (point: Coordinates) => void; origin?: Coordinates | null; fitPoints?: boolean; routeGeometry?: RouteGeometry | null; routeAttribution?: { text: string; url: string } | null };
+export type MapCanvasProps = { points: MapCanvasPoint[]; activeId?: string; onSelect?: (id: string) => void; onPick?: (point: Coordinates) => void; origin?: Coordinates | null; focusPoint?: Coordinates & { revision: number }; fitPoints?: boolean; routeGeometry?: RouteGeometry | null; routeAttribution?: { text: string; url: string } | null };
 
 const ASTANA: [number, number] = [71.4304, 51.1282];
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -102,6 +101,7 @@ export function MapLibreCanvas(props: MapCanvasProps) {
       view.addControl(new gl.AttributionControl({ compact: false }), 'bottom-left');
       const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 220;
       let fittedRoute: RouteGeometry | null = null;
+      let focusedRevision: number | undefined;
 
       const render = () => {
         // React can detach the host before a queued ResizeObserver/map event runs.
@@ -110,6 +110,11 @@ export function MapLibreCanvas(props: MapCanvasProps) {
         removeMarkers();
         const bounds = container.getBoundingClientRect();
         const current = latest.current;
+        if (current.focusPoint && validCoordinates(current.focusPoint) && current.focusPoint.revision !== focusedRevision) {
+          focusedRevision = current.focusPoint.revision;
+          const position: [number, number] = [current.focusPoint.lon, current.focusPoint.lat];
+          view.fitBounds(new gl.LngLatBounds(position, position), { maxZoom: 16, duration: 0, padding: { top: Math.min(260, container.clientHeight * .35), bottom: Math.min(220, container.clientHeight * .28), left: 44, right: 44 } });
+        }
         const line = current.routeGeometry;
         const validLine = line?.type === 'LineString' && line.coordinates.length >= 2 && line.coordinates.length <= 20_000 && line.coordinates.every(p => p.length >= 2 && validCoordinates({ lat: p[1], lon: p[0] }));
         const routeData: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: validLine ? [{ type: 'Feature', properties: {}, geometry: line! }] : [] };

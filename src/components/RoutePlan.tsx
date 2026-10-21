@@ -4,10 +4,11 @@ import { Localize, useI18n, formatDate, formatNumber, translateText } from '../c
 
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowUpRight, ArrowUp, ArrowDown, CalendarDays, Clock3, MapPin, Navigation, Share2, Trash2, Footprints, X, Route, GripVertical } from 'lucide-react';
+import { Map, ArrowUpRight, ArrowUp, ArrowDown, CalendarDays, Clock3, MapPin, Navigation, Share2, Trash2, Footprints, X, Route, GripVertical } from 'lucide-react';
 import { buildRouteTimeline, astanaDateInput, parseAstanaDateInput } from '@/client/route-timeline';
 import { twoGisWalkingPlanUrl } from '@/client/2gis-navigation';
 import { reorderRouteStops } from '@/client/reorder-route-stops';
+import { formatDurationMinutes } from '@/client/format-duration';
 import s from './RoutePlan.module.css';
 import type { RoutingStatus, StreetRoute } from '../server/pilot/street-routing';
 
@@ -53,6 +54,7 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
   const drag = useRef<{ timer: ReturnType<typeof setTimeout>; from: number; to: number; ready: boolean } | null>(null);
   const sheet = useRef<HTMLElement>(null);
   const [routingStatus, setRoutingStatus] = useState<RoutingStatus | null>(null);
+  const [routingStatusLoaded, setRoutingStatusLoaded] = useState(false);
   const [consentFor, setConsentFor] = useState<string | null>(null);
   const [routingBusy, setRoutingBusy] = useState(false);
   const [routingError, setRoutingError] = useState('');
@@ -73,12 +75,12 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
   useEffect(() => () => { if (drag.current) clearTimeout(drag.current.timer); }, []);
   useEffect(() => {
     const controller = new AbortController();
-    void fetch('/api/routing', { signal: controller.signal, cache: 'no-store' }).then(async r => r.ok ? await r.json() as unknown : null).then(value => { if (isRoutingStatus(value) && !controller.signal.aborted) setRoutingStatus(value); }).catch(() => {});
+    void fetch('/api/routing', { signal: controller.signal, cache: 'no-store' }).then(async r => r.ok ? await r.json() as unknown : null).then(value => { if (isRoutingStatus(value) && !controller.signal.aborted) setRoutingStatus(value); }).catch(() => {}).finally(() => { if (!controller.signal.aborted) setRoutingStatusLoaded(true); });
     return () => controller.abort();
   }, []);
   useEffect(() => () => { routingRequest.current?.abort(); }, [routingKey]);
   async function calculateStreets() {
-    if (!consent || !origin || !routingStatus?.available || routingBusy) return;
+    if (!consent || !origin || !routingStatus?.available || routingBusy || busy || street || routingRequest.current && !routingRequest.current.signal.aborted) return;
     const controller = new AbortController(); routingRequest.current?.abort(); routingRequest.current = controller;
     setRoutingBusy(true); setRoutingError('');
     try {
@@ -97,7 +99,7 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
       if (!controller.signal.aborted) setCalculated({ key: routingKey, route: body.route });
     } catch (error) {
       if (!controller.signal.aborted) { setCalculated(null); setRoutingError(String(error).includes('RATE_LIMITED') ? 'Слишком много запросов. Подожди немного и попробуй снова.' : 'Путь по улицам сейчас недоступен. Ниже остаётся оценка по прямой и внешняя навигация.'); }
-    } finally { if (routingRequest.current === controller) setRoutingBusy(false); }
+    } finally { if (routingRequest.current === controller) { routingRequest.current = null; setRoutingBusy(false); } }
   }
   const timelineLegs = street ? street.legs.map(p => ({ estimatedMinutes: p.durationSeconds / 60 })) : plan.legs;
   const timeline = buildRouteTimeline(departure, Boolean(origin), plan.stops, timelineLegs);
@@ -107,15 +109,16 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
   const totalMinutes = baseTotalMinutes === null || timeline.waitMinutes === null ? null : baseTotalMinutes + Math.ceil(timeline.waitMinutes);
   const remainingMinutes = plan.totalMinutes !== null && plan.remainingMinutes !== null && totalMinutes !== null ? plan.totalMinutes + plan.remainingMinutes - totalMinutes : null;
   const navigation = twoGisWalkingPlanUrl(plan.stops, origin, destination);
-  const points = plan.stops.map((p, index) => ({ ...p, title: p.name, dateLabel: translateText(`${index + 1} · ${p.durationMinutes === null ? 'Длительность уточняется' : `${p.durationMinutes} мин${p.durationState === 'observed' ? '' : ' — оценка посещения'}`}`, language) }));
+  const duration = (minutes: number) => formatDurationMinutes(minutes, language)!;
+  const points = plan.stops.map((p, index) => ({ ...p, title: p.name, dateLabel: translateText(`${index + 1} · ${p.durationMinutes === null ? 'Длительность уточняется' : `${duration(p.durationMinutes)}${p.durationState === 'observed' ? '' : ' — оценка посещения'}`}`, language) }));
 
   return <Localize><main className={s.screen} aria-label="Маршрут по Астане">
     <div className={s.map} data-panel-expanded={expanded}><MapCanvas fitPoints points={points} origin={origin} routeGeometry={street?.geometry} routeAttribution={street?.attribution} activeId={active} onSelect={id => { setActive(id); setExpanded(true); }} /></div>
-    <div className={s.top}><button className={s.back} onClick={onBack}><ArrowLeft size={18} /> На карту</button></div>
+    {!expanded && <button className={s.mapBubble} aria-label="На карту" title="Все места и события на карте" onClick={onBack}><Map size={22} /></button>}
     {!expanded && <button className={s.planBubble} aria-label="Развернуть план маршрута" aria-expanded={false} aria-controls="route-plan-sheet" onClick={() => setExpanded(true)}><Route size={23} /><span>{plan.stops.length}</span></button>}
     <section id="route-plan-sheet" ref={sheet} className={s.sheet} data-expanded={expanded} hidden={!expanded} aria-label="План маршрута">
       <div className={s.summary}>
-        <div className={s.heading}><div><small>Мой план · {dateLabel(departure)}</small><h2 aria-live="polite">{busy ? 'Обновляем маршрут…' : totalMinutes === null ? origin ? 'Время нужно уточнить' : 'Нужна точка старта' : `Примерно ${totalMinutes} мин`}</h2></div><button className={s.icon} aria-label="Свернуть план маршрута" onClick={() => { if (sheet.current) sheet.current.scrollTop = 0; setExpanded(false); }}><X size={20} /></button></div>
+        <div className={s.heading}><div><small>Мой план · {dateLabel(departure)}</small><h2 aria-live="polite">{busy ? 'Обновляем маршрут…' : totalMinutes === null ? origin ? 'Время нужно уточнить' : 'Нужна точка старта' : `${translateText('Примерно', language)} ${duration(totalMinutes)}`}</h2></div><button className={s.icon} aria-label="Свернуть план маршрута" onClick={() => { if (sheet.current) sheet.current.scrollTop = 0; setExpanded(false); }}><X size={20} /></button></div>
         <div className={s.summaryFacts}><span><Footprints size={14} />Пешком</span><span>Остановки: {formatNumber(plan.stops.length, language)}</span><span>{street ? `${formatNumber(street.distanceMeters / 1000, language, 1)} км по улицам` : plan.distanceKm === null ? 'Расстояние неизвестно' : `≈${formatNumber(plan.distanceKm, language, 1)} км по прямой`}</span></div>
         <p className={s.summaryNote}>{!origin ? 'Выбери старт для оценки дороги.' : street ? 'Время — оценка, посещения не подтверждены.' : 'Оценка по прямой, не путь по улицам.'}{plan.budget.min === null ? ' Стоимость уточняется.' : ''}</p>
         {(plan.feasibility === 'infeasible' || remainingMinutes !== null && remainingMinutes < 0) && <p className={s.compactWarning} role="status">План превышает выбранные ограничения.</p>}
@@ -128,13 +131,25 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
             <span className={s.dot}>{index === plan.stops.length - 1 && !destination ? 'B' : index + 1}</span>
             <div className={s.stop}>
               <button className={s.stopTitle} onClick={() => { setActive(stop.id); onOpenStop(stop.id); }}><span translate="no">{stop.name}</span><ArrowUpRight size={15} /></button>
-              <small>{arrivals[index] ? `≈${time(arrivals[index]!)} · ` : ''}{stop.durationMinutes === null ? 'Длительность уточняется' : `посещение ${stop.durationState === 'observed' ? '' : '≈'}${stop.durationMinutes} мин`}</small>
-              {timeline.stops[index]?.waitMinutes !== null && timeline.stops[index]?.waitMinutes > 0 && <small>До начала: ≈{Math.ceil(timeline.stops[index].waitMinutes!)} мин ожидания</small>}
-              {timeline.stops[index]?.lateMinutes !== null && timeline.stops[index]?.lateMinutes > 0 && <small>Опоздание по расчёту: ≈{Math.ceil(timeline.stops[index].lateMinutes!)} мин</small>}
+              <small>{arrivals[index] ? `≈${time(arrivals[index]!)} · ` : ''}{stop.durationMinutes === null ? 'Длительность уточняется' : `${translateText('посещение', language)} ${stop.durationState === 'observed' ? '' : '≈'}${duration(stop.durationMinutes)}`}</small>
+              {timeline.stops[index]?.waitMinutes !== null && timeline.stops[index]?.waitMinutes > 0 && <small>{translateText('До начала:', language)} ≈{duration(timeline.stops[index].waitMinutes!)}</small>}
+              {timeline.stops[index]?.lateMinutes !== null && timeline.stops[index]?.lateMinutes > 0 && <small>{translateText('Опоздание по расчёту:', language)} ≈{duration(timeline.stops[index].lateMinutes!)}</small>}
             </div>
             {onReorder && plan.stops.length > 1 && <button className={s.dragHandle} disabled={busy} aria-label={`Удерживай и перемещай ${stop.name}`}
               onPointerDown={e => { if (busy || e.button !== 0) return; cancelDrag(); e.currentTarget.setPointerCapture(e.pointerId); const state = { from: index, to: index, ready: false, timer: setTimeout(() => { state.ready = true; setDragged(index); }, 320) }; drag.current = state; }}
-              onPointerMove={e => { const state = drag.current; if (!state?.ready) return; const row = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('[data-stop-index]'); if (row && sheet.current?.contains(row)) { const next = Number(row.dataset.stopIndex); if (Number.isInteger(next)) state.to = next; } }}
+              onPointerMove={e => {
+                const state = drag.current; if (!state?.ready) return;
+                const scroll = sheet.current?.querySelector<HTMLElement>('#route-details');
+                if (!scroll) return;
+                const bounds = scroll.getBoundingClientRect();
+                // The compact sheet may show only one stop. Dragging towards an
+                // edge reveals the next stop instead of hitting the fixed footer.
+                if (e.clientY > bounds.bottom - 24) scroll.scrollTop += 18;
+                else if (e.clientY < bounds.top + 24) scroll.scrollTop -= 18;
+                const hitY = Math.max(bounds.top + 2, Math.min(bounds.bottom - 2, e.clientY));
+                const row = document.elementFromPoint(e.clientX, hitY)?.closest<HTMLElement>('[data-stop-index]');
+                if (row && sheet.current?.contains(row)) { const next = Number(row.dataset.stopIndex); if (Number.isInteger(next)) state.to = next; }
+              }}
               onPointerUp={() => { const state = drag.current; if (state?.ready) moveStop(state.from, state.to); cancelDrag(); }} onPointerCancel={cancelDrag} onLostPointerCapture={cancelDrag}><GripVertical size={16} /></button>}
             <button className={s.remove} disabled={busy || plan.stops.length === 1} aria-label={`Убрать ${stop.name} из плана`} onClick={() => onRemove(stop.id)}><Trash2 size={15} /></button>
           </li>)}
@@ -142,11 +157,11 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
         </ol>
         <details className={s.options}><summary>Время и параметры</summary>
         <div className={s.startActions}><button disabled={busy} onClick={onChangeStart}>{origin ? 'Изменить точку старта' : 'Выбрать точку старта'}</button><button disabled={busy} onClick={onLocate}><MapPin size={13} />Моё местоположение</button></div>
-        <ol className={s.stopParameters}>{plan.stops.map((stop, index) => <li key={stop.id}><b translate="no">{stop.name}</b><small translate={stop.address ? 'no' : undefined}>{stop.address ?? 'Адрес уточняйте перед посещением'}</small><small>{street?.legs[index] ? `≈${Math.ceil(street.legs[index].durationSeconds / 60)} мин по улицам` : origin && plan.legs?.[index] ? `≈${plan.legs[index].estimatedMinutes} мин по прямой` : 'Дорога пока не рассчитана'}</small>{onReorder && plan.stops.length > 1 && <div className={s.reorderActions}><button disabled={busy || index === 0} aria-label={`Поднять ${stop.name} выше`} onClick={() => moveStop(index, index - 1)}><ArrowUp size={14} /></button><button disabled={busy || index === plan.stops.length - 1} aria-label={`Опустить ${stop.name} ниже`} onClick={() => moveStop(index, index + 1)}><ArrowDown size={14} /></button></div>}</li>)}</ol>
+        <ol className={s.stopParameters}>{plan.stops.map((stop, index) => <li key={stop.id}><b translate="no">{stop.name}</b><small translate={stop.address ? 'no' : undefined}>{stop.address ?? 'Адрес уточняйте перед посещением'}</small><small>{street?.legs[index] ? `≈${duration(street.legs[index].durationSeconds / 60)} по улицам` : origin && plan.legs?.[index] ? `≈${duration(plan.legs[index].estimatedMinutes)} по прямой` : 'Дорога пока не рассчитана'}</small>{onReorder && plan.stops.length > 1 && <div className={s.reorderActions}><button disabled={busy || index === 0} aria-label={`Поднять ${stop.name} выше`} onClick={() => moveStop(index, index - 1)}><ArrowUp size={14} /></button><button disabled={busy || index === plan.stops.length - 1} aria-label={`Опустить ${stop.name} ниже`} onClick={() => moveStop(index, index + 1)}><ArrowDown size={14} /></button></div>}</li>)}</ol>
         <label className={s.departure}><CalendarDays size={19} /><span>Дата и время начала<input lang={language} aria-label="Дата и время начала маршрута" type="datetime-local" value={astanaDateInput(departure)} onChange={e => { const parsed = parseAstanaDateInput(e.target.value); if (parsed) changeDeparture(parsed); else setDateError('Выберите действительные дату и время.'); }} /></span><button type="button" onClick={() => changeDeparture(new Date().toISOString())}>Сейчас</button></label>
         {dateError && <p role="alert" className={s.warning}>{dateError}</p>}
         <p className={s.zone}>Время Астаны. Расписание мест на выбранную дату нужно уточнить.</p>
-        <div className={s.facts}><span><Clock3 size={15} />{remainingMinutes === null ? 'Оставшееся свободное время неизвестно.' : `Останется ≈${remainingMinutes} мин`}</span><span><MapPin size={15} />{street ? `${(street.distanceMeters / 1000).toLocaleString(language === 'kk' ? 'kk-KZ' : language === 'en' ? 'en-GB' : 'ru-RU', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} км по улицам` : plan.distanceKm === null ? 'Расстояние пока не рассчитано.' : `≈${plan.distanceKm.toLocaleString(language === 'kk' ? 'kk-KZ' : language === 'en' ? 'en-GB' : 'ru-RU', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} км по прямой`}</span><span>Бюджет: {plan.budget.min === null ? 'нужно уточнить стоимость' : `от ${formatNumber(plan.budget.min, language)} ₸`}</span>{plan.totalMinutes !== null && plan.travelMinutes !== null && <span><Clock3 size={15} />Запас времени {formatNumber(bufferMinutes, language)} мин</span>}</div>
+        <div className={s.facts}><span><Clock3 size={15} />{remainingMinutes === null ? 'Оставшееся свободное время неизвестно.' : `Останется ≈${remainingMinutes < 0 ? "−" : ""}${duration(Math.abs(remainingMinutes))}`}</span><span><MapPin size={15} />{street ? `${(street.distanceMeters / 1000).toLocaleString(language === 'kk' ? 'kk-KZ' : language === 'en' ? 'en-GB' : 'ru-RU', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} км по улицам` : plan.distanceKm === null ? 'Расстояние пока не рассчитано.' : `≈${plan.distanceKm.toLocaleString(language === 'kk' ? 'kk-KZ' : language === 'en' ? 'en-GB' : 'ru-RU', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} км по прямой`}</span><span>Бюджет: {plan.budget.min === null ? 'нужно уточнить стоимость' : `от ${formatNumber(plan.budget.min, language)} ₸`}</span>{plan.totalMinutes !== null && plan.travelMinutes !== null && <span><Clock3 size={15} />Запас времени {duration(bufferMinutes)}</span>}</div>
         <button className={s.editConditions} disabled={busy} onClick={onEditConditions}>Изменить условия</button>
         <button className={s.editConditions} disabled={busy} onClick={() => onShare(departure)}><Share2 size={16} />Поделиться планом</button>
         {(plan.feasibility === 'infeasible' || remainingMinutes !== null && remainingMinutes < 0) && <p className={s.warning}>Этот план превышает выбранные ограничения. Убери остановку или измени условия.</p>}
@@ -154,12 +169,20 @@ export function RoutePlan({ plan, origin, destination, busy, onBack, onOpenStop,
         <section className={s.routing} aria-label="Расчёт пути по улицам">
           <b>Путь по улицам</b>
           {street ? <><p>Источник: {routingStatus?.label}. Время остаётся оценкой.</p><button onClick={() => setCalculated(null)}>Убрать дорожный расчёт</button></> : <>{routingStatus?.available ? <><label className={s.consent}><input type="checkbox" checked={consent} onChange={e => setConsentFor(e.target.checked ? null : 'denied')} />Дорожный расчёт выбранных точек</label><button disabled={!consent || !origin || routingBusy} onClick={() => void calculateStreets()}>{routingBusy ? 'Строим пеший путь…' : 'Рассчитать путь по улицам'}</button>{!origin && <small>Сначала выбери точку старта.</small>}</> : <p>Дорожный провайдер не подключён. Навигация откроется в 2ГИС.</p>}</>}
-          {routingError && <p role="status">{routingError}</p>}
         </section>
         <p className={s.note}>Выбранные точки передаются провайдеру только при расчёте или открытии навигации. Поддержка промежуточных точек зависит от приложения 2ГИС: на iPhone проверь остановки после открытия.</p>
         </details>
       </div>
-      <div className={s.actions}>{navigation && <a className={s.begin} href={navigation} onClick={onStartNavigation} target="_blank" rel="noreferrer"><Navigation size={19} />Начать маршрут<ArrowUpRight size={18} /></a>}</div>
+      <div className={s.actions}>
+        {!origin ? <button className={s.begin} disabled={busy} onClick={onChangeStart}><MapPin size={19} />Выбрать точку старта</button>
+          : street && navigation ? <a className={s.begin} href={navigation} onClick={onStartNavigation} target="_blank" rel="noreferrer"><Navigation size={19} />Начать маршрут<ArrowUpRight size={18} /></a>
+          : <><button className={s.begin} disabled={busy || routingBusy || !routingStatus?.available || !consent} onClick={() => void calculateStreets()}><Route size={19} />{routingBusy ? 'Строим пеший путь…' : !routingStatusLoaded ? 'Проверяем дорожный расчёт…' : 'Проложить маршрут'}</button>
+            {routingError && <p className={s.actionError} role="status">{routingError}</p>}
+            {routingStatusLoaded && !routingStatus?.available && <p className={s.actionError} role="status">Дорожный расчёт сейчас недоступен. Можно построить путь в 2ГИС.</p>}
+            {navigation && (routingError || routingStatusLoaded && !routingStatus?.available) && <a className={s.fallbackNavigation} href={navigation} onClick={onStartNavigation} target="_blank" rel="noreferrer">Открыть в 2ГИС без расчёта<ArrowUpRight size={14} /></a>}
+            {!consent && <p className={s.actionError}>Включи дорожный расчёт в параметрах плана.</p>}
+          </>}
+      </div>
     </section>
   </main></Localize>;
 }

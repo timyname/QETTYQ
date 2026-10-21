@@ -3,6 +3,12 @@ import { ORGANIZER_TRANSLATIONS } from './i18n-organizer';
 import { POLICY_TRANSLATIONS } from './i18n-policy';
 import { ROUTE_TRANSLATIONS } from './i18n-route';
 const rows = `
+Найти на карте|Картадан табу|Find on map
+Ищем в каталоге и адресах…|Каталог пен мекенжайлардан іздеп жатырмыз…|Searching places and addresses…
+Результаты поиска на карте|Картадағы іздеу нәтижелері|Map search results
+Адресная точка OpenStreetMap · вход уточняйте|OpenStreetMap мекенжай нүктесі · кіреберісті нақтылаңыз|OpenStreetMap address point · check the entrance
+В текущем каталоге и адресном снимке совпадений нет. Можно выбрать точку на карте.|Қазіргі каталог пен мекенжайлар көшірмесінде сәйкестік жоқ. Нүктені картадан таңдауға болады.|No match in the current places and address snapshot. You can choose a point on the map.
+Поиск не ответил. Попробуй ещё раз или выбери точку на карте.|Іздеу жауап бермеді. Қайта көр немесе картадан нүктені таңда.|Search did not respond. Try again or choose a point on the map.
 Что придумаем?|Не ойластырамыз?|What shall we do?
 Свидание, ужин или что-то новое? Расскажи, что задумал. Я уточню детали и покажу варианты с источниками.|Кездесу, кешкі ас әлде жаңа бір нәрсе ме? Ойыңды айт. Мәліметтерді нақтылап, дереккөздері бар нұсқаларды көрсетемін.|A date, dinner or something new? Tell me what you have in mind. I'll ask a little more and suggest options with sources.
 ПОМОЩНИК QETTYQ|QETTYQ КӨМЕКШІСІ|QETTYQ ASSISTANT

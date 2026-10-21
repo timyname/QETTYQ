@@ -42,7 +42,7 @@ test('улицы: явное согласие, одна 401-сессия, мет
     await r.fulfill({ json: { dataMode: 'synthetic_test', route: { quality: 'street', profile: 'foot', provider: 'fossgis_foot', fetchedAt: '2026-10-20T00:00:00Z', geometry: { type: 'LineString', coordinates }, distanceMeters: 960, durationSeconds: 720, legs: [{ distanceMeters: 960, durationSeconds: 720 }], attribution: { text: 'FOSSGIS / OSRM Foot · synthetic_test', url: 'https://routing.openstreetmap.de/about.html' }, warnings: [] } } });
   });
   await routeScreen(page, context);
-  const button = page.getByRole('button', { name: 'Рассчитать путь по улицам', exact: true });
+  const button = page.getByRole('button', { name: 'Проложить маршрут', exact: true });
   await expect(button).toBeEnabled(); expect(calls).toBe(0);
   const consent = page.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' });
   await expect(consent).toBeChecked(); await consent.uncheck(); await expect(button).toBeDisabled();
@@ -86,9 +86,10 @@ test('отказ провайдера не рисует линию и не по�
   });
   await routeScreen(page, context);
   await page.getByRole('checkbox', { name: 'Дорожный расчёт выбранных точек' }).check();
-  await page.getByRole('button', { name: 'Рассчитать путь по улицам', exact: true }).click();
+  await page.getByRole('button', { name: 'Проложить маршрут', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Путь по улицам сейчас недоступен.' })).toBeVisible();
   await expect(page.locator('[data-route-quality="street"]')).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Открыть в 2ГИС без расчёта', exact: true })).toHaveAttribute('href', /2gis\.ru\/directions\/tab\/pedestrian/);
   expect(calls).toBe(1);
 });

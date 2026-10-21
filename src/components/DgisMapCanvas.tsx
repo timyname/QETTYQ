@@ -21,8 +21,13 @@ function mapPadding(host: HTMLElement) {
   host.appendChild(probe);
   const computed = getComputedStyle(probe), css = getComputedStyle(host);
   const safeBottom = Number.parseFloat(computed.paddingBottom) || 0;
+  // Full-bleed scenes have zero shell padding: measure the protected floating
+  // header itself instead of inferring safe area from the cropped scene.
   const shell = host.closest<HTMLElement>('[data-screen]');
-  const safeTop = shell ? Number.parseFloat(getComputedStyle(shell).paddingTop) || 0 : 0;
+  const header = shell?.querySelector<HTMLElement>(':scope > header');
+  const hostTop = host.getBoundingClientRect().top;
+  const safeTop = Math.max(0, (header?.getBoundingClientRect().top ?? hostTop) - hostTop);
+  const copyrightTop = header ? Math.max(0, header.getBoundingClientRect().bottom - hostTop + 2) : safeTop + 78;
   const top = Math.min(host.clientHeight * .45, (Number.parseFloat(computed.paddingTop) || 150) + safeTop);
   const ratio = Number.parseFloat(css.getPropertyValue('--map-fit-bottom-ratio')) || 0;
   const offset = Number.parseFloat(css.getPropertyValue('--map-fit-bottom-offset')) || 0;
@@ -33,7 +38,7 @@ function mapPadding(host: HTMLElement) {
   // Native 2GIS copyright occupies the free band below the global 76px header
   // and above map toolbar / route-back controls (100–110px). The bottom dock and
   // expanded route sheet must never cover mandatory provider attribution.
-  return { fit: { top, bottom, left: 42, right: 42 }, controls: { top: safeTop + 78, bottom: creditBottom + safeBottom, left: 16, right: 10 } };
+  return { fit: { top, bottom, left: 42, right: 42 }, controls: { top: copyrightTop, bottom: creditBottom + safeBottom, left: 16, right: 10 } };
 }
 
 function markerIcon(category: string) {
@@ -61,6 +66,7 @@ export function DgisMapCanvas(props: Props) {
     let objects: DgisObject[] = [], routeObjects: DgisObject[] = [], popup: DgisObject | null = null;
     let geometry: MapCanvasProps['routeGeometry'];
     let fittedPoints = false;
+    let focusedRevision: number | undefined;
     let timer: number | undefined;
     let canvas: HTMLCanvasElement | undefined;
     const removeObjects = () => { objects.forEach(object => object.destroy()); objects = []; popup?.destroy(); popup = null; };
@@ -87,6 +93,11 @@ export function DgisMapCanvas(props: Props) {
           removeObjects();
           const current = latest.current, padding = mapPadding(container);
           view.setControlsLayoutPadding(padding.controls);
+          if (current.focusPoint && valid(current.focusPoint) && current.focusPoint.revision !== focusedRevision) {
+            focusedRevision = current.focusPoint.revision;
+            const position = [current.focusPoint.lon, current.focusPoint.lat];
+            view.fitBounds({ southWest: position, northEast: position }, { maxZoom: 16, padding: padding.fit, animation: { animate: false } });
+          }
           const line = current.routeGeometry;
           const bounds = dgisRouteBounds(line);
           if (line !== geometry) {

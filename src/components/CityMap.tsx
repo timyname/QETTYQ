@@ -16,6 +16,7 @@ type Props = {
   onSelect?: (id: string) => void;
   onPick?: (point: Coordinates) => void;
   origin?: Coordinates | null;
+  focusPoint?: Coordinates & { revision: number };
 };
 
 export function createMapTooltip(point: Pick<MapPoint, "title" | "dateLabel">, document: Document) {
@@ -91,7 +92,7 @@ export function createClusterLabel(count: number, document: Document) {
   return icon;
 }
 
-export function CityMap({ points, activeId, onSelect, onPick, origin }: Props) {
+export function CityMap({ points, activeId, onSelect, onPick, origin, focusPoint }: Props) {
   const { language } = useI18n();
   const host = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -220,5 +221,10 @@ export function CityMap({ points, activeId, onSelect, onPick, origin }: Props) {
     if (ready && point && Number.isFinite(point.lat) && Number.isFinite(point.lon)) mapRef.current?.panInside([point.lat, point.lon], { padding: [30, 30] });
   }, [activeId, points, ready]);
 
+  useEffect(() => {
+    if (ready && focusPoint && Number.isFinite(focusPoint.lat) && Number.isFinite(focusPoint.lon)) {
+      mapRef.current?.setView([focusPoint.lat, focusPoint.lon], 16, { animate: false });
+    }
+  }, [ready, focusPoint]);
   return <Localize><div className="city-map" ref={host} aria-label="Карта событий Астаны">{error && <p role="status">Не удалось загрузить карту. Список мест остаётся доступным.</p>}</div></Localize>;
 }

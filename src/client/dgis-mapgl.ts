@@ -62,9 +62,23 @@ export function dgisBounds(points: number[][]): DgisBounds | null {
   }), { southWest: [...points[0]], northEast: [...points[0]] });
 }
 
-export function approvedBrowserMapKey(data: unknown): string | null {
+function currentMapOrigin() {
+  if (typeof window === 'undefined') return '';
+  // WKWebView custom-scheme Location.origin may be opaque. Never allow arbitrary null origins.
+  return window.location.protocol === 'capacitor:' && window.location.hostname === 'localhost'
+    ? 'capacitor://localhost' : window.location.origin;
+}
+export function approvedBrowserMapKey(data: unknown, origin = currentMapOrigin()): string | null {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
   const value = data as Record<string, unknown>;
+  // Fail closed before SDK download/initialization. A domain-approved browser
+  // credential does not automatically work in capacitor://localhost or file:.
+  if (!Array.isArray(value.allowedOrigins) || !value.allowedOrigins.length
+    || value.allowedOrigins.length > 10 || !value.allowedOrigins.every(item => typeof item === 'string'
+      && (/^https:\/\/[a-z0-9.-]+(?::\d+)?$/u.test(item)
+        || /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?$/u.test(item)
+        || item === 'capacitor://localhost'))
+    || !value.allowedOrigins.includes(origin)) return null;
   return value.enabled === true && value.provider === '2gis' && typeof value.browserKey === 'string'
     && /^[a-zA-Z0-9._~-]{12,512}$/u.test(value.browserKey) ? value.browserKey : null;
 }

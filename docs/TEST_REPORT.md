@@ -1,5 +1,17 @@
 # Отчёт проверки
 
+## Скриншоты iPhone / native Origin / map search · 21.10.2026
+
+- Финальный `pnpm test`:641/641PASS,55files. `pnpm typecheck` PASS; scopedESLint map/search/PilotApp/API/tests PASS. Первичный rootlint поймал Date.now() в callback, заменено монотонной request revision; правило не отключали.
+- Полный чистый `PORT=3039 pnpm exec playwright test --workers=2 --output=output/playwright/iphone-ui-pass-results --reporter=line`:81/81PASS,2.9min. До этого76/81: обнаружены и исправлены credit/header после fullbleed, landscape attribution overlap, eventfixture selection и drag к остановке вне scroll viewport. Существующие проверки href/unknown/source/hit-test сохранены. Подробно `A-route-start-flow-20261021.md`, `A-safe-area-shell-20261021.md`.
+- Search: новые unit+API tests проверяют alternateKKspelling только для retrieval, exactnumeric house tokens, unknown/expired addresses, no-store/session/cross-site/cleanup. MockMapGL проверяет actual fitBounds target after submit, empty response, enterKeyHintsearch. Самый поздний native-only flag добавлен отдельно и покрыт641unit+productionbuild; webfixture конфигурация не зависит от него.
+- `git archive 87f62e3b482eb7ba1d51b1e0e2c55a68b3677874 … | docker build --platform linux/amd64 -t qettyq:vps-20261021-11 -`:PASS Next16.4.2 build+tsc. App-only compose update, backup verified, healthy. SSH authorized_keys SHA256 прежний `9abd2d5bb7b3e791b345eeaf6bd608cb40930acb908e6dd9056cf1ab38135c40`; другие проекты не менялись.
+- Native `pnpm exec vite build --outDir …/.sites-runtime/iphone-ui.zYxSzA/native-www --emptyOutDir`:PASS2.41s, предупреждение largechunks оставлено, не скрыто. Source/mobile/www/signing не переписаны. Подключён физический iPhone, но новый bundle ещё не установлен и hardwarekeyboard/status-area QA не объявлены PASS. Существующий ACTIVE iPhone-sync процесс отдельный.
+- Console: после отдельного owner approval добавлен точный `capacitor://localhost` рядом с HTTPSweborigin. Save/reload подтвердили chips; Map Tiles202/1000,monthBlock, demo21.11 неизменны. Снимок ограничений cropped ниже secret header: `exports/screenshots/iphone-ui-20261021/origins-saved.png`. Новый native flag provisioned без вывода ключа, другие env сохранены.
+- Production HTTP own-session: namedvenue1,publicaddress2,negative0; sourceURLOSM/no-store/searchStoredfalse PASS. Web+nativeconfig enabled2GIS/allowednative true, secret values не выводились. Своя disposable session удалена. Latency1315/460/337ms — end-to-end HTTPS с coldstart, не localretrievalbenchmark.
+- Media: bounded11Wikidata+8Commons metadata200 дали0новых approvedphoto; 12reviewcandidates из749POI. Отдельно1currentEvent JSON-LD/og:image→oneJPEG downloaded/decoded/SHA/visual/privateignore PASS. PublicDisplayAllowed=false, не считать фото подключёнными к карточкам. Отчёты `A-real-media-enrichment-20261021.md` и `A-private-event-media-download-20261021.md`.
+- Платные Google/OpenAI calls0, caps/ledgers не сбрасывались. Physical nativeMapGL tile-load после Origin изменения остаётся непроверенным; не равен browser/mock/correctconsoleconfig.
+
 ## Активация demo MapGL и published style · 21.10.2026
 
 - `pnpm test`:590/590 PASS,51files, финальный run04:44; `pnpm typecheck`:PASS. Scoped ESLint map/config/theme/tests+PolicyPages/i18n-policy/smoke-script PASS. Первое обновление policy поймало missing translation2ГИС (589/590), добавлен RU/KK/EN brand row и полный повтор590PASS. Проверки не выключались.

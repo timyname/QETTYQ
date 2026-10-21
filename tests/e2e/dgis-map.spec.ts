@@ -4,13 +4,26 @@ import { pilotPlaces, publicPlace } from '../../src/server/pilot/catalog';
 /** Synthetic MapGL adapter checks, not real 2GIS tiles, quota or credentials. */
 const key = 'SYNTHETIC_PUBLIC_MAPGL_KEY_NOT_REAL';
 const places = pilotPlaces.slice(0, 3).map(publicPlace);
+test('submitted map search centers on returned sourced point and exposes a search keyboard action', async ({ page }) => {
+  await fixture(page); await map(page);
+  await expect(page.locator('[data-map-engine="2gis"]')).toHaveAttribute('data-map-ready', 'true');
+  const input = page.getByRole('searchbox', { name: 'Поиск места на карте' });
+  await expect(input).toHaveAttribute('enterkeyhint', 'search');
+  await input.fill('Мангилик ел 10/1'); await input.press('Enter');
+  await expect(page.getByRole('list', { name: 'Результаты поиска на карте' })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { dgisQa: { fits: unknown[] } }).dgisQa.fits)).toContainEqual({ bounds: { southWest: [71.44, 51.14], northEast: [71.44, 51.14] }, options: expect.objectContaining({ maxZoom: 16 }) });
+  await page.getByRole('button', { name: 'SYNTHETIC адрес, 10/1 Адресная точка OpenStreetMap · вход уточняйте', exact: true }).click();
+  await expect(page.getByRole('list', { name: 'Результаты поиска на карте' })).toHaveCount(0);
+  await input.fill('SYNTHETIC EMPTY'); await page.getByRole('button', { name: 'Найти на карте' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'В текущем каталоге' })).toBeVisible();
+});
 test.use({ viewport: { width: 430, height: 932 }, reducedMotion: 'reduce' });
 
 async function fixture(page: Page, mode: 'ready' | 'style-error' | 'sdk-error' = 'ready') {
   const submitted: Array<{ path: string; value: Record<string, unknown> | null }> = [];
   await page.addInitScript(({ mode }) => {
     if (mode === 'sdk-error') return;
-    const state = { maps: [] as unknown[], lines: [] as unknown[], zoom: [] as number[], destroyed: 0 };
+    const state = { maps: [] as unknown[], lines: [] as unknown[], zoom: [] as number[], fits: [] as unknown[], destroyed: 0 };
     const scope = window as unknown as { mapgl: unknown; dgisQa: typeof state & { click?: (point: number[]) => void; lose?: () => void; error?: (kind: string) => void } };
     scope.dgisQa = state;
     class Map {
@@ -29,7 +42,7 @@ async function fixture(page: Page, mode: 'ready' | 'style-error' | 'sdk-error' =
       on(type: string, fn: (event?: unknown) => void) { (this.handlers[type] ??= []).push(fn); return this; }
       project(point: number[]) { return [80 + (point[0] - 71.3) * 1200, 300 + (point[1] - 51.1) * 1200]; }
       unproject(point: number[]) { return [71.3 + (point[0] - 80) / 1200, 51.1 + (point[1] - 300) / 1200]; }
-      fitBounds() { return this; }
+      fitBounds(bounds: unknown, options: unknown) { state.fits.push({ bounds, options }); return this; }
       getZoom() { return this.zoom; }
       setZoom(zoom: number) { this.zoom = zoom; state.zoom.push(zoom); return this; }
       setRotation() { return this; } setPitch() { return this; }
@@ -58,7 +71,8 @@ async function fixture(page: Page, mode: 'ready' | 'style-error' | 'sdk-error' =
     const value = req.postData() ? req.postDataJSON() as Record<string, unknown> : null;
     submitted.push({ path: url.pathname, value });
     const respond = (json: unknown) => route.fulfill({ json });
-    if (url.pathname === '/api/maps/config') return respond({ enabled: true, provider: '2gis', browserKey: key });
+    if (url.pathname === '/api/maps/config') return respond({ enabled: true, provider: '2gis', browserKey: key, allowedOrigins: [url.origin] });
+    if (url.pathname === '/api/maps/search') return respond({ items: value?.query === 'SYNTHETIC EMPTY' ? [] : [{ id: 'synthetic-address', kind: 'address', title: 'SYNTHETIC адрес, 10/1', address: null, lat: 51.14, lon: 71.44, sourceUrl: 'https://www.openstreetmap.org/way/1', quality: 'derived', asOf: '2026-10-19' }], dataMode: 'synthetic_test' });
     if (url.pathname === '/api/session') return respond({ session: { id: 'synthetic-dgis-qa' } });
     if (url.pathname === '/api/catalog') return respond({ items: places, dataMode: 'snapshot' });
     if (url.pathname === '/api/events') return respond({ items: [], dataMode: 'unavailable', warnings: [] });

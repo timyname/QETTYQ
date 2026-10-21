@@ -7,6 +7,7 @@ import { installOfflineTestGuards, openRussianApp } from './offline-test-setup';
 test.use({ timezoneId: 'America/New_York' });
 test.beforeEach(async ({ page }) => {
   await installOfflineTestGuards(page);
+  await page.route('**/api/routing', route => route.fulfill({ json: { available: false, provider: 'fossgis_foot', label: 'SYNTHETIC disabled', reason: 'QA_DISABLED', localDemo: false } }));
   await page.route('**/api/events', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [], dataMode: 'unavailable', freshness: 'unavailable', fetchedAt: null }) }));
 });
 
@@ -75,7 +76,8 @@ test('маршрут: время Астаны независимо от timezone
   await expect(sheet.getByText('Мой план · 23 октября', { exact: true })).toBeVisible();
   await expect(sheet.getByText('18:30 · начало', { exact: true })).toBeVisible();
   await expect(sheet.locator('#route-details > ol > li')).toHaveCount(2);
-  const cta = page.getByRole('link', { name: 'Начать маршрут', exact: true });
+  await expect(page.getByRole('link', { name: 'Начать маршрут', exact: true })).toHaveCount(0);
+  const cta = page.getByRole('link', { name: 'Открыть в 2ГИС без расчёта', exact: true });
   await expect(cta).toHaveAttribute('href', /points\/71\.4304,51\.1282\|/);
   await expect(cta).toHaveAttribute('href', /\/directions\/tab\/pedestrian\//);
   await expect(page.getByRole('button', { name: 'Свернуть план маршрута' })).toBeVisible();
@@ -96,6 +98,7 @@ test('маршрут: время Астаны независимо от timezone
     }).toBe(true);
     await page.screenshot({ path: `exports/screenshots/v6/route-${width}.png` });
   }
+  await page.getByRole('button', { name: 'Свернуть план маршрута', exact: true }).click();
   await page.getByRole('button', { name: 'На карту', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Город на карте' })).toBeVisible();
   await expect(page.locator('.maplibregl-canvas, [data-map-engine="fallbackleaflet"] .leaflet-container')).toBeVisible();
