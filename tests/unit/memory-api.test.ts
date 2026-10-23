@@ -17,6 +17,9 @@ import { PATCH as profile } from "../../src/app/api/memory/profile/route";
 import { POST as message } from "../../src/app/api/memory/messages/route";
 import { POST as visit } from "../../src/app/api/memory/visits/route";
 import type { MemoryScope } from "../../src/server/memory/contracts";
+import { normalizeChatHistory, CHAT_HISTORY_MAX_BYTES } from "../../src/server/pilot/chat-history";
+import { prepareLeisureDialogue } from "../../src/server/assistant/leisure-dialogue";
+import { pilotContextSchema } from "../../src/server/pilot/contracts";
 
 let directory: string, path: string, cookie: string, session: string;
 let db: DatabaseSync;
@@ -167,12 +170,38 @@ describe("durable per-browser memory API, explicit consent and real SQLite", () 
     const text = String(db.prepare("SELECT text FROM memory_messages WHERE id='assistant-long'").get()?.text);
     expect(Buffer.byteLength(text)).toBeLessThanOrEqual(4000);
   });
-  it("retains 24 untrusted messages and sends at most six only after AI-transfer consent", async () => {
+  it("retains 24 untrusted messages and returns twenty bounded dialogue turns only after AI-transfer consent", async () => {
     await consent("dialogue");
     for (let index = 0; index < 15; index++) await memory.recordExchange(request("POST"), { userMessageId: `u-${index}`, userText: `Запрос ${index}`, assistantMessageId: `a-${index}`, assistantText: "Уточните интересы.", mode: "deterministic" });
     const state = await (await GET(request())).json(); expect(state.messages).toHaveLength(24);
     expect(state.visits).toEqual([]); expect(await memory.readForAI(request("POST"))).toBeNull();
-    await consent("ai_transfer"); expect((await memory.readForAI(request("POST")))?.history.length).toBeLessThanOrEqual(6);
+    await consent("ai_transfer");
+    const history = (await memory.readForAI(request("POST")))!.history;
+    expect(history).toHaveLength(20);
+    expect(Buffer.byteLength(JSON.stringify(history))).toBeLessThanOrEqual(CHAT_HISTORY_MAX_BYTES);
+    expect(normalizeChatHistory(history)).toHaveLength(6);
+  });
+
+  it("restores an early date/dinner/exclusion after nine exchanges and actual SQLite reopen", async () => {
+    await consent("dialogue", "persistent_30d"); await consent("ai_transfer", "persistent_30d");
+    for (let index = 0; index < 9; index++) {
+      time += 1;
+      const text = index === 0 ? "Хочу на свидание завтра: ужин, без стендапа, до 10000 тенге" : "На двоих";
+      expect((await memory.recordExchange(request("POST"), { userMessageId: `long-u-${index}`, userText: text,
+        assistantMessageId: `long-a-${index}`, assistantText: "SYNTHETIC TEST: запрос принят", mode: "deterministic" })).stored).toBe(true);
+    }
+    db.close(); db = openDatastore({ path }); install();
+    resetSessionStoreForTests(); session = createSession().id;
+    const restored = await memory.readForAI(request("POST"));
+    expect(restored?.history).toHaveLength(18);
+    const dialogue = prepareLeisureDialogue({ text: "Два часа", history: restored!.history, context: pilotContextSchema.parse({}), now: time });
+    expect(dialogue.context).toMatchObject({ goal: "food", budget: 10000, strictBudget: true, minutes: 120, partySize: 2 });
+    expect(dialogue.retrievalText).toContain("2026-10-21");
+    expect(dialogue.excludedTags).toContain("standup");
+    expect(dialogue.intent).toBe("date");
+    expect(normalizeChatHistory(restored!.history)).toHaveLength(6);
+    await revoke(request("DELETE", { scope: "ai_transfer" }));
+    expect(await memory.readForAI(request("POST"))).toBeNull();
   });
   it("marks a visit only through separate explicit consent/action and rejects future/unknown records", async () => {
     const repository = createEventsStore(db);

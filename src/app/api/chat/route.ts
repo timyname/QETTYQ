@@ -1,5 +1,5 @@
 import { catalogMeta } from "../../../server/pilot/catalog";
-import { prepareLeisureDialogue, filterDialogueCandidates } from "../../../server/assistant/leisure-dialogue";
+import { prepareLeisureDialogue, filterDialogueCandidates, DIALOGUE_CONFIRMED_FIELDS } from "../../../server/assistant/leisure-dialogue";
 import { answerPilotChatWithEvents, parseContext, positiveCategoryQuery } from "../../../server/pilot/chat";
 import { answerReasonedAssistant } from "../../../server/pilot/reasoned-assistant";
 import { localizedClarification, localizedSearchReply } from "../../../server/pilot/chat-language";
@@ -15,8 +15,10 @@ import { getHostedRuntime, type HostedRuntime } from "../../../server/pilot/host
 import { boundChatPayload } from "../../../server/pilot/chat-history";
 import { chatInputSchema, pilotContextSchema } from "../../../server/pilot/contracts";
 import { apiError, blockCrossSiteMutation, jsonResponse, readJson, requireSession, validationError } from "../../../server/session/http";
+import { beginRagTrace } from "../../../server/retrieval/trace-recorder";
+import type { RagTraceStore } from "../../../server/retrieval/trace";
 
-export async function handleChat(request: Request, publicRuntime?: PublicAIRuntime, events: HostedRuntime["events"] = liveEventsService, memory?: HostedRuntime["memory"]) {
+export async function handleChat(request: Request, publicRuntime?: PublicAIRuntime, events: HostedRuntime["events"] = liveEventsService, memory?: HostedRuntime["memory"], traces: RagTraceStore | undefined = getHostedRuntime()?.ragTraces) {
   const blocked = blockCrossSiteMutation(request);
   if (blocked) return blocked;
   const auth = requireSession(request);
@@ -34,6 +36,8 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   auth.session.chatRequestTimes = auth.session.chatRequestTimes.filter((time) => time > now - 60_000);
   if (auth.session.chatRequestTimes.length >= 30) return apiError("RATE_LIMITED", 429);
   auth.session.chatRequestTimes.push(now);
+  const trace = beginRagTrace(auth.session.id, parsed.data.language, traces);
+  try {
   let saved: MemoryAIContext | null = null;
   if (parsed.data.useAI && memory) { try { saved = await memory.readForAI(request); } catch { /* no hidden RAM/consent fallback */ } }
   const preferences = saved?.preferences;
@@ -42,8 +46,15 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   } : {});
   // Prefer the current bounded transcript. Global text deduplication can erase a
   // later correction (e.g. 2000 -> 3000 -> 2000); never treat assistant text as fact.
-  const history = (parsed.data.history.length ? parsed.data.history : saved?.history ?? []).slice(-6);
-  const dialogue = prepareLeisureDialogue({ text: parsed.data.text, history, context, language: parsed.data.language, now });
+  const history = (parsed.data.history.length ? parsed.data.history : saved?.history ?? []).slice(-20);
+  trace.history(history.length);
+  trace.mark("memory");
+  // Only /api/context establishes confirmed settings. A default request context
+  // or a remembered preference is not silently promoted to a locked constraint.
+  const confirmedFields = auth.session.context ? DIALOGUE_CONFIRMED_FIELDS.filter(field => field !== "goal"
+    && auth.session.context![field] === context[field]) : undefined;
+  const dialogue = prepareLeisureDialogue({ text: parsed.data.text, history, context, confirmedFields, language: parsed.data.language, now });
+  trace.mark("dialogue");
   const remember = async (reply: string, mode: "openai" | "deterministic") => {
     if (!memory) return false;
     try { return (await memory.recordExchange(request, { userMessageId: crypto.randomUUID(), userText: parsed.data.text,
@@ -51,11 +62,13 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
     catch { return false; }
   };
   if (dialogue.action === "clarify") {
+    const traceId = await trace.finish("clarify", { mode: "deterministic" });
     return jsonResponse({ ...catalogMeta(), reply: dialogue.reply, proposedContext: dialogue.context,
       items: [], events: [], eventEvidence: [], eventsMeta: null, citations: [], steps: [], suggestions: [],
       mode: "deterministic", generationMode: "deterministic", reasoningMode: "deterministic", model: null,
       reason: "DIALOGUE_CLARIFICATION", questions: dialogue.questions, warnings: dialogue.warnings,
-      memoryStored: await remember(dialogue.reply, "deterministic"), language: parsed.data.language });
+      memoryStored: await remember(dialogue.reply, "deterministic"), language: parsed.data.language }, 200,
+      traceId ? { "x-qettyq-trace-id": traceId } : undefined);
   }
   const retrievalText = dialogue.retrievalText, effectiveContext = dialogue.context;
   let result = await answerPilotChatWithEvents(retrievalText, effectiveContext, { getEvents: () => events.get() });
@@ -65,6 +78,7 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
     result.eventEvidence = result.eventEvidence.filter(evidence => result.events.some(event => event.id === evidence.eventId));
   };
   constrain();
+  trace.mark("retrieval");
   result.reply = localizedSearchReply(parsed.data.language, result);
   let assistant: SmartAssistantResult = { mode: "deterministic", reply: result.reply, citations: [], model: null, reason: "AI_NOT_REQUESTED" };
   let googlePlaces: GooglePlacesResult | undefined;
@@ -135,8 +149,17 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   const warnings = assistant.mode === "openai"
     ? result.warnings.filter(warning => !warning.startsWith("Без внешнего AI:"))
     : result.warnings;
+  trace.mark("generation");
+  const traceId = await trace.finish(result.items.length || result.events.length ? "success" : "empty",
+    { ...result, mode: assistant.mode, dataMode: result.eventsMeta?.dataMode ?? meta.dataMode },
+    "eventRetrieval" in result ? result.eventRetrieval.excludedCount : null);
   return jsonResponse({ ...meta, ...result, ...assistant, generationMode: assistant.mode, reasoningMode, googlePlaces, memoryStored, language: parsed.data.language,
-    dataMode: result.eventsMeta?.dataMode ?? meta.dataMode, warnings: [...(result.eventsMeta ? [] : meta.warnings), ...warnings, ...dialogue.warnings] });
+    dataMode: result.eventsMeta?.dataMode ?? meta.dataMode, warnings: [...(result.eventsMeta ? [] : meta.warnings), ...warnings, ...dialogue.warnings] }, 200,
+    traceId ? { "x-qettyq-trace-id": traceId } : undefined);
+  } catch (error) {
+    await trace.finish("error");
+    throw error;
+  }
 }
 
 export function POST(request: Request) {

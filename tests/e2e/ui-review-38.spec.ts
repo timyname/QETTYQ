@@ -100,7 +100,7 @@ test('38 review: dock follows drag and keyboard; composer has no chips; bounded 
   let bytes = 0;
   await page.route('**/api/chat', async route => {
     bytes = new TextEncoder().encode(route.request().postData()!).byteLength;
-    expect(route.request().postDataJSON().history.length).toBeLessThanOrEqual(6);
+    expect(route.request().postDataJSON().history.length).toBeLessThanOrEqual(20);
     expect(route.request().postDataJSON()).toMatchObject({ useAI: false, googleConsent: false });
     await route.fulfill({ json: { reply: 'SYNTHETIC TEST — ответ без провайдера', items: [], mode: 'deterministic' } });
   });

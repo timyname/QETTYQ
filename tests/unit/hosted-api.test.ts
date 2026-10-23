@@ -47,14 +47,14 @@ describe("hosted API dependency wiring, no external traffic", () => {
     expect(explicit.dependencies).toHaveBeenCalledOnce(); expect(mock.dependencies).not.toHaveBeenCalled();
     expect(liveEventsService.get).toHaveBeenCalledOnce(); expect(mock.get).not.toHaveBeenCalled(); expect(answer).toHaveBeenCalledOnce();
   });
-  it("normalizes 24 browser messages before schema validation, retaining six and redacting decimal GPS", async () => {
+  it("normalizes 24 browser messages before schema validation, retaining twenty for dialogue and redacting decimal GPS", async () => {
     const mock = fixture(); setHostedRuntime(mock.host);
     const answer = vi.spyOn(reasonedAssistant, "answerReasonedAssistant").mockResolvedValue({ assistant: { mode: "deterministic", reply: "SYNTHETIC TEST", citations: [], model: null, reason: "TEST_ONLY" }, plan: null, evidence: null });
     const history = Array.from({ length: 24 }, (_, index) => ({ role: "user", text: `${index}: Я у 51.123456,71.123456` }));
     const response = await chat(request("chat", createSession().id, { text: "Лекции завтра", useAI: true, history }));
     expect(response.status).toBe(200);
     const input = answer.mock.calls[0][0];
-    expect(input.history).toHaveLength(6); expect(input.history![0].text).toContain("18:");
+    expect(input.history).toHaveLength(20); expect(input.history![0].text).toContain("4:");
     expect(JSON.stringify(input.history)).not.toContain("51.123456");
   });
   it("rejects oversized core with 413 before retrieval or AI dependencies", async () => {

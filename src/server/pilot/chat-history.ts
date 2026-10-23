@@ -30,12 +30,25 @@ export function normalizeChatHistory(input: unknown): RecentChatMessage[] {
   return history;
 }
 
+/** More cheap deterministic dialogue turns, not a larger model prompt. The
+ * total UTF-8 budget stays identical to the six-message provider context. */
+export function normalizeDialogueHistory(input: unknown): RecentChatMessage[] {
+  if (!Array.isArray(input)) return [];
+  const history: RecentChatMessage[] = input.slice(-20).flatMap(value => {
+    if (!value || typeof value !== "object" || !["user", "assistant"].includes(value.role) || typeof value.text !== "string") return [];
+    const text = clip(redactDecimalCoordinates(value.text, "[координата скрыта]"), 1600, 1000);
+    return text ? [{ role: value.role as RecentChatMessage["role"], text }] : [];
+  });
+  while (history.length && bytes(history) > CHAT_HISTORY_MAX_BYTES) history.shift();
+  return history;
+}
+
 /** Root API should call after readJson; client must also bound the complete serialized
  * POST BEFORE fetch, because the HTTP reader rejects >16 KiB before normalization.
  * Never silently discard current text, location consent, or budget constraints.
  */
 export function boundChatPayload<T extends { history?: unknown }>(payload: T): Omit<T, "history"> & { history: RecentChatMessage[] } {
-  const result = { ...payload, history: normalizeChatHistory(payload.history) };
+  const result = { ...payload, history: normalizeDialogueHistory(payload.history) };
   while (result.history.length && bytes(result) > CHAT_PAYLOAD_SOFT_BYTES) result.history.shift();
   if (bytes(result) > CHAT_PAYLOAD_SOFT_BYTES) throw new Error("CHAT_CORE_PAYLOAD_TOO_LARGE");
   return result;

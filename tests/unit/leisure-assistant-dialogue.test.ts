@@ -109,7 +109,7 @@ describe('bounded leisure assistant dialogue (offline, no provider)', () => {
   });
 
   it('uses bounded recent history only', () => {
-    const result = run('Кофе', [user('До 99999 тенге'), ...Array.from({ length: 12 }, () => assistant('SYNTHETIC TEST'))]);
+    const result = run('Кофе', [user('До 99999 тенге'), ...Array.from({ length: 24 }, () => assistant('SYNTHETIC TEST'))]);
     expect(result.historyUsed).toBe(0); expect(result.context.budget).toBeNull();
   });
 

@@ -1,10 +1,13 @@
 import type { PilotContext } from '../pilot/contracts';
 import { parseContext } from '../pilot/chat';
-import { normalizeChatHistory, type RecentChatMessage } from '../pilot/chat-history';
+import { normalizeDialogueHistory, type RecentChatMessage } from '../pilot/chat-history';
 import { redactDecimalCoordinates } from '../pilot/location-redaction';
+import { isNegatedMention } from '../retrieval/lexical-query';
 
 export type DialogueLanguage = 'ru' | 'kk' | 'en';
 export type DialogueQuestion = { field: 'format' | 'date' | 'budget'; text: string };
+export const DIALOGUE_CONFIRMED_FIELDS = ['budget', 'strictBudget', 'budgetBasis', 'partySize', 'minutes', 'goal'] as const;
+export type DialogueConfirmedField = typeof DIALOGUE_CONFIRMED_FIELDS[number];
 export type LeisureDialogue = {
   action: 'clarify' | 'retrieve'; reply: string; questions: DialogueQuestion[];
   intent: 'date' | 'food' | 'events' | 'places' | 'general'; context: PilotContext;
@@ -26,6 +29,9 @@ const exclusions = [
   { tag: 'park', term: 'парк', pattern: /парк\p{L}*|park\p{L}*|саябақ\p{L}*/giu, content: /парк|park|garden|саябақ/iu },
   { tag: 'cafe', term: 'кофе', pattern: /кофе\p{L}*|кафе|coffee|caf[eé]/giu, content: /кофе|кафе|coffee|cafe/iu },
   { tag: 'rock', term: 'рок', pattern: /(?:^|[^\p{L}])(?:рок|rock|metal)(?=[^\p{L}]|$)/giu, content: /рок|rock|metal/iu },
+  { tag: 'standup', term: 'стендап', pattern: /стендап\p{L}*|stand[\s-]*up/giu, content: /стендап|stand[\s-]*up/iu },
+  { tag: 'concert', term: 'концерт', pattern: /концерт\p{L}*|concert\p{L}*/giu, content: /концерт|concert/iu },
+  { tag: 'food', term: 'еда', pattern: /(?<!\p{L})(?:еда|еду|еды|ресторан\p{L}*|ужин\p{L}*|food|restaurant\p{L}*|dinner|тамақ)(?!\p{L})/giu, content: /restaurant|cafe|fast_food|food_court|ресторан|кафе|ужин|dinner|food|тамақ/iu },
 ] as const;
 type FormatChoice = { key: 'food' | 'events' | 'places'; goal: PilotContext['goal']; query: string; pattern: RegExp };
 const dateIntent = /свидани\p{L}*|романтич\p{L}*|\b(?:a\s+date|date\s+night|dating|romantic)\b|кездесу|романтик/iu;
@@ -37,29 +43,37 @@ const indifferent = /^(?:не\s*важно|без\s+разницы|любое|л
 const amount = /\d[\d\s.,]*(?:₸|тг|тенге|теңге|kzt)|\d+(?:[.,]\d+)?\s*(?:тыс(?:яч)?|k)\s*(?:₸|тг|тенге|теңге|kzt)?/iu;
 const duration = /\d+(?:[.,]\d+)?\s*(?:час\p{L}*|мин\p{L}*|hours?|minutes?|сағат|минут)|(?:один|одна|два|две|три|четыре|пять|шесть|one|two|three|four|five|six|бір|екі|үш|төрт|бес|алты|жарты)\s+(?:час\p{L}*|hours?|сағат)|полчаса|полтора\s+часа|half\s+an\s+hour|one\s+and\s+a\s+half\s+hours?|бір\s+жарым\s+сағат/iu;
 const cuisine = /япон\p{L}*|жапон\p{L}*|japan\p{L}*|корей\p{L}*|кор[её]й\p{L}*|korean|кәріс\p{L}*|итал\p{L}*|italian|индий\p{L}*|indian|үнді\p{L}*|китай\p{L}*|chinese|қытай\p{L}*|веган\p{L}*|vegan|вегетариан\p{L}*|vegetarian/giu;
-const negative = (text: string, position: number, end = position) => /(?:^|[^\p{L}])(?:без|не|no|not|without|емес)\s+(?:(?:хочу|хотим|нуж\p{L}*|нравится|want|like)\s+)?$/iu.test(text.slice(0, position))
-  || /^\s+(?:емес|керек\s+емес)(?=$|[^\p{L}])/iu.test(text.slice(end));
+// Share the retrieval scope rules, while preserving the original match offsets.
+const negative = (text: string, position: number, end = position) => isNegatedMention(text.toLocaleLowerCase('ru-RU'),
+  Object.assign([text.slice(position, end).toLocaleLowerCase('ru-RU')] as [string], { index: position }));
+
+/** Remove rejected nouns from positive search, but retain their explicit filter
+ * below. Otherwise “not theatre, stand-up” can be parsed as both interests. */
+function positiveSearchText(text: string): string {
+  let result = text;
+  for (const entry of exclusions) result = result.replace(new RegExp(entry.pattern.source, entry.pattern.flags), (noun: string, position: number) =>
+    negative(result, position, position + noun.length) ? ' '.repeat(noun.length) : noun);
+  return result;
+}
 
 function dayQuery(text: string, now: number): string | null {
   const local = new Date(now + 5 * 3_600_000), day = local.toISOString().slice(0, 10);
   const plus = (days: number) => new Date(Date.parse(`${day}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
-  const explicit = [...text.matchAll(/20\d{2}-\d{2}-\d{2}|\d{1,2}\s+(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)(?:\s+20\d{2})?/giu)].at(-1)?.[0];
-  if (explicit) return explicit;
+  const explicit = [...text.matchAll(/20\d{2}-\d{2}-\d{2}|\d{1,2}\s+(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)(?:\s+20\d{2})?/giu)]
+    .filter(match => !negative(text, match.index!, match.index! + match[0].length)).map(match => ({ position: match.index!, value: match[0] }));
   const relative = [
-    { pattern: /послезавтра/giu, value: plus(2) }, { pattern: /завтра|\btomorrow\b|ертең/giu, value: plus(1) },
+    { pattern: /послезавтра/giu, value: plus(2) }, { pattern: /(?<!\p{L})завтра|\btomorrow\b|ертең/giu, value: plus(1) },
     { pattern: /сегодня|сейчас|\btoday\b|\bright now\b|бүгін|қазір/giu, value: day },
     { pattern: /выходн\p{L}*|\bweekend\b|демалыс\s+күн/giu, value: 'выходные' },
-  ].flatMap(entry => [...text.matchAll(entry.pattern)].filter(match => !negative(text, match.index!)).map(match => ({ position: match.index!, value: entry.value })));
-  // Avoid treating the suffix «завтра» in «послезавтра» as tomorrow.
-  if (/послезавтра/iu.test(text)) return plus(2);
+  ].flatMap(entry => [...text.matchAll(entry.pattern)].filter(match => !negative(text, match.index!, match.index! + match[0].length)).map(match => ({ position: match.index!, value: entry.value })));
   const weekdays = [
     /(?<!\p{L})(?:воскресень\p{L}*|sunday|жексенбі(?:де)?)(?!\p{L})/giu, /(?<!\p{L})(?:понедельник\p{L}*|monday|дүйсенбі(?:де)?)(?!\p{L})/giu,
     /(?<!\p{L})(?:вторник\p{L}*|tuesday|сейсенбі(?:де)?)(?!\p{L})/giu, /(?<!\p{L})(?:сред[ау]|wednesday|сәрсенбі(?:де)?)(?!\p{L})/giu,
     /(?<!\p{L})(?:четверг\p{L}*|thursday|бейсенбі(?:де)?)(?!\p{L})/giu, /(?<!\p{L})(?:пятниц\p{L}*|friday|жұма(?:да)?)(?!\p{L})/giu,
     /(?<!\p{L})(?:суббот\p{L}*|saturday|сенбі(?:де)?)(?!\p{L})/giu,
-  ].flatMap((pattern, weekday) => [...text.matchAll(pattern)].filter(match => !negative(text, match.index!))
+  ].flatMap((pattern, weekday) => [...text.matchAll(pattern)].filter(match => !negative(text, match.index!, match.index! + match[0].length))
     .map(match => ({ position: match.index!, value: plus((weekday - local.getUTCDay() + 7) % 7) })));
-  return [...relative, ...weekdays].sort((a, b) => a.position - b.position).at(-1)?.value ?? null;
+  return [...explicit, ...relative, ...weekdays].sort((a, b) => a.position - b.position).at(-1)?.value ?? null;
 }
 
 const labels = {
@@ -89,18 +103,27 @@ function searchTerms(text: string) {
 
 /** Stateless replay of bounded USER turns. No DB writes, provider requests or
  * inferred identity/relationship/profile. Assistant messages are never facts.
- * Confirmed settings remain constraints; topic reset only clears dialogue replay.
+ * Explicitly confirmed settings are restored before the current user turn.
+ * Without field provenance, only a known strict budget is protected by default;
+ * default minutes/goal are not assumed to be a confirmed choice after reload.
+ * Topic reset only clears dialogue replay, not protected settings.
  */
-export function prepareLeisureDialogue(input: { text: string; history?: unknown; context: PilotContext; language?: DialogueLanguage; now?: number }): LeisureDialogue {
+export function prepareLeisureDialogue(input: { text: string; history?: unknown; context: PilotContext; language?: DialogueLanguage; now?: number;
+  confirmedFields?: readonly DialogueConfirmedField[] }): LeisureDialogue {
   const language = input.language ?? 'ru', copy = labels[language], now = input.now ?? Date.now();
   const current = redactDecimalCoordinates(input.text, '[координаты скрыты]').slice(0, 1000);
-  const normalized: RecentChatMessage[] = normalizeChatHistory(input.history);
+  const normalized: RecentChatMessage[] = normalizeDialogueHistory(input.history);
   let history = normalized.filter(message => message.role === 'user').map(message => message.text);
   const reset = resetPattern.test(current);
   if (reset) history = [];
   else { const last = history.findLastIndex(text => resetPattern.test(text)); if (last >= 0) history = history.slice(last); }
   const turns = [...history, current];
   let context: PilotContext = { ...input.context, likedTags: [...input.context.likedTags] };
+  const protectedFields = new Set<DialogueConfirmedField>(DIALOGUE_CONFIRMED_FIELDS.filter(field => input.confirmedFields?.includes(field)));
+  if (input.context.strictBudget && input.context.budget !== null) {
+    for (const field of ['budget', 'strictBudget', 'budgetBasis', 'partySize'] as const) protectedFields.add(field);
+  }
+  const protectedContext = Object.fromEntries([...protectedFields].map(field => [field, input.context[field]])) as Partial<Pick<PilotContext, DialogueConfirmedField>>;
   let intent: LeisureDialogue['intent'] = 'general', romantic = false, format: FormatChoice | null = null;
   let date: string | null = null, dateKnown = false, budgetKnown = context.budget !== null;
   let query = '', pending: DialogueQuestion['field'][] = [];
@@ -110,7 +133,19 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
     return [...(!format ? ['format' as const] : []), ...(!dateKnown ? ['date' as const] : []),
       ...(format?.key === 'food' && !budgetKnown ? ['budget' as const] : [])];
   };
-  for (const turn of turns) {
+  for (const [turnIndex, turn] of turns.entries()) {
+    if (turnIndex === turns.length - 1) {
+      context = { ...context, ...protectedContext };
+      if (protectedFields.has('budget')) budgetKnown = context.budget !== null;
+      // A protected goal must also own the positive query; otherwise a stale
+      // food noun is reparsed downstream and defeats the restored walk goal.
+      if (protectedFields.has('goal') && format?.goal !== context.goal) {
+        format = formats.find(entry => entry.goal === context.goal)
+          ?? { ...formats[1], goal: 'new', query: 'досуг' };
+        query = format.query;
+        if (!romantic) intent = format.key;
+      }
+    }
     romantic ||= dateIntent.test(turn);
     if (romantic) intent = 'date';
     const positives = formats.flatMap(entry => [...turn.matchAll(new RegExp(entry.pattern.source, entry.pattern.flags))]
@@ -122,8 +157,12 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
     for (const entry of exclusions) for (const match of turn.matchAll(new RegExp(entry.pattern.source, entry.pattern.flags))) {
       if (negative(turn, match.index!, match.index! + match[0].length)) excluded.add(entry.tag); else excluded.delete(entry.tag);
     }
-    const positiveText = turn.replace(/(?:без|не|without|not|no)\s+(?:(?:хочу|want)\s+)?(?:балет\p{L}*|кофе\p{L}*|кафе|музе\p{L}*|театр\p{L}*|парк\p{L}*|coffee|ballet|theat\p{L}*|museum\p{L}*|park\p{L}*)/giu, ' ');
+    const positiveText = positiveSearchText(turn);
     context = parseContext(positiveText, context);
+    // parseContext has a fixed category priority for single-shot requests.
+    // Dialogue instead follows the latest explicit positive format in this turn.
+    if (selected) context.goal = selected.goal;
+    else if (positiveCuisine) context.goal = 'food';
     const day = dayQuery(turn, now);
     if (day) { date = day; dateKnown = true; explicit.add('date'); }
     if (/любой\s+день|день\s+не\s*важ\p{L}*|any\s+day|күн\s+маңызды\s+емес/iu.test(turn)) { date = null; dateKnown = true; explicit.add('date'); }

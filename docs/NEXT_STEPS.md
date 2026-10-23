@@ -1,5 +1,17 @@
 # Следующие шаги
 
+## После context/RAG v15 · 24.10.2026
+
+- [x] Опубликованы lexical/context improvements и16/16 afisha artworks; public canary включая18turns/persistent memory/new guest/strict settings/exact name/hash18files PASS.788 unit/integration, E2E95/96+isolated2/2+final8/8; source/claims limits в TEST_REPORT.
+- [x] Минимальный R2 default-OFF trace с TTL24h/isolation/deletion. Это не весь planned profiler: нужны source/field/freshness/exclusion breakdown, реальные safe token/ledger links и policy disclosure перед включением production recording.
+- [ ] Следующий R3/R4 пакет: общий fail-closed fetch/persist/display/LLM/embed capability, expiry/revoke, единый retrieval/evidence POI/events/hub. Pure denied-source fixture остаётся блокером утверждения «policy-complete», не исчезать в отчётах.
+- [ ] R5/R6: улучшить семантику мастер-классов и сложных отрицаний/KK, outlet unknown marker; создавать новые independent dev cases. Holdout текущего корпуса уже просмотрен; не тюнить по нему, для нового gate нужен новый проверенный контрольный набор. Embeddings/RRF не включать до policy+измеренных gates; бюджеты не повышать.
+- [ ] Память: дальнейший confirmed-field provenance после native/browser reload, длинные тексты за6KiB, самостоятельное deterministic read saved prefs и объяснимое использование visits остаются ограничениями. Не расширять AI-transfer/profile consent неявно.
+- [ ] Фото POI5/749 остаются открытой работой. Для новых venues нужно exact identity/address+rights/visualreview, не proximity-only или placeholder. Для будущих событий автоrefresh фактов не является автоapproval новых картинок. Review publisher rights до expiry30d.
+- [ ] Sybil Swarm repo подтверждён; no-key isolated local backend install/test отдельно. Настоящая simulation потребует общего hard budget cap/proxy и bounded разрешённого запуска из существующего остатка. Не принимать synthetic scores за реальную конверсию и не подменять ими iPhone/browser QA.
+- [ ] Установить native bundle и физически проверить клавиатуру/memory restart/multi-stop; compilation не доказательство. Презентация/видео/заявка не менялись. SSH сохранять; Google/OpenAI caps без изменений.
+
+
 ## После media-memory v13 · 24.10.2026
 
 - [x]10 реальных изображений афиши,2 ресторанных publisher фото и1 историческое Commons фото опубликованы и проверены. Web coverage:10/16 events,5/749 POI; это не полное закрытие фото-наполнения.

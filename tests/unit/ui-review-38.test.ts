@@ -6,13 +6,13 @@ describe('owner UI review safeguards', () => {
   it('bounds the whole UTF-8 chat POST, not just character count', () => {
     const history = Array.from({ length: 24 }, () => ({ role: 'user' as const, text: '🦄'.repeat(1000) }));
     const body = boundedChatPayload('Куда сходить?', { likedTags: ['culture'], origin: null }, history, false);
-    expect(body.history.length).toBeLessThanOrEqual(6);
+    expect(body.history.length).toBeLessThanOrEqual(20);
     expect(new TextEncoder().encode(JSON.stringify(body)).byteLength).toBeLessThanOrEqual(CHAT_BODY_LIMIT_BYTES);
     expect(body.text).toBe('Куда сходить?');
   });
   it('preserves newest messages and never silently truncates the current request', () => {
     const history = Array.from({ length: 20 }, (_, index) => ({ role: 'assistant' as const, text: `${index}` }));
-    expect(boundedChatPayload('Новое', {}, history, true).history.map(row => row.text)).toEqual(['14', '15', '16', '17', '18', '19']);
+    expect(boundedChatPayload('Новое', {}, history, true).history.map(row => row.text)).toEqual(history.map(row => row.text));
     expect(() => boundedChatPayload('x'.repeat(CHAT_BODY_LIMIT_BYTES), {}, [], false)).toThrow('Запрос слишком большой');
   });
   it('does not confuse AI consent with availability or successful model execution', () => {

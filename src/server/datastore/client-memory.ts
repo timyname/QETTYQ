@@ -136,7 +136,7 @@ export function createClientMemory(db: DatabaseSync, clock: () => number = Date.
   function deleteClient(token: string) { db.prepare("DELETE FROM memory_clients WHERE id_hash=?").run(clientHash(token)); }
   function aiContext(token: string) {
     requireConsent(token, "ai_transfer");
-    return { preferences: readProfile(token), history: messages(token).slice(-6), visits: visits(token) };
+    return { preferences: readProfile(token), history: messages(token).slice(-20), visits: visits(token) };
   }
   function purgeExpired() {
     return atomic(db, () => {

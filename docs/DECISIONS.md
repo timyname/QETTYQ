@@ -1,5 +1,16 @@
 # Решения
 
+## Разговорный контекст и R2 без нового биллинга · 24.10.2026
+
+- Увеличен не provider prompt, а bounded deterministic replay:20 сообщений/6KiB вместо6 при той же общей границе14KiB. Provider slice6 и все модели/token/reservation caps неизменны. Память читается только при действующих scopes; assistant turns не трактуются как факты.
+- Историческая тема/дата/отрицания исправляются последней положительной user репликой. Подтверждённые money/time поля из /api/context восстанавливаются перед текущим сообщением; strict non-null budget защищён и без field provenance вместе с basis/party. Default120/null не выдаются за подтверждение. Goal остаётся мягкой темой диалога, не вечным lock. Explicit current changes — proposal, не autoconfirm.
+- Live canary нашёл второй parsing pass, превращавший canonical «без еда» обратно в food после правильного dialogue. parseContext теперь использует общий immediate-scope negation helper, сохраняя bounded EN verb/preposition/article grammar и positive-clause controls. Дополнительный Google enrichment в этом пути не начинается.
+- Lexical v2 ищет known exact names/translations до top3, но не делает fuzzy entity merge и не выдумывает amenities/цены/географию. Gold/manifest не менялись; archived baseline fbe5923 отделён от current adapter. Holdout не используется для исправления его конкретных провалов.
+- Минимальные R2 traces: explicit flag, default OFF, additive SQLite migration2;24h TTL, hashed session/entity IDs,30/session10000global. Write/read failures не ломают ответ, delete failure не маскируется успехом. Не собираются тексты/GPS/URLs/providerraw/tokens/cost; основной ledger остаётся авторитетным.
+-16 издательских afisha artworks +2 venue JPEG живут вне Git; только18 approved bytes по manifest входят в image. Rights scope/expiry/credit/no-store не ослаблялись. Доступная публичная картинка без точного venue identity не является пригодным фото.
+- Sybil: владелец подтвердил nghiahsgs/Sybil-Swarm. Устанавливать только isolated no-key local backend; не передавать existing key в engine без общего hard cap. Синтетические отзывы не равны browser QA/реальным метрикам/прохождению RAG tests.
+
+
 ## Publisher media и происхождение памяти · 24.10.2026
 
 - Фото от издателя допускаются только в явно некоммерческом пилоте по опубликованным условиям, с кредитом/ссылкой и отдельным reviewed manifest. Это не CC-лицензия и не утверждение об известном фотографе. Любое известное third-party ограничение/expiry/revoke отключает выдачу.

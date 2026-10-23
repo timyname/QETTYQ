@@ -7,5 +7,10 @@ export async function handleMemoryRoute(request: Request, operation: MemoryOpera
   if (request.method !== "GET") { const blocked = blockCrossSiteMutation(request); if (blocked) return blocked; }
   const auth = requireSession(request); if (!auth.ok) return auth.response;
   if (!service) return jsonResponse({ available: false, error: { code: "MEMORY_STORAGE_UNAVAILABLE" } }, 503);
-  return service.handle(request, operation);
+  const response = await service.handle(request, operation);
+  if (operation === "delete" && response.ok) {
+    try { getHostedRuntime()?.ragTraces?.deleteSession(auth.session.id); }
+    catch { return jsonResponse({ deleted: false, error: { code: "DIAGNOSTIC_DELETE_UNAVAILABLE" } }, 503); }
+  }
+  return response;
 }

@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { createClientMemory } from "../datastore/client-memory";
-import { normalizeChatHistory } from "../pilot/chat-history";
+import { normalizeDialogueHistory } from "../pilot/chat-history";
 import { blockCrossSiteMutation, jsonResponse, readJson, requireSession } from "../session/http";
 import type { MemoryOperation, MemoryService, MemoryState } from "./contracts";
 
@@ -126,7 +126,7 @@ export function createMemoryService(db: DatabaseSync, options: { production: boo
         const token = existing(request);
         if (!token || !memory.hasConsent(token, "ai_transfer")) return null;
         const result = memory.aiContext(token);
-        return { ...result, history: normalizeChatHistory(result.history) };
+        return { ...result, history: normalizeDialogueHistory(result.history) };
       } catch { return null; }
     },
     async recordExchange(request, exchange) {

@@ -24,6 +24,8 @@ import { createDataHubRepository } from "../data-hub/repository";
 import { createDataHubService } from "../data-hub/service";
 import { createPublicDataHubFeed } from "../data-hub/public-feed";
 import { createHubEventsBridge } from "../data-hub/events-bridge";
+import { RAG_TRACE_SCHEMA_V1 } from "../retrieval/schema";
+import { createRagTraceStore } from "../datastore/rag-traces";
 
 type LedgerProof = { source: "cloudflare-d1"; sourceFrozen: true; approvalId: typeof PUBLIC_AI_APPROVAL_ID; verifiedRowCount: number; rows: AIReservationExport[] };
 function readVerifiedLedgerProof(path: string | undefined): LedgerProof {
@@ -60,6 +62,7 @@ export function initializeVpsRuntime(options: {
   const db = openDatastore({ path: env.QETTYQ_DATABASE_PATH, production: env.NODE_ENV === "production", migrate: true });
   try {
     atomic(db, () => db.exec(DATA_HUB_SCHEMA_V1));
+    atomic(db, () => db.exec(RAG_TRACE_SCHEMA_V1));
     const store = createEventsStore(db);
     const osm = sourceRegistry.find(source => source.id === "osm-overpass-poi");
     const sxodim = sourceCandidates.sources.find(source => source.id === "sxodim-astana");
@@ -111,6 +114,10 @@ export function initializeVpsRuntime(options: {
       db.prepare("UPDATE qettyq_hub_producers SET enabled=0 WHERE id='threads-analyzer'").run();
     }
     const memory = createMemoryService(db, { production: env.NODE_ENV === "production", now: options.now });
+    // Default off. Technical trace does not grant AI/memory consent or billing.
+    let ragTraces;
+    try { ragTraces = createRagTraceStore(db, { enabled: env.QETTYQ_RAG_TRACE_ENABLED === "true", now: options.now }); }
+    catch { ragTraces = createRagTraceStore(db, { enabled: false }); }
     const hubCleanup = setInterval(() => { try { hubRepository.purgeExpired(); } catch { /* never log payload/SQL parameters */ } }, 60_000);
     hubCleanup.unref();
     let closed = false;
@@ -118,7 +125,7 @@ export function initializeVpsRuntime(options: {
     const matchAddress = createAddressMatcher(addressIndex as AddressIndex, options.now ?? Date.now);
     const matchVenue = createEventVenueMatcher(baselinePlaces, matchAddress, options.now ?? Date.now);
     const runtime: VpsRuntime = {
-      ai, dataHub, events: { async get() {
+      ai, dataHub, ragTraces, events: { async get() {
         const result = await mergedEvents.get();
         // Independent derived OSM evidence; raw publisher snapshot stays unchanged.
         return { ...result, items: enrichEventAddresses(result.items, matchAddress, matchVenue) };
@@ -128,7 +135,7 @@ export function initializeVpsRuntime(options: {
       } }, memory,
       routing: { reserve: sessionId => reserveRoutingRequest(routingDb, sessionId, options.now?.() ?? Date.now()), env: routingEnv },
       diagnostics: { ledgerReady, ledgerReason, baselinePlaces: baselinePlaces.length, baselineOccurrences: snapshot.items.length, memoryPublic: true, dataHubConfigured: Boolean(dataHub) },
-      close() { if (closed) return; closed = true; if (getHostedRuntime() === runtime) setHostedRuntime(null); clearInterval(hubCleanup); runtime.memory?.dispose?.(); db.close(); },
+      close() { if (closed) return; closed = true; if (getHostedRuntime() === runtime) setHostedRuntime(null); clearInterval(hubCleanup); runtime.memory?.dispose?.(); ragTraces.dispose?.(); db.close(); },
     };
     setHostedRuntime(runtime);
     return runtime;

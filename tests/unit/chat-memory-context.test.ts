@@ -67,13 +67,13 @@ describe('AI context provenance and granular transfer consent', () => {
     expect(selectChatHistory([reply], { forAI: true, now })).toEqual([]);
   });
 
-  it('retains existing 24-message storage, six-message payload and UTF-8 byte bounds', () => {
+  it('retains existing 24-message storage and bounded dialogue payload without provenance fields', () => {
     let memory = createDefaultLocalMemory();
     for (let index = 0; index < 30; index++) memory = appendLocalMessage(memory, { ...message(`new-${index}`), text: 'Қ'.repeat(2000) });
     expect(memory.dialogue).toHaveLength(24);
     const selected = selectChatHistory(memory.dialogue, { forAI: true, now });
     const payload = boundedChatPayload('Прогулка', {}, selected, true);
-    expect(payload.history).toHaveLength(6);
+    expect(payload.history).toHaveLength(3);
     expect(new TextEncoder().encode(JSON.stringify(payload)).byteLength).toBeLessThanOrEqual(CHAT_BODY_LIMIT_BYTES);
     expect(JSON.stringify(payload)).not.toContain('contextOrigin');
   });

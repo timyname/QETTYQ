@@ -1,4 +1,24 @@
-# RAG evaluation baseline · R1 · 24.10.2026
+# RAG evaluation: R1 baseline и lexical/dialogue v2 · 24.10.2026
+
+## Новый frozen A/B · lexical/dialogue v2
+
+Исторический baseline извлечён через `git archive fbe5923 src data tests scripts/eval-rag.ts` в отдельную ignored папку. Его evaluator импортирует архивные production-функции, а candidate — новые. Corpus/gold SHA ниже не менялись. Dev использован для разработки. После первого frozen holdout validation независимый public HTTP canary выявил интеграционный дефект dinner→standup→повторный parseContext: separator в «без еда» ошибочно менял цель на food. Исправление проверено новым API regression и шестью EN framing/тремя positive-clause parity cases; затем validation повторён без подгонки к holdout. Scores/IDs/outcomes/assertions остались прежними, deterministicRepeat=true. Это повтор после независимо найденного runtime дефекта, не tuning на holdout.
+
+| Срез | Старые → новые outcomes | Все assertions | Returned Recall@10 | nDCG@3 |
+|---|---|---|---|---|
+| All40 |34/40 →35/40|29/40 →32/40|0.7241 →0.8103 (n29)|0.7023 →0.8528 (n29)|
+| Dev24 |23/24 →24/24|19/24 →21/24|0.8684 →0.9737 (n19)|0.8947 →1.0000 (n19)|
+| Holdout16 |11/16 →11/16|10/16 →11/16|0.4500 →0.5000 (n10)|0.3366 →0.5732 (n10)|
+
+RU nDCG0.7974→0.9128(n13), KK0.5625→0.7500(n8), EN0.6875→0.8582(n8). Pure synthetic forbidden records2→1: EN concert exclusion исправлен; denied-source RU21 остаётся прежним source-gate дефектом evaluated pure function, не доказанным public API leak. Никаких scoped source permissions этим matcher не расширено. Полный source capability/expiry/revoke boundary R3/R4 ещё необходим.
+
+Оставшиеся failures: EN05/KK05/RU05 нет конкретного unknown-marker розетки; EN07/KK07/RU16 misses «сделать руками»; KK06 смешанная культура/отрицание; RU21 pure source permission gate. Ни одно из них не удалено из gold. Holdout ниже проектных0.90 Recall/0.80 nDCG: semantic/hybrid gate **не пройден**, embeddings/index/RRF не включены. Это улучшение существующего bounded lexical matcher, не готовый advanced RAG.
+
+Внутренний candidate Recall@10 остаётся not observable, LLM generation/entailment/injection не выполнялись. Offline costs0; timings Mac adapter при параллельных тестах не VPS SLA (p95 old51.8ms/new30.2ms без повторных статистических выводов). Существующие provider6-message/input/output/quota caps сохранены.
+
+Команда `pnpm eval:rag` теперь честно помечает текущий `multilingual-lexical-dialogue-v2`; `--split=dev` отделяет tuning. Старый результат воспроизводится только архивными функциями. Ниже сохранён исторический R1-отчёт, включая тогдашний незавершённый R2. Сейчас реализована отключённая по умолчанию минимальная диагностика: [RAG_R2_TRACE](RAG_R2_TRACE.md); не весь planned trace profiler.
+
+## Исторический R1 checkpoint
 
 Status: **implemented, offline tested, independently reviewed and integrated**. This is a baseline, not evidence of improved retrieval or finished hybrid RAG. Existing matcher, source policy, budgets and production data were not changed.
 

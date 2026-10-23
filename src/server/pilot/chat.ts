@@ -4,15 +4,13 @@ import { requestedFoodMatch } from "./food-search";
 import type { LiveEventsResult } from "../ingestion/live-events";
 import type { LiveAstanaEvent } from "../ingestion/sxodim-live";
 import { retrieveEventEvidence, type EventEvidence } from "../ingestion/event-evidence";
+import { isNegatedMention } from "../retrieval/lexical-query";
 
 export function parseContext(text: string, context: PilotContext): PilotContext {
   const value = text.toLocaleLowerCase("ru-RU");
   const result = { ...context, likedTags: [...context.likedTags] };
-  const positive = (pattern: RegExp) => [...value.matchAll(new RegExp(pattern.source, "giu"))].some(match => {
-    const prefix = value.slice(0, match.index), suffix = value.slice(match.index! + match[0].length);
-    const negatedBefore = /(?:^|[^\p{L}])(?:без|не|not|no|without)(?:\s+(?:хочу|хотим|нуж\p{L}*|want|like|в|на|in|to|the|a)){0,3}\s+$/iu.test(prefix);
-    return !negatedBefore && !/^\s+(?:емес|керек\s+емес)(?=$|[^\p{L}])/iu.test(suffix);
-  });
+  const positive = (pattern: RegExp) => [...value.matchAll(new RegExp(pattern.source, "giu"))]
+    .some(match => !isNegatedMention(value, match));
   if (positive(/кофе\p{L}*|кафе|поесть|ресторан\p{L}*|(?:^|[^\p{L}])еда(?=$|[^\p{L}])|coffee|food|тамақ|жегім|ас іш|донер|шаурм\p{L}*|рамен|рамэн|суши|пицц\p{L}*|бургер\p{L}*|restaurant|dinner|lunch|ramen|sushi|pizza|burger/u)) result.goal = "food";
   else if (positive(/прогул\p{L}*|погуля\p{L}*|парк\p{L}*|walk|саябақ\p{L}*|серуен\p{L}*/u)) result.goal = "walk";
   else if (positive(/музей|театр\p{L}*|концерт\p{L}*|спектак\p{L}*|лекци\p{L}*|событи\p{L}*|афиш\p{L}*|выстав\p{L}*|кино|museum|theat\p{L}*|көрме\p{L}*/u)) result.goal = "activity";
@@ -41,7 +39,7 @@ export function parseContext(text: string, context: PilotContext): PilotContext 
   const party = value.match(/нас\s+(\d{1,2})(?=$|[^\d])|на\s+(\d{1,2})\s+человек|for\s+(\d{1,2})\s+(?:people|persons?|guests?)/u);
   const partyNumber = party ? Number(party[1] ?? party[2] ?? party[3]) : null;
   if (partyNumber !== null && partyNumber >= 1 && partyNumber <= 20) result.partySize = partyNumber;
-  if (/на\s+(?:двоих|троих|всех)|общий\s+бюджет|total\s+budget|for\s+(?:everyone|(?:two|three)(?!\s+(?:hours?|minutes?|days?)))|екеумізге|барлығына/u.test(value)) result.budgetBasis = "group";
+  if (/на\s+(?:двоих|троих|всех)|общий\s+бюджет|total\s+budget|for\s+(?:everyone|(?:two|three)(?!\s+(?:hours?|minutes?|days?)))|екеумізге|үшеумізге|бәрімізге|барлығына|жалпы\s+(?:бюджет\s*)?\d/u.test(value)) result.budgetBasis = "group";
   else if (/на\s+человека|per\s+person|адам\s+басына/u.test(value)) result.budgetBasis = "person";
   return result;
 }

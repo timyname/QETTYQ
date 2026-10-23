@@ -1,6 +1,7 @@
 import type { PilotContext } from "../pilot/contracts";
 import type { LiveEventsResult } from "./live-events";
 import type { LiveAstanaEvent } from "./sxodim-live";
+import { isNegatedMention } from "../retrieval/lexical-query";
 
 export type EventEvidence = {
   id: string; eventId: string; name: string; startsAt: string; endsAt: string | null;
@@ -17,7 +18,7 @@ export type EventRetrieval = {
 const normalize = (text: string) => text.normalize("NFKC").toLocaleLowerCase("ru-RU").replace(/ё/g, "е");
 const rock = /(?:^|[^\p{L}])(?:рок|rock|metal|метал|punk|панк)(?:[^\p{L}]|$)/u;
 const groups = [
-  { query: /культур\p{L}*|\bcultur(?:e|al)\b/gu, content: /культур|театр|спектак|музе|выстав|искус|балет|опера|концерт|музык|лекци|образован|theat|ballet|opera|exhibition|concert|lecture/u },
+  { query: /культур\p{L}*|мәдени\p{L}*|\bcultur(?:e|al)\b/gu, content: /культур|мәдени|театр|спектак|музе|выстав|искус|балет|опера|концерт|музык|лекци|образован|theat|ballet|opera|exhibition|concert|lecture|қойылым|көрме|дәріс/u },
   { query: /(?:^|[^\p{L}])(?:рок|rock|metal|метал|панк|punk)(?=[^\p{L}]|$)/gu, content: rock },
   { query: /концерт\p{L}*|concert\p{L}*/gu, content: /концерт|concert|музык/u },
   { query: /спектак\p{L}*|театр\p{L}*|theat\p{L}*|қойылым\p{L}*/gu, content: /спектак|театр|theat|қойылым/u },
@@ -26,7 +27,7 @@ const groups = [
   { query: /выстав\p{L}*|exhibition\p{L}*|көрме\p{L}*/gu, content: /выстав|exhibition|көрме/u },
   { query: /стендап\p{L}*|stand\s*up|комеди\p{L}*/gu, content: /стендап|stand\s*up|комик|комеди/u },
   { query: /квиз\p{L}*|quiz/gu, content: /квиз|quiz/u },
-  { query: /мастер[\s-]*класс\p{L}*|workshop\p{L}*/gu, content: /мастер[\s-]*класс|workshop/u },
+  { query: /мастер[\s-]*класс\p{L}*|workshop\p{L}*|шеберлік\s+саба\p{L}*/gu, content: /мастер[\s-]*класс|workshop|шеберлік\s+саба/u },
   { query: /танц\p{L}*|бачат\p{L}*|dance|bachata/gu, content: /танц|бачат|dance|bachata/u },
 ];
 const tagPatterns: Record<string, RegExp> = {
@@ -50,15 +51,18 @@ const stem = (word: string) => word.length > 5 ? word.replace(/(?:иями|ам�
  * the original text's categories, exclusions, dates, price or preferences. */
 function textMatcher(query: string) {
   const mentioned = groups.map(group => ({ group, matches: [...query.matchAll(new RegExp(group.query.source, group.query.flags))] })).filter(value => value.matches.length > 0);
-  const isNegative = (match: RegExpMatchArray) => /(?:^|[^\p{L}])(?:без\s+|не\s+(?:(?:хочу|нужен|нужны|интересует|нравится)\s+)?)$/u.test(query.slice(0, match.index).trimEnd() + " ");
+  const isNegative = (match: RegExpMatchArray) => isNegatedMention(query, match);
   const selectedGroups = mentioned.filter(value => value.matches.some(match => !isNegative(match))).map(value => value.group);
   const excludedGroups = mentioned.filter(value => value.matches.every(isNegative)).map(value => value.group);
   let remainder = query.replace(/\b20\d{2}-\d{2}-\d{2}\b/gu, "").replace(/бесплат\p{L}*|тегін|\bfree\b|недел\p{L}*/gu, " ")
     // Only this generic phrase is framing. Names/unsupported activities remain tokens.
     .replace(/куда[\s-]+нибудь/gu, "куда");
   for (const { group } of mentioned) { group.query.lastIndex = 0; remainder = remainder.replace(group.query, " "); }
-  const tokens = [...new Set((remainder.match(/\p{L}{4,}/gu) ?? []).filter(token => !stopWords.has(token) && !requestScaffolding.has(token)).map(stem))].slice(0, 12);
-  const alternatives = /(?:^|\s)(?:или|либо|or)(?:\s|$)/u.test(query);
+  // Explicit request/negation framing in EN/KK, not arbitrary interests or names.
+  remainder = remainder.replace(/(?:^|[^\p{L}])(?:not\s+only|(?:don't|don’t|do\s+not)\s+want|instead\s+of|вместо|without|excluding|exclude|except|avoid|керек\s+емес|емес|қоспа)(?=$|[^\p{L}])/gu, " ");
+  const multilingualFraming = new Set("ізде іздеп тап тауып бер берші көрсет ұсын ұсыныңыз өтінемін қалаймын бүгін ертең астанада астананың іс шара шаралар шараларды ісшара ісшаралар демалыс демалыста апта осы маған қандай бірдеңе болатын концертсіз no not".split(/\s+/u));
+  const tokens = [...new Set((remainder.match(/\p{L}{4,}/gu) ?? []).filter(token => !stopWords.has(token) && !requestScaffolding.has(token) && !multilingualFraming.has(token)).map(stem))].slice(0, 12);
+  const alternatives = /(?:^|\s)(?:или|либо|or|немесе)(?:\s|$)/u.test(query);
   return (content: string): "EXPLICITLY_EXCLUDED_CATEGORY" | "TEXT_MISMATCH" | null => {
     if (excludedGroups.some(group => group.content.test(content))) return "EXPLICITLY_EXCLUDED_CATEGORY";
     const mismatch = alternatives ? selectedGroups.length > 0 && !selectedGroups.some(group => group.content.test(content)) : selectedGroups.some(group => !group.content.test(content));

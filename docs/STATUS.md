@@ -1,5 +1,17 @@
 # Статус QETTYQ
 
+## Контекст, lexical RAG v2 и афиша v15 · 24.10.2026
+
+- Сервис: опубликован `qettyq:vps-20261024-15`, healthy,189.9MiB/640MiB; immutable build input tree `a256261c976841449fc272a13ead6155e2da66f6`, image manifest `66295b4270cdb948023a3a2b6d712fdb1f35561aae245e4eb33daee6e62e0fb4`. SQLite backup verified; SSH сохранён, другие проекты не менялись.
+- AI/поиск: улучшены bounded lexical RU/KK/EN категории/отрицания/точные имена, последняя положительная дата и смена цели. Frozen A/B против fbe5923: nDCG@3 all0.7023→0.8528(n29), holdout0.3366→0.5732(n10), full assertions29→32/40. Embeddings/hybrid gate не пройден; semantic index не включён. Pure source-denied fixture остаётся gap R3/R4, не заявляется public API leak.
+- Память:20 сообщений для deterministic replay при прежних6KiB; provider по-прежнему6/input/output caps прежние. SQLite24 сообщения/independent consents/TTL/delete сохранены. Confirmed settings защищены от старой истории; текущий текст может предложить изменения, не записывая настройки молча.
+- Production HTTP: память восстановлена в новой guest session,18-turn date/dinner→standup сохранил бюджет12000/party2/120min/activity; новый confirmed5000 не повышен историей; exact museum first match. Тестовая память удалена/проверена. Paid Google/OpenAI calls0.
+- Данные/фото: live16 событий,16 publisher posters (было10),749 snapshot POI/5 фото.18 private JPEG total2564599B, aggregate SHA `b1d900d30f935bb620153a65db46e9c7c5b3fa4f922bb9abd474274595e85b62`; HTTP18/18 hashes/no-store PASS. Это afisha artwork, не доказательство фотографии фактического события. Ararat/LifeFitness/TLP/TARY/Rafe без нового approved снимка, несовпадения адресов не обходились.
+- R2: минимальный технический trace с TTL24h/isolation/session deletion, без query/GPS/rawoutput; public flag default OFF и HTTP подтвердил OFF. Полный profiler/source facts/accounting в trace ещё не реализованы; см.RAG_R2_TRACE.
+- Проверки:788/788 unit/integration, typecheck/scoped lint/immutable Next PASS; E2E full95/96 (30s boundingBox timeout), isolated routing2/2 PASS без ослабления, финальные chat/privacy8/8 PASS. Native Vite compile PASS24.17s до backend-only canary fix, не новая установка iPhone.
+- Маршруты регрессированы без изменения алгоритма. Презентация/видео/заявка не менялись. Sybil Swarm подтверждён владельцем; отдельная no-key isolated установка/проверка, не часть production или полноценный browser QA; статус в agent reports.
+
+
 ## Реальные фото, память и RAG R1 · 24.10.2026
 
 - Web: опубликован `qettyq:vps-20261024-13`, healthy, 184.9MiB/640MiB. Immutable build tree `63e6da95d288d165f71b4f3eaf25a58a89516ce5`, image manifest `0b14db0db909ff26d75d132268ef137aa2e5bc607fd1be96b98b5a046fa8dedb`. Проверенная SQLite backup, другие проекты не менялись, SSH сохранён.

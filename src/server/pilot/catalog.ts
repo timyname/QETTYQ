@@ -4,6 +4,7 @@ import type { Place } from "../../domain/types";
 import type { PilotContext } from "./contracts";
 import { weeklyOpeningStatus } from "../ingestion/weekly-hours";
 import { getPlaceMedia } from "../media/commons-place-media";
+import { containsPlaceName, placeCategoryQuery } from "../retrieval/lexical-query";
 
 export const pilotPlaces = places as Place[];
 export const catalogCredit = { text: "© OpenStreetMap contributors", url: "https://www.openstreetmap.org/copyright", license: "ODbL" };
@@ -40,14 +41,12 @@ export type SearchedPlace = ReturnType<typeof publicPlace> & {
   reason: string; unknowns: string[];
 };
 export function searchPilotPlaces(context: PilotContext, text = "", pool: readonly Place[] = pilotPlaces, now = Date.now()): SearchedPlace[] {
-  const normalized = text.toLocaleLowerCase("ru-RU");
-  const categoryWords = /музей|museum|мұражай/u.test(normalized) ? ["museum"]
-    : /театр|theat|спектак/u.test(normalized) ? ["theatre"]
-      : /кофе|coffee|кафе/u.test(normalized) ? ["cafe"]
-        : /парк|park|саябақ/u.test(normalized) ? ["park", "garden"] : [];
-  const categoryCandidates = categoryWords.length
-    ? pool.filter((place) => place.tags.some((tag) => categoryWords.includes(tag)))
-    : [...pool];
+  const categories = placeCategoryQuery(text);
+  const allowed = pool.filter(place => !place.tags.some(tag => categories.excluded.includes(tag)));
+  const exact = allowed.filter(place => [place.name, ...Object.values(place.nameTranslations ?? {})]
+    .some(name => containsPlaceName(text, name)));
+  const categoryCandidates = (exact.length ? exact : allowed)
+    .filter(place => !categories.wanted.length || place.tags.some(tag => categories.wanted.includes(tag)));
   const candidates = context.goal === "new" && context.likedTags.length > 0
     ? categoryCandidates.filter((place) => place.tags.some((tag) => context.likedTags.includes(tag)))
     : categoryCandidates;

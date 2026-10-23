@@ -1,5 +1,17 @@
 # Отчёт проверки
 
+## RAG/context v15 · 24.10.2026
+
+- `pnpm exec vitest run --maxWorkers=4`:69files,788/788 PASS11.35s (финальный source). `pnpm typecheck` и scoped ESLint PASS. Ранний прогон776:1 failure был старым six-message expectation API; обновлён под новый20-turn контракт, provider6-test сохранён.
+- Полный E2E `--workers=2`:95/96 PASS6.0m, один старый street-routing30s boundingBox timeout на видимой кнопке во время concurrent Docker compilation. Assertions/timeout не менялись. `street-routing.spec.ts --workers=1`:2/2 PASS19.6s. После независимого canary fix финальные `memory-ai-consent.spec.ts ui-review-38.spec.ts --workers=1`:8/8 PASS37.7s. Не заявляем один целиком зелёный96/96 запуск этого релиза.
+- Docker/Next linux/amd64 immutable build PASS. v14 предварительно опубликован; live canary поймал food reparse и очищен finally. Корректирующий v15 tree a256261c976841449fc272a13ead6155e2da66f6 built50.5s, manifest66295b4270cdb948023a3a2b6d712fdb1f35561aae245e4eb33daee6e62e0fb4. Native compile24.17s относится к тому же client20-turn patch до backend-only correction; physical iPhone не установлен/не проверен.
+- Independent SQLite19trace-store +11API cases: strict schema, TTL/restart/isolation/collision/capacity/delete/off; без провайдеров. Memory actual SQLite reopen после9exchanges сохраняет начало bounded диалога; revoke ai_transfer→null. Общие788 включают эти cases, не складывать числа повторно.
+- A/B archived fbe5923/current:40 cases, gold/corpus hashes прежние, deterministicRepeat true; outcomes34→35/40, full assertions29→32/40; holdout11/16outcomes,11/16assertions,Recall0.50/n10,nDCG0.5732/n10. Generation claims не оценивались; source-denied pure-function finding1 остаётся.
+- Production HTTPS v15: durable memory across guest renewal,18-message follow-up, confirmed strict5000, exact museum search PASS; mode deterministic/useAIfalse/googleConsentfalse, оплачиваемых вызовов0. Live events16/16posters, snapshot749/5POIphotos;18exactJPEG hashes+no-store PASS. Full own memory delete/GET disabled и own session cleanup выполнены.
+- Chrome production: новая Qargyn афиша реально видна в деталях; proof `output/playwright/rag-context-r2-final-chat-20261024/live-qargyn-v15.png`. R2 public flag OFF подтверждён отсутствием trace header. VPS healthy189.9MiB/640MiB, backup verified, SSH digest прежний.
+- Известны прежние synthetic safe-area hydration/MapLibre missing sprites/native large chunk warnings. Маршруты: regression only; презентация/видео/заявка не менялись. Sybil результаты отдельно, не считаются QETTYQ browser/real-user tests.
+
+
 ## Фото + память + RAG R1 · 24.10.2026
 
 Фактически выполнено:
