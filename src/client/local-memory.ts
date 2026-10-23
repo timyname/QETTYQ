@@ -7,6 +7,8 @@ export const MAX_CHAT_MESSAGES = 24;
 export const MAX_MESSAGE_CHARS = 4000;
 
 export type LocalChatRole = "user" | "assistant";
+/** App provenance, not an authenticity claim about owner-editable localStorage. */
+export type ChatContextOrigin = "device" | "server" | "legacy_unknown";
 
 export type LocalChatMessage = {
   id: string;
@@ -14,6 +16,7 @@ export type LocalChatMessage = {
   text: string;
   createdAt: string;
   mode: "user" | "deterministic" | "openai";
+  contextOrigin?: ChatContextOrigin;
   citations?: Array<{ url: string; title: string; startIndex?: number; endIndex?: number }>;
 };
 
@@ -89,6 +92,9 @@ function safeMessage(value: unknown): LocalChatMessage | null {
     id: value.id,
     role: value.role as LocalChatRole,
     mode: value.mode as LocalChatMessage["mode"],
+    // Never treat an old or malformed persisted record as newly device-authored.
+    contextOrigin: value.contextOrigin === "device" || value.contextOrigin === "server"
+      ? value.contextOrigin : "legacy_unknown",
     text,
     createdAt,
     ...(citations.length ? { citations } : {}),
@@ -150,7 +156,9 @@ export function clearLocalMemory(storage: StorageLike) {
 }
 
 export function appendLocalMessage(memory: LocalMemory, message: LocalChatMessage): LocalMemory {
-  const safe = safeMessage(message);
+  // This function appends a NEW local turn. Restored server turns must supply
+  // contextOrigin: "server"; parse/save never use this device default.
+  const safe = safeMessage({ ...message, contextOrigin: message.contextOrigin === undefined ? "device" : message.contextOrigin });
   if (!safe) return memory;
   return { ...memory, dialogue: [...memory.dialogue, safe].slice(-MAX_CHAT_MESSAGES) };
 }

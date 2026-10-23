@@ -5,7 +5,7 @@ import registry from '../../data/place-media.json';
 import places from '../../data/places.json';
 import { getPlaceMedia, resolveCommonsPlaceMedia } from '../../src/server/media/commons-place-media';
 
-const now = Date.parse('2026-10-21T00:00:00Z');
+const now = Date.parse('2026-10-24T00:00:00Z');
 const id = registry.records[0].placeId;
 const fixture = () => structuredClone(registry);
 

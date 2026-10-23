@@ -1,16 +1,20 @@
 import registryJson from '../../../data/place-media.json';
+import { validGeographicMediaProof, type ReviewedGeographicMediaProof } from './geographic-media-identity';
+import { resolvePublisherPlaceMedia, type PublisherPlacePhoto } from './publisher-place-media';
 
 export type RealPlacePhoto = {
   kind: 'real_place_photo'; src: string; alt: string; author: string; credit: string;
   license: string; licenseUrl: string; sourceUrl: string; width: number; height: number; changes: string;
+  photographedAt?: string | null;
 };
-export type PlaceMedia = RealPlacePhoto | { kind: 'none'; src: null };
+export type PlaceMedia = RealPlacePhoto | PublisherPlacePhoto | { kind: 'none'; src: null };
 export type CommonsPlacePhotoRecord = {
   placeId: string; src: string; alt: string; author: string; credit: string;
   license: string; licenseUrl: string; sourceUrl: string; fileTitle: string;
   width: number; height: number; bytes: number; sha256: string; changes: string;
   fetchedAt: string; photographedAt: string | null;
-  identityProof: { osmUrl: string; osmTag: 'wikimedia_commons' | 'wikidata'; osmTagValue: string;
+  identityProof: { osmUrl: string; osmTag: 'wikimedia_commons' | 'wikidata' | 'reviewed_geographic_match'; osmTagValue: string;
+    geographicMatch?: ReviewedGeographicMediaProof;
     commonsCategory: string; categoryVerified: boolean; categoryEvidenceUrl: string; sourceAsOf: string };
   rights: { status: 'approved' | 'pending' | 'blocked' | 'revoked'; reviewedAt: string; reviewExpiresAt: string | null;
     photographLicenseVerified: boolean; visualVerified: boolean;
@@ -20,6 +24,8 @@ export type CommonsPlacePhotoRecord = {
 
 const licenses: Record<string, string> = {
   'CC BY-SA 4.0': 'https://creativecommons.org/licenses/by-sa/4.0/',
+  'CC BY-SA 3.0': 'https://creativecommons.org/licenses/by-sa/3.0/',
+  'CC BY 2.0': 'https://creativecommons.org/licenses/by/2.0/',
   'CC BY 4.0': 'https://creativecommons.org/licenses/by/4.0/',
   'CC0 1.0': 'https://creativecommons.org/publicdomain/zero/1.0/',
 };
@@ -64,7 +70,10 @@ export function resolveCommonsPlaceMedia(placeId: string, registry: unknown, now
       || !iso(proof.sourceAsOf) || Date.parse(proof.sourceAsOf) > now + 300_000
       || proof.osmTag === 'wikimedia_commons' && normalizedTitle(proof.osmTagValue) !== normalizedTitle(proof.commonsCategory)
       || proof.osmTag === 'wikidata' && !/^Q[1-9]\d*$/u.test(proof.osmTagValue)
-      || !['wikimedia_commons', 'wikidata'].includes(proof.osmTag)) continue;
+      || proof.osmTag === 'reviewed_geographic_match' && (!plain(photo.sourceUrl, 1500)
+        || proof.osmTagValue !== 'manual_file_gps_inside_observed_osm_boundary'
+        || !validGeographicMediaProof(proof.geographicMatch, photo.sourceUrl, now))
+      || !['wikimedia_commons', 'wikidata', 'reviewed_geographic_match'].includes(proof.osmTag)) continue;
     if (!rights || rights.status !== 'approved' || rights.photographLicenseVerified !== true || rights.visualVerified !== true
       || rights.allowStore !== true || rights.allowDisplay !== true || rights.allowRedistribute !== true
       || !['nature_no_protected_work', 'separate_permission', 'public_domain'].includes(rights.subjectRights)
@@ -84,11 +93,13 @@ export function resolveCommonsPlaceMedia(placeId: string, registry: unknown, now
       || !iso(photo.fetchedAt) || Date.parse(photo.fetchedAt) > now + 300_000) continue;
     return { kind: 'real_place_photo', src: photo.src, alt: photo.alt, author: photo.author, credit: photo.credit,
       license: photo.license, licenseUrl: photo.licenseUrl!, sourceUrl: photo.sourceUrl,
-      width: photo.width!, height: photo.height!, changes: photo.changes };
+      width: photo.width!, height: photo.height!, changes: photo.changes,
+      photographedAt: typeof photo.photographedAt === 'string' && plain(photo.photographedAt, 60) ? photo.photographedAt : null };
   }
   return none();
 }
 
 export function getPlaceMedia(placeId: string): PlaceMedia {
-  return resolveCommonsPlaceMedia(placeId, registryJson);
+  const commons = resolveCommonsPlaceMedia(placeId, registryJson);
+  return commons.kind !== 'none' ? commons : resolvePublisherPlaceMedia(placeId) ?? commons;
 }

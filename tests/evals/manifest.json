@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "corpusVersion": "rag-gold-v1-20261024",
+  "frozenNow": "2026-10-21T07:00:00Z",
+  "baseline": "existing-top3-v1",
+  "hashes": {
+    "corpus": "5fab697ea45c3630ef91c03e8cfd76a04eb86fc03be2ab253d0fdf56d8cec1e1",
+    "golden": "ca73f28e49d02d335f52fc733e3a99a12ccad31ac589e0ac8b5ecad70ccb0917"
+  },
+  "review": "reviewed_root_and_independent_agent_20261024",
+  "mode": "offline_only"
+}

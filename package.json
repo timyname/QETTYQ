@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:integration": "vitest run tests/integration",
     "test:e2e": "playwright test",
+    "eval:rag": "tsx scripts/eval-rag.ts",
     "data:import:poi": "tsx scripts/import-poi.ts",
     "data:import:events": "tsx scripts/import-events.ts",
     "data:validate": "tsx scripts/validate-data.ts",

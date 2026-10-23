@@ -231,6 +231,7 @@ QETTYQ · поиск по каталогу|QETTYQ · каталогтан ізд
 Локальный черновик. Публикация и проверка организатора пока недоступны.|Жергілікті нобай. Жариялау мен ұйымдастырушыны тексеру әлі қолжетімсіз.|Local draft. Publishing and organiser verification are not available yet.
 К моим черновикам|Нобайларыма|My drafts
 Условия публикации|Жариялау шарттары|Publishing conditions
+Условия использования|Пайдалану шарттары|Terms of use
 Это локальный черновик. Публикация и проверка организатора пока не подключены.|Бұл — жергілікті нобай. Жариялау мен ұйымдастырушыны тексеру әлі қосылмаған.|This is a local draft. Publishing and organiser verification are not connected yet.
 Черновик сохранён на устройстве. Он не опубликован и не отправлен на модерацию.|Нобай құрылғыда сақталды. Ол жарияланбады және тексеруге жіберілмеді.|Draft saved on this device. It is not published or submitted for review.
 Удалить память QETTYQ?|QETTYQ жадын өшіру керек пе?|Delete QETTYQ memory?
@@ -398,6 +399,7 @@ AI пока недоступен|AI әзірге қолжетімсіз|AI is cu
 Қазақша|Қазақша|Kazakh
 English|Ағылшынша|English
 Афиша организатора|Ұйымдастырушының афишасы|Organiser poster
+Изображение из афиши · Давай Сходим|Афишадан алынған сурет · Давай Сходим|Image from the listings · Давай Сходим
 Афиша организатора · {credit}|Ұйымдастырушының афишасы · {credit}|Organiser poster · {credit}
 Иллюстрация категории: {category}|Санат иллюстрациясы: {category}|Category illustration: {category}
 Наличие мест узнавайте у организатора.|Бос орындарды ұйымдастырушыдан нақтыла.|Check availability with the organiser.

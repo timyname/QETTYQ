@@ -1,16 +1,19 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-10-20",
+  "reviewedAt": "2026-10-24",
   "defaultPublisherPosterPolicy": "deny_until_item_rights_verified",
   "remoteHotlinkingEnabled": false,
   "publishers": {
     "sxodim-astana-noncommercial": {
       "termsUrl": "https://sxodim.com/polzovatelskoe-soglashenie",
       "factReuse": "noncommercial_with_credit",
-      "posterRights": "unknown",
+      "posterRights": "scoped_noncommercial_publisher_permission_with_credit_and_link",
+      "approvedPublisherRegistry": "data/publisher-event-media.json",
+      "scope": "noncommercial_pilot_only",
+      "knownThirdPartyRestrictionsOverride": true,
       "autoDownload": false,
       "hotlink": false,
-      "reason": "General publisher reuse terms do not verify authorship or a grant for every third-party photograph/poster."
+      "reason": "Current public terms explicitly permit use of site materials for noncommercial purposes with publisher attribution and links. Exact reviewed same-origin Event.image files are permitted only through the separate expiring publisher registry; no claim of an individual organizer grant, unknown photographer authorship stays unknown, known third-party restrictions override. Commercial use and unreviewed automatic downloads are not permitted by this scope."
     }
   },
   "organizerApprovalRequirements": [

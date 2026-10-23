@@ -308,9 +308,15 @@ for (const language of ['kk', 'en'] as const) for (const viewport of [{ width: 3
       await button('Показать подборку').click();
       await expect(page.getByRole('article').first()).toBeVisible();
       await snap('feed');
-      const place = page.getByRole('article').first();
-      const originalPlace = await place.getByRole('heading').innerText();
+      // Freeze the chosen identity, not an index that Playwright would resolve
+      // again after a transient notice/HMR or catalogue replacement.
+      const originalPlace = await page.getByRole('article').first().getByRole('heading').innerText();
+      const place = page.locator('[data-screen="feed"] > main').getByRole('article').filter({ has: page.getByRole('heading', { name: originalPlace, exact: true }) });
+      await expect(place).toHaveCount(1);
+      await expect(button('Закрыть уведомление')).toHaveCount(0);
       await place.getByRole('button', { name: L('Сохранить'), exact: true }).click();
+      await expect(place.getByRole('button', { name: L('Убрать из сохранённых'), exact: true })).toHaveAttribute('aria-pressed', 'true');
+      await expect(place.getByRole('heading', { name: originalPlace, exact: true })).toHaveText(originalPlace);
       await place.getByRole('button', { name: L('Подробнее'), exact: true }).click();
       await expect(page.getByRole('heading', { name: originalPlace, exact: true })).toBeVisible();
       await snap('detail');

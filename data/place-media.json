@@ -92,6 +92,81 @@
       },
       "commonsOriginalSha1": "bfdb7e38a43ab4e6160cca2aeef6b9e9366ff2bf",
       "importedAt": "2026-10-20T21:24:28.618Z"
+    },
+    {
+      "placeId": "osm:way:37884583",
+      "src": "/assets/places/astana-lovers-park-2005.jpg",
+      "alt": "Парк влюблённых в Астане, исторический вид 25 июля 2005 года. Современное состояние может отличаться.",
+      "author": "Sofi Kan",
+      "credit": "Sofi Kan · Wikimedia Commons · CC BY-SA 3.0",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:ASTANA_love_park_2005.JPG",
+      "fileTitle": "File:ASTANA love park 2005.JPG",
+      "fileCategories": [
+        "Parks in Astana"
+      ],
+      "width": 1280,
+      "height": 960,
+      "bytes": 299573,
+      "sha256": "7aeb7a0609ea39f99371af1660dd30c76179f950093a25961365116d4dc77d4e",
+      "reviewedSha256": "7aeb7a0609ea39f99371af1660dd30c76179f950093a25961365116d4dc77d4e",
+      "changes": "Commons thumbnail resized to 1280×960; no crop, retouching or AI alteration.",
+      "fetchedAt": "2026-10-23T19:15:00Z",
+      "photographedAt": "2005-07-25 11:48:04",
+      "identityProof": {
+        "osmUrl": "https://www.openstreetmap.org/way/37884583",
+        "osmTag": "reviewed_geographic_match",
+        "osmTagValue": "manual_file_gps_inside_observed_osm_boundary",
+        "commonsCategory": "Category:Parks in Astana",
+        "categoryVerified": true,
+        "categoryEvidenceUrl": "https://commons.wikimedia.org/wiki/Category:Parks_in_Astana",
+        "sourceAsOf": "2026-10-19T20:21:11Z",
+        "geographicMatch": {
+          "fileLat": 51.131054,
+          "fileLon": 71.410811,
+          "osmBoundary": [
+            [
+              71.4064206,
+              51.1300467
+            ],
+            [
+              71.41061,
+              51.1293845
+            ],
+            [
+              71.4119988,
+              51.1329313
+            ],
+            [
+              71.4078335,
+              51.1336
+            ],
+            [
+              71.4064206,
+              51.1300467
+            ]
+          ],
+          "matchedVenueLabel": "Парк влюбленных",
+          "fileDescription": "Park in Astana (2005) between Turan and Kabanbay batyra avenues",
+          "filePageUrl": "https://commons.wikimedia.org/wiki/File:ASTANA_love_park_2005.JPG",
+          "reviewedAt": "2026-10-23T19:15:00Z"
+        }
+      },
+      "rights": {
+        "status": "approved",
+        "reviewedAt": "2026-10-23T19:15:00Z",
+        "reviewExpiresAt": null,
+        "photographLicenseVerified": true,
+        "visualVerified": true,
+        "subjectRights": "nature_no_protected_work",
+        "allowStore": true,
+        "allowDisplay": true,
+        "allowRedistribute": true,
+        "notes": "Own-work photographer Sofi Kan and file-specific CC BY-SA 3.0 verified from current Commons imageinfo. Exact filename Love Park, description between Turan/Kabanbay and observed GPS inside actual OSM park polygon jointly bind identity; no OSM Commons tag is claimed. Native thumbnail visually reviewed: historic landscaped green park with paths/trees/flower beds, no protected architectural building or sculpture as main subject, tiny background houses incidental. Must label 2005 historical photograph, not current appearance. Preserve credit/license/ShareAlike for media."
+      },
+      "commonsOriginalSha1": "3a533c903623edcf1cc2f66956a5ce9f0347cc0c",
+      "importedAt": "2026-10-23T19:15:37.823Z"
     }
   ]
 }

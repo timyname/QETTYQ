@@ -1,5 +1,6 @@
 import defaultMediaPolicy from "../../../data/media-policy.json";
 import ownedIllustrations from "../../../public/assets/ideas/manifest.json";
+import { resolvePublisherEventMedia, type PublisherPoster } from '../media/publisher-event-media';
 
 /** Worker-compatible, fixed-source adapter. No Node TCP/DNS, login, JS evaluation or photos. */
 export const SXODIM_INDEX = "https://sxodim.com/astana";
@@ -58,6 +59,7 @@ export type EventMediaPolicy = {
   ownedCategoryIllustrations: { provenance: string; rightsBasis: string; mediaType: string; mandatoryNotice: string; mappings: Array<{ categories: string[]; src: string; label: string }> };
 };
 export type EventMediaPlan =
+  | PublisherPoster
   | { kind: "organizer_poster"; src: string; alt: string; label: string; notice: string | null; credit: string | null; fit: "contain" }
   | { kind: "category_illustration"; src: string; alt: string; label: string; notice: string; credit: null; fit: "cover" }
   | { kind: "none"; src: null; alt: string; label: string; notice: string; credit: null; fit: null; reason: "no_approved_media" };
@@ -120,6 +122,8 @@ export function resolveEventMedia(event: Pick<LiveAstanaEvent, "name" | "categor
     if (!file || !["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.mime) || file.width < 1 || file.height < 1 || file.width > 8192 || file.height > 8192 || !Number.isInteger(file.width) || !Number.isInteger(file.height) || !/^[a-f0-9]{64}$/i.test(file.sha256) || !Number.isFinite(Date.parse(file.validatedAt)) || Date.parse(file.validatedAt) > now) continue;
     return { kind: "organizer_poster", src: item.localAssetPath, alt: `Афиша «${event.name}», предоставленная организатором с разрешением.`, label: "Афиша организатора", notice: null, credit: typeof item.credit === "string" ? item.credit : null, fit: "contain" };
   }
+  const publisherPoster = resolvePublisherEventMedia(event.contactUrl, undefined, now);
+  if (publisherPoster) return publisherPoster;
   const owned = policy.ownedCategoryIllustrations;
   if (options.allowCategoryIllustration !== false && owned?.mediaType === "category_illustration" && owned.rightsBasis === "project_generated_visuals" && owned.provenance === "public/assets/ideas/manifest.json" && typeof owned.mandatoryNotice === "string" && owned.mandatoryNotice.trim() && Array.isArray(owned.mappings)) {
     const category = event.category?.trim().toLowerCase();

@@ -1,5 +1,17 @@
 # Следующие шаги
 
+## После media-memory v13 · 24.10.2026
+
+- [x]10 реальных изображений афиши,2 ресторанных publisher фото и1 историческое Commons фото опубликованы и проверены. Web coverage:10/16 events,5/749 POI; это не полное закрытие фото-наполнения.
+- [ ] Расширять curated photo registry: точный venue/event identity, источник/условия, оригинальные bytes/hash, visual review, expiry/revoke. Ararat/Life fitness пока без подтверждённого снимка (для Life fitness конфликт адреса). Не брать похожий филиал/случайный снимок. Перед expiry30d повторить review, иначе route отключит фото. Публичные условия не равны разрешению коммерческого использования.
+- [x] Memory provenance + свежий ai_transfer gate, regression missing/expired/revoked/legacy/derived messages;706 unit/integration и96 E2E PASS.
+- [x] R1:40 independently reviewed RU/KK/EN gold cases, versioned corpus/hash и offline eval; результаты и слабые места в RAG_EVAL_REPORT.md. R1 не улучшил поиск.
+- [ ] R2: приватный request/trace ID, source/fact IDs, freshness/permission/unknown gates, без raw chat/GPS/секретов/Google-media; ограниченный TTL, deletion-by-session и no-trace/default tests. Затем общий R0 source capability/expiry/revoke gate до embeddings, dev-only tuning, holdout не использовать для подгонки.
+- [ ] Продолжить доказуемое качество поиска: EN отрицания, KK group budget/date phrasing, семантика мастер-классов, exact-name ranking. Не расширять бюджет и не включать live embeddings скрытно.
+- [ ] Установить новый native bundle и физически проверить фото relative→production API, память после restart, клавиатуру, multi-stop. Compile не закрывает этот gate.
+- [ ] Презентация/видео/заявка не менялись. SSH сохранять, Google/OpenAI лимиты не повышать.
+
+
 ## После multi-stop v12 · 21.10.2026
 
 - Закрыто в web: потеря2–3точек при Evaluate, видимая перестановка, автоматическая street line, отдельные переходы/посещения, обновлённый share/time warning.646 unit/integration и83 E2E PASS; public Chrome smoke PASS.

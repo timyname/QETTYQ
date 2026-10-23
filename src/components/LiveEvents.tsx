@@ -10,6 +10,7 @@ import type { LiveAstanaEvent, EventMediaPlan } from '@/server/ingestion/sxodim-
 import s from './PilotApp.module.css';
 import art from './event-artwork.module.css';
 import { twoGisWalkingPlanUrl } from '@/client/2gis-navigation';
+import { appMediaUrl } from '../client/media-url';
 
 export type LiveFeed = {
   items: LiveAstanaEvent[];
@@ -31,18 +32,23 @@ export function eventPrice(event: LiveAstanaEvent, language: Language = 'ru') {
 }
 export function eventImage(event: LiveAstanaEvent) {
   const media = (event as LiveAstanaEvent & { media?: EventMediaPlan }).media;
+  if (media?.kind === 'publisher_poster' && /^\/api\/media\/events\/[a-f0-9]{64}$/u.test(media.src)) return media.src;
   return media?.kind === 'organizer_poster' && /^\/assets\/event-posters\/[a-z0-9][a-z0-9._-]{0,120}\.(jpe?g|png|webp|avif)$/i.test(media.src) && !media.src.includes('..') ? media.src : null;
 }
 
 function eventImageLabel(event: LiveAstanaEvent) {
   const media = (event as LiveAstanaEvent & { media?: EventMediaPlan }).media;
+  if (eventImage(event) && media?.kind === 'publisher_poster') return 'Изображение из афиши · Давай Сходим';
   return eventImage(event) && media?.kind === 'organizer_poster' ? `Афиша организатора${media.credit ? ` · ${media.credit}` : ''}` : 'Афиша пока не добавлена';
 }
 
 function EventArtwork({ event, mini = false }: { event: LiveAstanaEvent; mini?: boolean }) {
   const image = eventImage(event);
+  const src = image ? appMediaUrl(image) : null;
   const [failed, setFailed] = useState<string | null>(null);
-  return image && failed !== image ? <Image className={art.poster} src={image} fill sizes={mini ? '64px' : '430px'} alt={eventImageLabel(event)} onError={() => setFailed(image)} /> : <div className={mini ? art.miniEmpty : art.empty} role="img" aria-label="Афиша пока не добавлена"><CalendarDays size={mini ? 24 : 32} strokeWidth={1.4} />{!mini && <span>{event.category ?? 'Событие'}<br />Афиша пока не добавлена</span>}</div>;
+  // Do not let the Next image optimizer retain publisher bytes after rights expiry.
+  // The native shim already renders an ordinary image and needs no optimizer prop.
+  return image && src && failed !== image ? <Image className={art.poster} src={src} {...(src === image ? { unoptimized: true } : {})} fill sizes={mini ? '64px' : '430px'} alt={eventImageLabel(event)} onError={() => setFailed(image)} /> : <div className={mini ? art.miniEmpty : art.empty} role="img" aria-label="Афиша пока не добавлена"><CalendarDays size={mini ? 24 : 32} strokeWidth={1.4} />{!mini && <span>{event.category ?? 'Событие'}<br />Афиша пока не добавлена</span>}</div>;
 }
 
 export function EventPreview({ event, onOpen }: { event: LiveAstanaEvent; onOpen: () => void }) {

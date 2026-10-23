@@ -1,5 +1,19 @@
 # Отчёт проверки
 
+## Фото + память + RAG R1 · 24.10.2026
+
+Фактически выполнено:
+
+- `pnpm exec vitest run --maxWorkers=4`:64files,706/706 PASS (финальный rerun15.12s). Первый запуск с default worker fanout дал timeout существующего CLI теста; assertions/timeouts не ослаблялись.
+- `PORT=3039 pnpm exec playwright test --workers=1 --output=output/playwright/media-memory-r1-final-20261024 --reporter=line`:96/96 PASS,6.3m. Frozen src. Ранние full runs95/96: screenshot protocol failure и HMR во время выбора карточки; latter trace подтверждён, test привязан к exact identity. После короткой подписи focused run10/14 выявил старый expected link label; обновлён только label, href/source checks сохранены.
+- `pnpm typecheck`, scoped ESLint по изменённым source/eval/media/E2E файлам: PASS. Offline `pnpm eval:rag`: deterministicRepeat true,40 reviewed cases;34 outcomes и29 полных assertions. CLI success означает воспроизводимость, не100%качество поиска. Отчёт: RAG_EVAL_REPORT.md.
+- Immutable Docker/Next build linux/amd64: PASS. `pnpm exec vite build --outDir .../.sites-runtime/media-memory-r1.zzlkMG/native-www` из mobile: PASS16.57s, warning крупных chunks; не установка на iPhone.
+- Image:12 private publisher JPEG,1706916B, exact SHA aggregate совпал. Public HTTPS после deploy:10event+2place endpoints200/hash/no-store; unknown SHA404 для обоих lanes. Catalog749/5photos; events live16/10posters. Production Chrome map→RIBAMBELLE→details: real image/credit visible, proof `output/playwright/real-place-photos/live-ribambelle-v13.png`.
+- VPS healthy; backup verified перед restart; SSH authorized_keys digest прежний. Existing secrets scan staged blobs:0 утечек. Google/OpenAI paid calls0. Browser MapGL использует существующий разрешённый demo; квота не расширялась.
+- Остались предупреждения dev synthetic safe-area hydration/MapLibre missing sprites и native large chunks. `git diff --check` отмечал2 trailing blank EOF в новых файлах, не функциональную ошибку; проверки не отключались.
+- Не доказаны physical iPhone install/restart, native memory cookie persistence, R2 traces, улучшение retrieval, полное photo coverage и новые презентация/видео/заявка.
+
+
 ## Multi-stop v12 · 21.10.2026
 
 - `pnpm test`:646/646PASS,57files. Scoped ESLint и `pnpm typecheck` PASS.

@@ -1,5 +1,15 @@
 # Статус QETTYQ
 
+## Реальные фото, память и RAG R1 · 24.10.2026
+
+- Web: опубликован `qettyq:vps-20261024-13`, healthy, 184.9MiB/640MiB. Immutable build tree `63e6da95d288d165f71b4f3eaf25a58a89516ce5`, image manifest `0b14db0db909ff26d75d132268ef137aa2e5bc607fd1be96b98b5a046fa8dedb`. Проверенная SQLite backup, другие проекты не менялись, SSH сохранён.
+- Production:16 live-событий,10 изображений афиши;749 snapshot POI,5 фото (3 Commons,2 publisher). RIBAMBELLE и Саксаул сопоставлены по точному заведению/адресу; новый снимок Lovers Park явно исторический2005. Не обещаем фото всех заведений или современность архивных интерьеров.
+-12 publisher JPEG хранятся вне Git, отдаются gated no-store endpoints с SHA/size/expiry/revoke проверками. Разрешение Sxodim ограничено некоммерческим использованием с упоминанием/ссылкой; не распространяется автоматически на коммерческий сервис или соцсети. В ленте краткая атрибуция, полная — в деталях.
+- Память: устранён обход ai_transfer через восстановленный transcript. Серверные/legacy и производные ответы сохраняют происхождение; свежая проверка согласия перед AI, отказ не стирает видимый диалог/текущий вопрос. SQLite, TTL и удаление существовали до этого релиза; native-cookie persistence после физического перезапуска не доказана.
+- R1:40 проверенных RU/KK/EN cases, воспроизводимый offline baseline:34/40 outcomes,29/40 full assertions,2 нарушения на прямой synthetic retriever boundary. Это не улучшенный matcher и не доказательство public API leak. R2 trace и hybrid RAG пока не реализованы.
+-706/706 unit/integration,96/96 E2E, typecheck/scoped lint, immutable Next build и private native Vite compile PASS. Production HTTP12/12 exact JPEG+404/no-store и Chrome venue photo PASS. Google/OpenAI paid calls0, бюджеты прежние. Маршруты регрессированы, алгоритм не менялся; презентация/видео/заявка не менялись. iPhone bundle не установлен.
+
+
 ## Исправление плана из нескольких точек · 21.10.2026
 
 - Опубликован `qettyq:vps-20261021-12`, healthy; immutable build tree `f37cb450e835102733652b18ce3334fd64e98e8f`, manifest `0b88e0c71d96c192df78c60359a215a3de686d2958e148d62756595c022cdb5e`. Проверенная SQLite backup перед обновлением; другие проекты не менялись, SSH сохранён.

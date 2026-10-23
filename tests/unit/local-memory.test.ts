@@ -56,4 +56,34 @@ describe("browser-local memory", () => {
     expect(loadLocalMemory(storage).profile).toMatchObject({ minutes: 720, strictBudget: true, budgetUnknown: true });
     expect(storage.getItem(LOCAL_MEMORY_KEY)).not.toContain('origin');
   });
+
+  it('preserves server provenance through actual JSON save/reload instead of upgrading it to device', () => {
+    const storage = new MemoryStorage();
+    const memory = appendLocalMessage(createDefaultLocalMemory(), {
+      id: 'restored-server', role: 'user', mode: 'user', text: 'Сохранённый контекст',
+      createdAt: '2026-10-24T00:00:00Z', contextOrigin: 'server',
+    });
+    saveLocalMemory(storage, memory);
+    expect(loadLocalMemory(storage).dialogue[0].contextOrigin).toBe('server');
+    saveLocalMemory(storage, loadLocalMemory(storage));
+    expect(loadLocalMemory(storage).dialogue[0].contextOrigin).toBe('server');
+  });
+
+  it.each([undefined, null, 'invalid', { source: 'device' }])('fails closed for missing/malformed persisted origin %j', origin => {
+    const memory = createDefaultLocalMemory();
+    const raw = JSON.stringify({ ...memory, dialogue: [{ id: 'old', role: 'user', mode: 'user', text: 'Старый контекст', createdAt: memory.updatedAt, contextOrigin: origin }] });
+    const parsed = parseLocalMemory(raw);
+    expect(parsed.dialogue[0].contextOrigin).toBe('legacy_unknown');
+    expect(parseLocalMemory(JSON.stringify(parsed)).dialogue[0].contextOrigin).toBe('legacy_unknown');
+  });
+
+  it('marks only newly appended local turns as device and retains that distinction after reload', () => {
+    const storage = new MemoryStorage();
+    const first = appendLocalMessage(createDefaultLocalMemory(), { id: 'new-user', role: 'user', mode: 'user', text: 'Прогулка завтра', createdAt: '2026-10-24T00:00:00Z' });
+    const next = appendLocalMessage(first, { id: 'new-assistant', role: 'assistant', mode: 'deterministic', text: 'Какой бюджет?', createdAt: '2026-10-24T00:00:01Z' });
+    saveLocalMemory(storage, next);
+    expect(loadLocalMemory(storage).dialogue.map(message => message.contextOrigin)).toEqual(['device', 'device']);
+    const legacy = parseLocalMemory(JSON.stringify({ ...next, dialogue: [{ ...next.dialogue[0], contextOrigin: undefined }] }));
+    expect(appendLocalMessage(createDefaultLocalMemory(), legacy.dialogue[0]).dialogue[0].contextOrigin).toBe('legacy_unknown');
+  });
 });

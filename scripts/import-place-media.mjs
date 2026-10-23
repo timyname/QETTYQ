@@ -45,8 +45,15 @@ async function main() {
   for (const line of raw.split('\n')) {
     if (!line) continue;
     const feature = JSON.parse(line.replace(/^\u001e/u, '')), tags = feature.properties ?? {};
-    if (`osm:${tags['@type']}:${tags['@id']}` === id
-      && tags[record.identityProof.osmTag] === record.identityProof.osmTagValue) { identityVerified = true; break; }
+    if (`osm:${tags['@type']}:${tags['@id']}` !== id) continue;
+    if (record.identityProof.osmTag === 'reviewed_geographic_match') {
+      const proof = record.identityProof.geographicMatch;
+      if (proof && Number(meta.GPSLatitude?.value) === proof.fileLat && Number(meta.GPSLongitude?.value) === proof.fileLon
+        && JSON.stringify(feature.geometry?.coordinates?.[0]?.[0]) === JSON.stringify(proof.osmBoundary)
+        && Object.entries(tags).some(([key, value]) => (key === 'name' || key.startsWith('name:')) && value === proof.matchedVenueLabel)
+        && plain(meta.ImageDescription?.value) === proof.fileDescription && proof.filePageUrl === record.sourceUrl) identityVerified = true;
+    } else if (tags[record.identityProof.osmTag] === record.identityProof.osmTagValue) identityVerified = true;
+    break;
   }
   if (!identityVerified) throw new Error('OSM source tag proof missing/mismatch');
   const bytes = await readFile(inputPath);

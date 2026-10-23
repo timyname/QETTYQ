@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "enabled": true,
+  "monetizationEnabled": false,
+  "scope": "noncommercial_pilot_only",
+  "termsUrl": "https://sxodim.com/polzovatelskoe-soglashenie",
+  "records": [
+    {
+      "status": "approved",
+      "rightsBasis": "publisher_public_noncommercial_permission_with_credit_and_link",
+      "termsUrl": "https://sxodim.com/polzovatelskoe-soglashenie",
+      "reviewedAt": "2026-10-23T19:25:54Z",
+      "reviewExpiresAt": "2026-11-22T19:25:54Z",
+      "fetchedAt": "2026-10-23T19:25:54Z",
+      "width": 1522,
+      "height": 570,
+      "mime": "image/jpeg",
+      "visualVerified": true,
+      "knownThirdPartyRestriction": false,
+      "modifications": "Exact served publisher JPEG; no crop, retouching or AI alteration by QETTYQ. Photographer unknown. Publisher image can reflect the source publication date rather than today's interior.",
+      "placeId": "osm:node:12041597269",
+      "sourcePageUrl": "https://sxodim.com/astana/place/ribambelle",
+      "sourceImageUrl": "https://sxodim.com/uploads/posts/2023/03/09/optimized/27cc1154ccf864930969229a694cc35a_1522x570-q-85.jpg",
+      "sourceName": "Ribambelle",
+      "sourceAddress": "Казахстан, Нур-Султан (Астана), улица Достык, 16",
+      "sourceHouse": "16",
+      "sourceStreetAlias": "улица Достык",
+      "sourceLat": 51.124742,
+      "sourceLon": 71.432073,
+      "catalogName": "RIBAMBELLE",
+      "catalogLat": 51.1249938,
+      "catalogLon": 71.4326174,
+      "identity": {
+        "method": "exact_name_and_shared_address_building",
+        "observedStreet": "Достық көшесі",
+        "observedStreetAliases": ["улица Достык"],
+        "streetAliasSourceUrl": "https://www.openstreetmap.org/way/24418994",
+        "observedHouse": "16",
+        "osmSourceUrl": "https://www.openstreetmap.org/relation/8205731",
+        "sourceAsOf": "2026-10-19T20:21:11Z",
+        "boundary": [
+          [
+            71.4313691,
+            51.1242924
+          ],
+          [
+            71.4317545,
+            51.1242294
+          ],
+          [
+            71.431839,
+            51.1242155
+          ],
+          [
+            71.432207,
+            51.1241552
+          ],
+          [
+            71.432781,
+            51.1240612
+          ],
+          [
+            71.4330061,
+            51.1246451
+          ],
+          [
+            71.4331743,
+            51.1250374
+          ],
+          [
+            71.4327613,
+            51.125121
+          ],
+          [
+            71.4317458,
+            51.125363
+          ],
+          [
+            71.4315138,
+            51.1247205
+          ],
+          [
+            71.4313691,
+            51.1242924
+          ]
+        ]
+      },
+      "sha256": "e319dd02b83df8006960243416d579b142a80c12ab3ec559c9ee625232df82f4",
+      "bytes": 195332,
+      "alt": "Интерьер ресторана Ribambelle по адресу Достык, 16, опубликованный Давай Сходим; снимок из материала 2023 года."
+    },
+    {
+      "status": "approved",
+      "rightsBasis": "publisher_public_noncommercial_permission_with_credit_and_link",
+      "termsUrl": "https://sxodim.com/polzovatelskoe-soglashenie",
+      "reviewedAt": "2026-10-23T19:25:54Z",
+      "reviewExpiresAt": "2026-11-22T19:25:54Z",
+      "fetchedAt": "2026-10-23T19:25:54Z",
+      "width": 1522,
+      "height": 570,
+      "mime": "image/jpeg",
+      "visualVerified": true,
+      "knownThirdPartyRestriction": false,
+      "modifications": "Exact served publisher JPEG; no crop, retouching or AI alteration by QETTYQ. Photographer unknown. Publisher image can reflect the source publication date rather than today's interior.",
+      "placeId": "osm:node:4953253121",
+      "sourcePageUrl": "https://sxodim.com/astana/place/restoran-saksaul",
+      "sourceImageUrl": "https://sxodim.com/uploads/posts/2023/02/16/optimized/73742ea2ce26095da4284adc91862fa6_1522x570-q-85.jpg",
+      "sourceName": "Ресторан «Саксаул»",
+      "sourceAddress": "Астана, улица Достык, 5",
+      "sourceHouse": "5",
+      "sourceStreetAlias": "улица Достык",
+      "sourceLat": 51.12789,
+      "sourceLon": 71.422245,
+      "catalogName": "Саксаул",
+      "catalogLat": 51.1281668,
+      "catalogLon": 71.4228833,
+      "identity": {
+        "method": "exact_name_and_observed_address",
+        "observedStreet": "Достық көшесі",
+        "observedStreetAliases": ["улица Достык"],
+        "streetAliasSourceUrl": "https://www.openstreetmap.org/way/24418994",
+        "observedHouse": "5",
+        "osmSourceUrl": "https://www.openstreetmap.org/node/4953253121",
+        "sourceAsOf": "2026-10-19T20:21:11Z"
+      },
+      "sha256": "cf5e42f830ff75d5f4ef09c7af8d2b2540c8b74a4e9f78375f115a02f18d82c1",
+      "bytes": 235791,
+      "alt": "Интерьер ресторана Саксаул на Достык, 5, опубликованный Давай Сходим; снимок из материала 2023 года."
+    }
+  ]
+}

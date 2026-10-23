@@ -24,7 +24,7 @@ describe('A8 independent Commons place-photo policy audit (offline)', () => {
   it('returns reviewed exact-identity local media with visible source/license/author/change metadata', () => {
     const photo = fixture(), result = resolveCommonsPlaceMedia(placeId, registry(photo), now);
     expect(result).toEqual({ kind: 'real_place_photo', src: photo.src, alt: photo.alt, author: photo.author, credit: photo.credit,
-      license: photo.license, licenseUrl: photo.licenseUrl, sourceUrl: photo.sourceUrl, width: photo.width, height: photo.height, changes: photo.changes });
+      license: photo.license, licenseUrl: photo.licenseUrl, sourceUrl: photo.sourceUrl, width: photo.width, height: photo.height, changes: photo.changes, photographedAt: photo.photographedAt });
   });
   it('never guesses a nearby or same-category venue photo and never performs a request', () => {
     const network = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('NO_NETWORK'));

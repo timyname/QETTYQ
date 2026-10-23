@@ -6,19 +6,24 @@ import { MapPin } from 'lucide-react';
 import { Localize, translateText, useI18n } from '../client/i18n';
 import type { PlaceMedia } from '../server/media/commons-place-media';
 import css from './place-photo.module.css';
+import { appMediaUrl } from '../client/media-url';
 
-export function hasRealPhoto(media?: PlaceMedia): media is Extract<PlaceMedia, { kind: 'real_place_photo' }> {
-  return media?.kind === 'real_place_photo' && /^\/assets\/places\/[a-z0-9-]+\.jpg$/.test(media.src);
+export function hasRealPhoto(media?: PlaceMedia): media is Exclude<PlaceMedia, { kind: 'none' }> {
+  return media?.kind === 'real_place_photo' && /^\/assets\/places\/[a-z0-9-]+\.jpg$/.test(media.src)
+    || media?.kind === 'publisher_place_photo' && /^\/api\/media\/places\/[a-f0-9]{64}$/u.test(media.src);
 }
 
 export function CatalogPhoto({ media, category, mini = false, label = true, labelClassName }: { media?: PlaceMedia; fallback: string; category: string; mini?: boolean; label?: boolean; labelClassName?: string }) {
   const { language } = useI18n();
   const [failed, setFailed] = useState<string | null>(null);
   const real = hasRealPhoto(media) && failed !== media.src;
-  return <Localize>{real ? <Image src={media.src} fill sizes={mini ? '64px' : '430px'} alt={media.alt} onError={() => setFailed(media.src)} /> : <div className={css.catalogEmpty} data-mini={mini} role="img" aria-label={`${translateText('Фото пока нет', language)}: ${category}`}><MapPin size={mini ? 24 : 44} strokeWidth={1.3} />{!mini && <span>{category}</span>}</div>}{(label || failed === media?.src) && <small className={labelClassName ?? (real ? css.catalogCredit : undefined)}>{real ? <span translate="no">{media.author} · {media.license}</span> : mini ? 'Без фото' : 'Фото пока нет'}</small>}</Localize>;
+  const src = real ? appMediaUrl(media.src) : null;
+  const year = real && media.kind === 'real_place_photo' ? media.photographedAt?.match(/^\d{4}/u)?.[0] : null;
+  return <Localize>{real && src ? <Image src={src} {...(media.kind === 'publisher_place_photo' && src === media.src ? { unoptimized: true } : {})} fill sizes={mini ? '64px' : '430px'} alt={media.alt} onError={() => setFailed(media.src)} /> : <div className={css.catalogEmpty} data-mini={mini} role="img" aria-label={`${translateText('Фото пока нет', language)}: ${category}`}><MapPin size={mini ? 24 : 44} strokeWidth={1.3} />{!mini && <span>{category}</span>}</div>}{(label || failed === media?.src) && <small className={labelClassName ?? (real ? css.catalogCredit : undefined)}>{real ? media.kind === 'publisher_place_photo' ? <><span>Источник фото</span>: <span translate="no">{media.publisher}</span></> : <span translate="no">{media.author}{year ? ` (${year})` : ''} · {media.license}</span> : mini ? 'Без фото' : 'Фото пока нет'}</small>}</Localize>;
 }
 
-export function CatalogPhotoCredit({ media }: { media?: PlaceMedia }) {
+export function CatalogPhotoCredit({ media, compact = false }: { media?: PlaceMedia; compact?: boolean }) {
   if (!hasRealPhoto(media)) return null;
-  return <Localize><p className={css.fullCredit} data-testid="catalog-photo-credit"><span>Автор фото:</span> <span translate="no">{media.author}</span> · <a href={media.sourceUrl} target="_blank" rel="noreferrer">Источник фото</a> · <a href={media.licenseUrl} target="_blank" rel="noreferrer" translate="no">{media.license}</a>. <span translate="no">{media.changes}</span> <span>Кадрирование для карточки.</span></p></Localize>;
+  if (compact) return <Localize><p className={css.compactCredit} data-testid="catalog-photo-credit"><a href={media.sourceUrl} target="_blank" rel="noreferrer">Источник фото</a>: <span translate="no">{media.kind === 'publisher_place_photo' ? media.publisher : media.author}</span> · <a href={media.licenseUrl} target="_blank" rel="noreferrer" translate={media.kind === 'publisher_place_photo' ? undefined : 'no'}>{media.kind === 'publisher_place_photo' ? 'Условия использования' : media.license}</a></p></Localize>;
+  return <Localize><p className={css.fullCredit} data-testid="catalog-photo-credit"><span>{media.kind === 'publisher_place_photo' ? 'Источник фото' : 'Автор фото:'}</span> <span translate="no">{media.kind === 'publisher_place_photo' ? media.publisher : `${media.author}${media.photographedAt ? ` (${media.photographedAt})` : ''}`}</span> · <a href={media.sourceUrl} target="_blank" rel="noreferrer">Источник фото</a> · <a href={media.licenseUrl} target="_blank" rel="noreferrer" translate="no">{media.license}</a>. <span translate="no">{media.changes}</span> <span>Кадрирование для карточки.</span></p></Localize>;
 }
