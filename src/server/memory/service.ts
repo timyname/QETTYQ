@@ -129,6 +129,28 @@ export function createMemoryService(db: DatabaseSync, options: { production: boo
         return { ...result, history: normalizeDialogueHistory(result.history) };
       } catch { return null; }
     },
+    async readForDialogue(request) {
+      if (guarded(request, request.method !== "GET")) return null;
+      try {
+        purge();
+        const token = existing(request);
+        if (!token || !memory.hasConsent(token, "profile") && !memory.hasConsent(token, "dialogue")) return null;
+        const currentTime = clock();
+        const astanaDay = (value: number) => new Date(value + 5 * 3_600_000).toISOString().slice(0, 10);
+        const today = astanaDay(currentTime);
+        const messages = memory.messages(token);
+        // The replay parser currently has one request clock. Replaying an old
+        // "tomorrow" using today's clock would invent a new date. Until trusted
+        // per-turn timestamps are supported, retain the stored transcript for
+        // the user's history UI but only replay today's local turns. Do not
+        // change ai_transfer policy or grant new provider access here.
+        const sameDayMessages = messages.filter(message => Number.isSafeInteger(message.createdAtMs)
+          && message.createdAtMs <= currentTime && astanaDay(message.createdAtMs) === today);
+        return { usage: "local_deterministic_only", historyTrust: "untrusted_personal_context",
+          historyWindow: "same_astana_calendar_day", omittedHistoryCount: messages.length - sameDayMessages.length,
+          preferences: memory.readProfile(token), history: normalizeDialogueHistory(sameDayMessages) };
+      } catch { return null; }
+    },
     async recordExchange(request, exchange) {
       if (guarded(request, true)) return { stored: false, reason: "MEMORY_AUTH_REQUIRED" };
       try {

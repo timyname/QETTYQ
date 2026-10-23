@@ -19,6 +19,19 @@ describe('publisher venue photos with exact independently observed identity', ()
     expect(validPublisherPlaceIdentity(p)).toBe(true);
     expect(resolvePublisherPlaceMedia(p.placeId, registry, now)?.sourceUrl).toBe(p.sourcePageUrl);
   });
+  it('binds Uno only to independently addressed Kenesary13 building, retaining the exact publisher exterior', () => {
+    const p = registry.records[2] as PublisherPlaceRecord;
+    expect(p.sourcePageUrl).toBe('https://sxodim.com/astana/place/uno');
+    expect(validPublisherPlaceIdentity(p)).toBe(true);
+    expect(resolvePublisherPlaceMedia(p.placeId, registry, now)).toMatchObject({
+      kind: 'publisher_place_photo', width: 1522, height: 570,
+      src: '/api/media/places/3070d0f30ac8d04ba3d6856413912b98efa63f0a909d33d160d3fbe6de8d9f83',
+    });
+    const outside = structuredClone(p);
+    outside.sourceLon = 71.4103;
+    expect(validPublisherPlaceIdentity(outside)).toBe(false);
+    expect(resolvePublisherPlaceMedia(p.placeId, { ...registry, records: [outside] }, now)).toBeNull();
+  });
   it('refuses another branch/changed address even for the same brand and nearby coordinates', () => {
     for (const patch of [{ sourceHouse: '18' }, { sourceAddress: 'Астана, улица Достык, 18' }, { sourceName: 'Other Restaurant' },
       { sourceAddress: 'Астана, улица Кунаева, 16', sourceStreetAlias: 'улица Кунаева' },
@@ -48,7 +61,7 @@ describe('publisher venue photos with exact independently observed identity', ()
     }
   });
   it('verifies real private JPEGs and gated served bytes by SHA, and denies expired media', async () => {
-    expect(registry.records).toHaveLength(2);
+    expect(registry.records).toHaveLength(3);
     for (const record of registry.records) {
       const bytes = readFileSync(`data/place-media-cache/${record.sha256}.jpg`);
       expect(bytes.length).toBe(record.bytes);

@@ -10,11 +10,23 @@ export type MemoryState = {
   historyTrust: "untrusted_personal_context";
 };
 export type MemoryAIContext = { preferences: MemoryPreferences | null; history: { role: "user" | "assistant"; text: string }[]; visits: MemoryVisit[] };
+/** Independent local-use scope. This value MUST NOT be passed to a model or
+ * external search provider: only readForAI can authorize that transfer. Saved
+ * settings remain untrusted preferences, not confirmed current constraints. */
+export type MemoryDialogueContext = {
+  usage: "local_deterministic_only";
+  historyTrust: "untrusted_personal_context";
+  historyWindow: "same_astana_calendar_day";
+  omittedHistoryCount: number;
+  preferences: MemoryPreferences | null;
+  history: { role: "user" | "assistant"; text: string }[];
+};
 export type MemoryExchange = { userMessageId: string; userText: string; assistantMessageId: string; assistantText: string; mode: "openai" | "deterministic" };
 export type MemoryOperation = "state" | "grant" | "revoke" | "profile" | "message" | "visit" | "delete";
 export type MemoryService = {
   handle(request: Request, operation: MemoryOperation): Promise<Response>;
   readForAI(request: Request): Promise<MemoryAIContext | null>;
+  readForDialogue?(request: Request): Promise<MemoryDialogueContext | null>;
   recordExchange(request: Request, exchange: MemoryExchange): Promise<{ stored: boolean; reason: string | null }>;
   dispose?(): void;
 };

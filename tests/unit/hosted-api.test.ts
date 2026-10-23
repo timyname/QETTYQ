@@ -42,6 +42,7 @@ describe("hosted API dependency wiring, no external traffic", () => {
   });
   it("keeps explicit Sites AI DI and its default event service independent from a registered host", async () => {
     const mock = fixture(), explicit = fixture(); setHostedRuntime(mock.host);
+    explicit.getStatus.mockResolvedValue({ configured: true, available: true, model: "gpt-5.5", localTestOnly: false, hostedWebSearch: false, retrievalMode: "source_evidence", reason: null, remainingCalls: 1 });
     const answer = vi.spyOn(reasonedAssistant, "answerReasonedAssistant").mockResolvedValue({ assistant: { mode: "deterministic", reply: "SYNTHETIC TEST", citations: [], model: null, reason: "TEST_ONLY" }, plan: null, evidence: null });
     await handleChat(request("chat", createSession().id, { text: "Лекции завтра", useAI: true }), explicit.host.ai);
     expect(explicit.dependencies).toHaveBeenCalledOnce(); expect(mock.dependencies).not.toHaveBeenCalled();
@@ -49,6 +50,7 @@ describe("hosted API dependency wiring, no external traffic", () => {
   });
   it("normalizes 24 browser messages before schema validation, retaining twenty for dialogue and redacting decimal GPS", async () => {
     const mock = fixture(); setHostedRuntime(mock.host);
+    mock.getStatus.mockResolvedValue({ configured: true, available: true, model: "gpt-5.5", localTestOnly: false, hostedWebSearch: false, retrievalMode: "source_evidence", reason: null, remainingCalls: 1 });
     const answer = vi.spyOn(reasonedAssistant, "answerReasonedAssistant").mockResolvedValue({ assistant: { mode: "deterministic", reply: "SYNTHETIC TEST", citations: [], model: null, reason: "TEST_ONLY" }, plan: null, evidence: null });
     const history = Array.from({ length: 24 }, (_, index) => ({ role: "user", text: `${index}: Я у 51.123456,71.123456` }));
     const response = await chat(request("chat", createSession().id, { text: "Лекции завтра", useAI: true, history }));

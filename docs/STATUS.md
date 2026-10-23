@@ -1,5 +1,16 @@
 # Статус QETTYQ
 
+## Лента, локальная память и shared cap · v17 · 24.10.2026
+
+- Web опубликован: `qettyq:vps-20261024-17`, healthy,186.9MiB/640MiB. Immutable build input tree `824563eec08b48ed7f34e1c853d6a41349fe3655`; image manifest `a87580a98e2a988d2abc7941ff700cbb8e436d1bd3943334b9f120f945500983`. v16 был только build candidate, на live не переключался; до v17 работал v15. Backup verified, SSH сохранён, другие проекты не менялись.
+- Фото: реальный Uno/Кенесары13 добавлен по exact name+shared addressed OSM building. POI6/749, афиша16/16.19 private publisher JPEG/2731071B, sorted SHA manifest148519d80030e8899f8cb1a2648c08aa1820f76a31e2ce00682a0d1583e17f82. Rights/credit/expiry/no-store gates сохранены; остальные проверенные venue placeholders/неоднозначные филиалы не добавлены.
+- UI: афиша — единая snap-ширина и16:10 media frame для loading/real/404/missing, contain без обрезки текста источника, равные края/высота карточек. Не новый дизайн всех venue/detail экранов.
+- Память: серверный local-only read по profile/dialogue scopes, без AI-transfer/visits.20turns/6KiB; replay только текущего дня Астаны, полная история UI не удаляется. Fresh nondefault request settings + money tuple и session confirmations предшествуют старой истории. Когда public AI unavailable, даже useAItrue фиксируется в локальный путь, модель не вызывается. Local-derived запрос не передаётся Google.
+- Production canary PASS: новый guest без client history, useAItrue/blocked budget → deterministic memory restore, fresh7000/nonstrict/90min, local food+Google consent → MEMORY_LOCAL_ONLY,6/749photo,16posters,19JPEG exacthash/no-store. Собственная память удалена/проверена; платных Google/OpenAI вызовов0.
+- AI/Sybil: общий gateway использует прежний approval/table/atomic reservation. Production read-only preflight: USD10reserved (19completed+1blocked),0remaining, PUBLIC_ACCOUNTING_BLOCKED; это не invoice. Upstream Sybil не подключён к gateway, ключи не передавались и платная simulation не запускалась. В ZCode действительно отправлено отдельное read-only задание GLM-5.3 Max; это не API и не запуск Sybil. Статус/ограничения в A-zcode-review.
+- Проверки:829/829 unit/integration72files, typecheck/scopedlint, immutable Next build58s, final targeted13/13 E2E49.4s PASS. Physical iPhone/native reinstall не выполнялись. Маршруты — regression only. Презентация/видео/заявка не менялись.
+
+
 ## Контекст, lexical RAG v2 и афиша v15 · 24.10.2026
 
 - Сервис: опубликован `qettyq:vps-20261024-15`, healthy,189.9MiB/640MiB; immutable build input tree `a256261c976841449fc272a13ead6155e2da66f6`, image manifest `66295b4270cdb948023a3a2b6d712fdb1f35561aae245e4eb33daee6e62e0fb4`. SQLite backup verified; SSH сохранён, другие проекты не менялись.

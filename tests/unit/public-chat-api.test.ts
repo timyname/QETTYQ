@@ -25,7 +25,7 @@ function runtime(reply = "Предлагаю сравнить варианты �
     return Response.json({ status: "completed", model: "gpt-5.5", service_tier: "default", usage: { input_tokens: 1000, output_tokens: 100 }, output: [{ type: "message", role: "assistant", content: [{ type: "output_text", text: JSON.stringify({ intent: "advice", evidenceIds, message: reply }) }] }] });
   });
   const dependencies = vi.fn<PublicAIRuntime["dependencies"]>((): SmartAssistantDependencies => ({ executionScope: "public", env: publicEnv, fetcher, quota: { kind: "durable_public", reserve, complete } }));
-  const getStatus = vi.fn<PublicAIRuntime["getStatus"]>(async () => ({ available: false, reason: "PUBLIC_SESSION_COOLDOWN", configured: true, localTestOnly: false, hostedWebSearch: false, retrievalMode: "source_evidence" as const, model: "gpt-5.5" as const, remainingCalls: 19, capMicroUsd: 10000000, reservedMicroUsd: 500000, reservationMicroUsd: 500000 }));
+  const getStatus = vi.fn<PublicAIRuntime["getStatus"]>(async () => ({ available: true, reason: null, configured: true, localTestOnly: false, hostedWebSearch: false, retrievalMode: "source_evidence" as const, model: "gpt-5.5" as const, remainingCalls: 19, capMicroUsd: 10000000, reservedMicroUsd: 500000, reservationMicroUsd: 500000 }));
   return { adapter: { dependencies, getStatus } satisfies PublicAIRuntime, dependencies, getStatus, reserve, complete, fetcher };
 }
 function request(session: string, body: unknown, headers = {}) {
@@ -133,6 +133,7 @@ describe("public chat route integration (offline synthetic provider, never paid)
 describe("public assistant status route (offline)", () => {
   it("requires a session and preserves public cooldown/no-hosted-search status", async () => {
     const mock = runtime();
+    mock.getStatus.mockResolvedValue({ available: false, reason: "PUBLIC_SESSION_COOLDOWN", configured: true, localTestOnly: false, hostedWebSearch: false, retrievalMode: "source_evidence", model: "gpt-5.5", remainingCalls: 19, capMicroUsd: 10000000, reservedMicroUsd: 500000, reservationMicroUsd: 500000 });
     const missing = await handleAssistantStatus(new Request("https://qettyq.example/api/assistant/status"), mock.adapter);
     expect(missing.status).toBe(401); expect(mock.getStatus).not.toHaveBeenCalled();
     const session = createSession();

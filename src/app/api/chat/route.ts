@@ -6,7 +6,7 @@ import { localizedClarification, localizedSearchReply } from "../../../server/pi
 import { requestedFoodMatch } from "../../../server/pilot/food-search";
 import { getGooglePlacesRuntime, unavailableGooglePlaces, type GooglePlacesResult } from "../../../server/pilot/google-places";
 import { pilotPlaces, searchPilotPlaces } from "../../../server/pilot/catalog";
-import type { MemoryAIContext } from "../../../server/memory/contracts";
+import type { MemoryAIContext, MemoryDialogueContext } from "../../../server/memory/contracts";
 import { liveEventsService } from "../../../server/ingestion/live-events";
 import { answerSmartAssistant, type SmartAssistantResult } from "../../../server/pilot/smart-assistant";
 import { getLocalAITestGate, reserveLocalAITestCall } from "../../../server/pilot/ai-test-quota";
@@ -38,21 +38,43 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   auth.session.chatRequestTimes.push(now);
   const trace = beginRagTrace(auth.session.id, parsed.data.language, traces);
   try {
+  // Availability is checked before choosing a memory scope. If public AI cannot
+  // run, use a strictly local path even when the UI requested AI; never read a
+  // local-only transcript and then attempt a model if quota changes mid-request.
+  let aiGate: { available: boolean; reason: string | null } | null = null;
+  if (parsed.data.useAI && publicRuntime) {
+    try { aiGate = await publicRuntime.getStatus(auth.session.id); }
+    catch { aiGate = { available: false, reason: "PUBLIC_BUDGET_STORAGE_UNAVAILABLE" }; }
+  }
+  const executeAI = parsed.data.useAI && aiGate?.available !== false;
   let saved: MemoryAIContext | null = null;
-  if (parsed.data.useAI && memory) { try { saved = await memory.readForAI(request); } catch { /* no hidden RAM/consent fallback */ } }
-  const preferences = saved?.preferences;
+  if (executeAI && memory) { try { saved = await memory.readForAI(request); } catch { /* no hidden RAM/consent fallback */ } }
+  let localSaved: MemoryDialogueContext | null = null;
+  if (!executeAI && memory?.readForDialogue) {
+    try { localSaved = await memory.readForDialogue(request); } catch { /* local scope also fails closed */ }
+  }
+  const preferences = saved?.preferences ?? localSaved?.preferences;
   const context = parsed.data.context ?? auth.session.context ?? pilotContextSchema.parse(preferences ? {
     likedTags: preferences.likedTags, goal: preferences.goal, minutes: preferences.minutes, budget: preferences.budget,
   } : {});
   // Prefer the current bounded transcript. Global text deduplication can erase a
   // later correction (e.g. 2000 -> 3000 -> 2000); never treat assistant text as fact.
-  const history = (parsed.data.history.length ? parsed.data.history : saved?.history ?? []).slice(-20);
+  const history = (parsed.data.history.length ? parsed.data.history : saved?.history ?? localSaved?.history ?? []).slice(-20);
+  // Local history/profile consent is NOT permission to send a derived query to
+  // Google. Current explicit context/transcript wins; never silently widen the
+  // local-only grant when restored information participates in this request.
+  const localMemoryUsed = localSaved !== null && (parsed.data.history.length === 0 && history.length > 0
+    || !parsed.data.context && !auth.session.context && localSaved.preferences !== null);
   trace.history(history.length);
   trace.mark("memory");
   // Only /api/context establishes confirmed settings. A default request context
   // or a remembered preference is not silently promoted to a locked constraint.
+  const defaultContext = pilotContextSchema.parse({});
+  const budgetFields = new Set(["budget", "strictBudget", "budgetBasis", "partySize"]);
   const confirmedFields = auth.session.context ? DIALOGUE_CONFIRMED_FIELDS.filter(field => field !== "goal"
-    && auth.session.context![field] === context[field]) : undefined;
+    && auth.session.context![field] === context[field])
+    : localMemoryUsed && parsed.data.context ? DIALOGUE_CONFIRMED_FIELDS.filter(field => field !== "goal"
+      && (context[field] !== defaultContext[field] || context.budget !== null && budgetFields.has(field))) : undefined;
   const dialogue = prepareLeisureDialogue({ text: parsed.data.text, history, context, confirmedFields, language: parsed.data.language, now });
   trace.mark("dialogue");
   const remember = async (reply: string, mode: "openai" | "deterministic") => {
@@ -80,10 +102,11 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   constrain();
   trace.mark("retrieval");
   result.reply = localizedSearchReply(parsed.data.language, result);
-  let assistant: SmartAssistantResult = { mode: "deterministic", reply: result.reply, citations: [], model: null, reason: "AI_NOT_REQUESTED" };
+  let assistant: SmartAssistantResult = { mode: "deterministic", reply: result.reply, citations: [], model: null,
+    reason: aiGate?.available === false ? aiGate.reason : "AI_NOT_REQUESTED" };
   let googlePlaces: GooglePlacesResult | undefined;
   let reasoningMode: "plan_retrieve_answer" | "deterministic" = "deterministic";
-  if (parsed.data.useAI) {
+  if (executeAI) {
     const input = { text: parsed.data.text, language: parsed.data.language, history, context: result.proposedContext,
       evidence: { items: result.items, events: result.events, eventEvidence: result.eventEvidence, reply: result.reply } };
     if (publicRuntime) {
@@ -138,7 +161,8 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   }
   if (result.proposedContext.goal === "food" && !googlePlaces) {
     const google = getGooglePlacesRuntime();
-    googlePlaces = result.proposedContext.strictBudget && result.proposedContext.budget !== null
+    googlePlaces = localMemoryUsed ? unavailableGooglePlaces("MEMORY_LOCAL_ONLY")
+      : result.proposedContext.strictBudget && result.proposedContext.budget !== null
       ? unavailableGooglePlaces("GOOGLE_PRICE_NOT_VERIFIED")
       : parsed.data.googleConsent && google
       ? await google.search({ query: retrievalText.slice(0, 240), language: parsed.data.language, consent: true, requestId: crypto.randomUUID() })

@@ -1,5 +1,16 @@
 # Следующие шаги
 
+## После v17 · 24.10.2026
+
+- [x] Опубликованы стабильная геометрия афиш, Uno realphoto (6/749), local-only server memory restore и blocked-AI deterministic fallback;829unit/integration+13targetedE2E+live canary PASS.
+- [x] Внутренний Sybil gateway использует существующий sharedcap, read-only production preflight действительно отклонил вызовы: резервUSD10полон/одна записьblocked. Не сбрасывать и не разблокировать без отдельной проверяемой reconciliation; новый бюджет не выдан.
+- [ ] Upstream Sybil всё ещё не подсоединён к gateway; обычный1000-agent runner запрещён. Платная simulation при текущем остатке невозможна. App-only GLM не API: отдельный ZCode audit запущен, его статус/проверенные выводы — в agent report, не обещать незапущенное фоновое наблюдение.
+- [ ] Продолжать exact venue identity + rights review для новых снимков:6/749 не полнота. В текущей афише16/16, новые source events требуют нового media approval. GenericOG/несовпавшие филиалы не подставлять. Current30day approvals review beforeexpiry.
+- [ ] Memory: добавить trusted per-turn date anchors и явную field provenance для долгого междневного диалога;20/6KiB всё ещё ограничение. Детерминированный local replay готов, но не claiming full ChatGPT memory. Не расширять ai_transfer/visits consent.
+- [ ] R3/R4 source capabilities/expiry/revoke и unified evidence; дальнейшие semantic/KK качества по новым dev cases и новому независимому holdout. Embeddings/hybrid gates ещё не пройдены; бюджеты не повышать.
+- [ ] Независимо воспроизвести ZCode findings; потенциальный upscale onboarding286×382 и desktop-short-height controls отдельно от новых realposters. PhysicaliPhone/native keyboard/multistop проверить отдельно; этот релиз — web, без новой nativeinstall. Маршруты, презентация, видео, заявка не изменены.
+
+
 ## После context/RAG v15 · 24.10.2026
 
 - [x] Опубликованы lexical/context improvements и16/16 afisha artworks; public canary включая18turns/persistent memory/new guest/strict settings/exact name/hash18files PASS.788 unit/integration, E2E95/96+isolated2/2+final8/8; source/claims limits в TEST_REPORT.

@@ -1,5 +1,17 @@
 # Отчёт проверки
 
+## v17 · фото / local memory / shared cap · 24.10.2026
+
+- Final `pnpm exec vitest run --maxWorkers=2`:72files,829/829 PASS15.72s; полный typecheck и scopedESLint PASS. Ранний825 PASS;827-run во время Docker имел5s timeout старого CLI-test; без изменения timeout/проверки827 PASS19.45s. После нового status gate12 прежних AI tests выявили fixtures с unavailable-status при успешном provider mock: fixtures согласованы с их сценарием available, grounding assertions сохранены. Затем829 PASS. Начальная strict-budget tuple регрессия найдена и исправлена, не скрыта.
+- Final targeted E2E: `afisha-media-sizing.spec.ts live-events.spec.ts memory-ai-consent.spec.ts ui-review-38.spec.ts --workers=1`,13/13 PASS49.4s.3новых media viewport360/390/430, extreme wide/tall,404/missing, длинное название, равные карточки/snap/nooverflow. Это не новый полный прогон всего E2E набора или physical iPhone.
+- Memory42focused realSQLite+API cases входят в829, не добавлять повторно: scopes/renewguest/restart/TTL/revoke/delete/auth/isolation/GPS, sameAstana-day, budgettuple, blocked/throw AI status → local-only/no dependencies/fetch/Google. Sharedcap28focused (13new+15existing) также входят в829; atomic app/Sybil cap и offline mocked provider.
+- Production read-only preflight streamed owner CLI: exit2,cap10000000/reserved10000000,remainingCalls0,reasonPUBLIC_ACCOUNTING_BLOCKED,providerCalls0. Никаких resets/refunds/new approvals/API keys. Native esbuild вызван напрямую после несовместимости pnpm wrapper с бинарником.
+- Immutable linux/amd64 build candidatev16 PASS102.8s, не опубликован; finalv17 tree824563eec08b48ed7f34e1c853d6a41349fe3655 PASS58.0s,manifest a87580a98e2a988d2abc7941ff700cbb8e436d1bd3943334b9f120f945500983. OnlyQETTYQ app compose updated after verified SQLite backup; healthy186.9MiB/640MiB, SSH hash unchanged.
+- Live HTTPS canary: server memory restore without client history/new guest/useAItrue+blocked cap; fresh7000+nonstrict+90min preserved; local food query notsentGoogle despite consent; ai_transfer absent; Uno photo visiblecatalog;16posters/6POIphotos/19exactJPEGSHA+no-store PASS. Own disposable memory deleted, GETdisabled verified and ownsession cleaned. Paid Google/OpenAI calls0.
+- Chrome v17 две соседние реальные афиши визуально проверены: границы карточек/медиа/CTA одинаковы. Proofs output/playwright/v16/live-afisha-v17.png и live-afisha-v17-next.png. Новая Uno фотография downloaded bytes reviewed агентом, без AI-изменений.
+- ZCodeGLM отдельное задание реально запущено; не засчитывается в829/E2E/Sybil simulation. Его найденные гипотезы требуют независимого воспроизведения; см.A-zcode-review. Native/device, презентация, видео и заявка в этом этапе не менялись.
+
+
 ## RAG/context v15 · 24.10.2026
 
 - `pnpm exec vitest run --maxWorkers=4`:69files,788/788 PASS11.35s (финальный source). `pnpm typecheck` и scoped ESLint PASS. Ранний прогон776:1 failure был старым six-message expectation API; обновлён под новый20-turn контракт, provider6-test сохранён.

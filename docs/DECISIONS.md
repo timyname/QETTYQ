@@ -1,5 +1,15 @@
 # Решения
 
+## Local-only memory, размер медиа и Sybil budget · 24.10.2026
+
+- Афиша использует одну геометрию rail100%/min-width0 и16:10 frame; содержимое posters contain, без генеративного заполнения/обрезки текста. Venue/detail размеры не менялись. Проверены крайние natural aspect ratios,404/missing и длинные названия.
+- readForDialogue — отдельный local-only scope, не разрешение на AI/Google передачу. Только действующий opaque memory cookie+guest, независимые profile/dialogue grants/TTL. Старый relative-date текст не переигрывается после смены дня Астаны; это ограничение до trusted per-turn timestamps, не удаление UI истории.
+- Публичный getStatus проверяется до выбора memory scope. Недоступный/throw status фиксирует deterministic execution на весь запрос; если квота позже изменится, этот запрос всё равно не вызывает модель. AI-available ветка по-прежнему только readForAI/ai_transfer. Local replay блокирует Google enrichment; свежая client history имеет приоритет.
+- Fresh request nondefault money/time поля защищаются от local old turns без persistent autoconfirm. Budget/strictness/basis/partySize связаны: false не должен теряться только потому, что совпадает с default. Текущая реплика может предложить новый лимит; session сама не меняется.
+- Sybil gateway не создаёт новый ledger/approval: прежние USD10, USD0.50 no-refund reservations, global pending/block, fixed session cooldown/daily и UUID/step1..4. Ограничены endpoint/model/tokens/bytes/tools/retries/timeout. Adapter пока не автоматически подменяет upstream engine; прямой ключ ему не выдавать.
+- Владелец подтвердил app-only GLM в ZCode. Использовать существующий интерфейс для независимого ограниченного review можно; извлекать OAuth/превращать app subscription в API нельзя. GLM opinions — synthetic hypotheses, не реальные отзывы, конверсия или прохождение всех функциональных тестов.
+
+
 ## Разговорный контекст и R2 без нового биллинга · 24.10.2026
 
 - Увеличен не provider prompt, а bounded deterministic replay:20 сообщений/6KiB вместо6 при той же общей границе14KiB. Provider slice6 и все модели/token/reservation caps неизменны. Память читается только при действующих scopes; assistant turns не трактуются как факты.

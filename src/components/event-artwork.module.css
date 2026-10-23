@@ -1,13 +1,18 @@
 .empty {display:flex;align-items:center;gap:12px;width:100%;height:100%;padding:22px;color:#d8eadb;background:#163f35;}
 .empty span {font-size:13px;line-height:1.45;}
 .empty svg {flex:none;}
-.rail {height:auto!important;align-items:flex-start;}
+.rail {height:auto!important;min-width:0;max-width:100%;align-items:stretch;}
+/* A snap page is exactly one rail viewport, never its title/image's min-content width. */
+.rail>.card {flex:0 0 100%;width:100%;min-width:0;max-width:100%;box-sizing:border-box;}
 .card {height:auto!important;display:flex;flex-direction:column;background:#163f35;}
-.card .art {height:220px!important;aspect-ratio:auto;flex:none;}
-.card .art[data-empty=true] {height:88px!important;}
+/* One reserved media frame for landscape, portrait, loading and missing artwork.
+   Contain preserves publisher poster text; the dark letterbox is intentional. */
+.card .art {width:100%;min-width:0;height:auto!important;aspect-ratio:16/10;flex:none;background:#163f35;}
 .card .art::after {display:none!important;}
 .card .art>small {position:absolute;top:auto!important;bottom:8px!important;left:12px!important;font-size:9px!important;}
-.card .body {position:relative;padding:16px!important;}
+.card .body {position:relative;min-width:0;flex:1;display:flex;flex-direction:column;padding:16px!important;overflow-wrap:anywhere;}
+.card .body>a {max-width:100%;}
+.card .body>button {margin-top:auto!important;}
 .card .body h2 {font-size:22px!important;}
 .detailArt[data-empty=true] {height:auto!important;min-height:220px;max-height:none;padding:100px 22px 24px;background:#163f35;}
 .detailArt[data-empty=true]>.empty {height:auto;padding:0 0 18px;}
