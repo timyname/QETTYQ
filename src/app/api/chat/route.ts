@@ -7,6 +7,7 @@ import { requestedFoodMatch } from "../../../server/pilot/food-search";
 import { getGooglePlacesRuntime, unavailableGooglePlaces, type GooglePlacesResult } from "../../../server/pilot/google-places";
 import { pilotPlaces, searchPilotPlaces } from "../../../server/pilot/catalog";
 import type { MemoryAIContext, MemoryDialogueContext } from "../../../server/memory/contracts";
+import { persistedReplayClocks } from "../../../server/memory/replay-alignment";
 import { liveEventsService } from "../../../server/ingestion/live-events";
 import { answerSmartAssistant, type SmartAssistantResult } from "../../../server/pilot/smart-assistant";
 import { getLocalAITestGate, reserveLocalAITestCall } from "../../../server/pilot/ai-test-quota";
@@ -60,10 +61,12 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   // Prefer the current bounded transcript. Global text deduplication can erase a
   // later correction (e.g. 2000 -> 3000 -> 2000); never treat assistant text as fact.
   const history = (parsed.data.history.length ? parsed.data.history : saved?.history ?? localSaved?.history ?? []).slice(-20);
+  const historyCreatedAtMs = persistedReplayClocks(history, saved ?? localSaved, now);
   // Local history/profile consent is NOT permission to send a derived query to
   // Google. Current explicit context/transcript wins; never silently widen the
   // local-only grant when restored information participates in this request.
   const localMemoryUsed = localSaved !== null && (parsed.data.history.length === 0 && history.length > 0
+    || historyCreatedAtMs !== undefined
     || !parsed.data.context && !auth.session.context && localSaved.preferences !== null);
   trace.history(history.length);
   trace.mark("memory");
@@ -75,7 +78,7 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
     && auth.session.context![field] === context[field])
     : localMemoryUsed && parsed.data.context ? DIALOGUE_CONFIRMED_FIELDS.filter(field => field !== "goal"
       && (context[field] !== defaultContext[field] || context.budget !== null && budgetFields.has(field))) : undefined;
-  const dialogue = prepareLeisureDialogue({ text: parsed.data.text, history, context, confirmedFields, language: parsed.data.language, now });
+  const dialogue = prepareLeisureDialogue({ text: parsed.data.text, history, historyCreatedAtMs, context, confirmedFields, language: parsed.data.language, now });
   trace.mark("dialogue");
   const remember = async (reply: string, mode: "openai" | "deterministic") => {
     if (!memory) return false;

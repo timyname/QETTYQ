@@ -3,6 +3,7 @@ import { parseContext } from '../pilot/chat';
 import { normalizeDialogueHistory, type RecentChatMessage } from '../pilot/chat-history';
 import { redactDecimalCoordinates } from '../pilot/location-redaction';
 import { isNegatedMention } from '../retrieval/lexical-query';
+import { astanaCalendarDay } from './anchored-history';
 
 export type DialogueLanguage = 'ru' | 'kk' | 'en';
 export type DialogueQuestion = { field: 'format' | 'date' | 'budget'; text: string };
@@ -109,15 +110,20 @@ function searchTerms(text: string) {
  * Topic reset only clears dialogue replay, not protected settings.
  */
 export function prepareLeisureDialogue(input: { text: string; history?: unknown; context: PilotContext; language?: DialogueLanguage; now?: number;
+  /** Internal only: authenticated SQLite write times, aligned with normalized history.
+   * API callers MUST NOT populate this from browser-supplied timestamps. */
+  historyCreatedAtMs?: readonly number[];
   confirmedFields?: readonly DialogueConfirmedField[] }): LeisureDialogue {
   const language = input.language ?? 'ru', copy = labels[language], now = input.now ?? Date.now();
   const current = redactDecimalCoordinates(input.text, '[координаты скрыты]').slice(0, 1000);
   const normalized: RecentChatMessage[] = normalizeDialogueHistory(input.history);
-  let history = normalized.filter(message => message.role === 'user').map(message => message.text);
+  const alignedClocks = input.historyCreatedAtMs?.length === normalized.length ? input.historyCreatedAtMs : undefined;
+  let history = normalized.flatMap((message, index) => message.role === 'user' ? [{ text: message.text,
+    createdAtMs: alignedClocks ? alignedClocks[index] : now, trusted: alignedClocks !== undefined }] : []);
   const reset = resetPattern.test(current);
   if (reset) history = [];
-  else { const last = history.findLastIndex(text => resetPattern.test(text)); if (last >= 0) history = history.slice(last); }
-  const turns = [...history, current];
+  else { const last = history.findLastIndex(turn => resetPattern.test(turn.text)); if (last >= 0) history = history.slice(last); }
+  const turns = [...history, { text: current, createdAtMs: now, trusted: false }];
   let context: PilotContext = { ...input.context, likedTags: [...input.context.likedTags] };
   const protectedFields = new Set<DialogueConfirmedField>(DIALOGUE_CONFIRMED_FIELDS.filter(field => input.confirmedFields?.includes(field)));
   if (input.context.strictBudget && input.context.budget !== null) {
@@ -125,15 +131,17 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
   }
   const protectedContext = Object.fromEntries([...protectedFields].map(field => [field, input.context[field]])) as Partial<Pick<PilotContext, DialogueConfirmedField>>;
   let intent: LeisureDialogue['intent'] = 'general', romantic = false, format: FormatChoice | null = null;
-  let date: string | null = null, dateKnown = false, budgetKnown = context.budget !== null;
+  let date: string | null = null, dateKnown = false, staleHistoricalDate = false, budgetKnown = context.budget !== null;
   let query = '', pending: DialogueQuestion['field'][] = [];
   const explicit = new Set<string>(), excluded = new Set<string>();
   const missing = (): DialogueQuestion['field'][] => {
-    if (!romantic && !turns.some(text => vague.test(text))) return [];
+    if (staleHistoricalDate) return ['date'];
+    if (!romantic && !turns.some(turn => vague.test(turn.text))) return [];
     return [...(!format ? ['format' as const] : []), ...(!dateKnown ? ['date' as const] : []),
       ...(format?.key === 'food' && !budgetKnown ? ['budget' as const] : [])];
   };
-  for (const [turnIndex, turn] of turns.entries()) {
+  for (const [turnIndex, timedTurn] of turns.entries()) {
+    const turn = timedTurn.text;
     if (turnIndex === turns.length - 1) {
       context = { ...context, ...protectedContext };
       if (protectedFields.has('budget')) budgetKnown = context.budget !== null;
@@ -163,9 +171,24 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
     // Dialogue instead follows the latest explicit positive format in this turn.
     if (selected) context.goal = selected.goal;
     else if (positiveCuisine) context.goal = 'food';
-    const day = dayQuery(turn, now);
-    if (day) { date = day; dateKnown = true; explicit.add('date'); }
-    if (/любой\s+день|день\s+не\s*важ\p{L}*|any\s+day|күн\s+маңызды\s+емес/iu.test(turn)) { date = null; dateKnown = true; explicit.add('date'); }
+    const validClock = Number.isSafeInteger(timedTurn.createdAtMs) && timedTurn.createdAtMs >= 0 && timedTurn.createdAtMs <= now;
+    let day = validClock ? dayQuery(turn, timedTurn.createdAtMs) : null;
+    if (day && timedTurn.trusted) {
+      const ruDate = day.match(/^(\d{1,2})\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)(?:\s+(20\d{2}))?$/iu);
+      const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+      if (ruDate) day = `${ruDate[3] ?? astanaCalendarDay(timedTurn.createdAtMs).slice(0, 4)}-${String(months.indexOf(ruDate[2].toLocaleLowerCase('ru-RU')) + 1).padStart(2, '0')}-${ruDate[1].padStart(2, '0')}`;
+    }
+    if (!validClock && timedTurn.trusted && dayQuery(turn, now)) { date = null; dateKnown = false; staleHistoricalDate = true; }
+    if (day) {
+      // Retain tomorrow/weekday against the original server-write day. An old
+      // elapsed day is not permission to silently switch to today's events.
+      // Weekend ranges are not represented by the existing single-day query;
+      // ask again after midnight rather than moving an old weekend forward.
+      const expired = timedTurn.trusted && (/^20\d{2}-\d{2}-\d{2}$/u.test(day) && day < astanaCalendarDay(now)
+        || day === 'выходные' && astanaCalendarDay(timedTurn.createdAtMs) !== astanaCalendarDay(now));
+      date = expired ? null : day; dateKnown = !expired; staleHistoricalDate = expired; explicit.add('date');
+    }
+    if (/любой\s+день|день\s+не\s*важ\p{L}*|any\s+day|күн\s+маңызды\s+емес/iu.test(turn)) { date = null; dateKnown = true; staleHistoricalDate = false; explicit.add('date'); }
     if (amount.test(turn)) {
       const thousands = turn.match(/(\d+(?:[.,]\d+)?)\s*(?:тыс(?:яч)?|k)(?=\s|$|[₸,.!?])/iu);
       if (thousands) context = parseContext(`${/(?:до|максимум|up to|at most)/iu.test(turn) ? 'до ' : ''}${Math.round(Number(thousands[1].replace(',', '.')) * 1000)} тенге`, context);
@@ -173,7 +196,7 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
     }
     if (duration.test(turn)) explicit.add('minutes');
     if (budgetOptOut.test(turn) || indifferent.test(turn) && pending.includes('budget')) { context.budget = null; context.strictBudget = false; budgetKnown = true; explicit.add('budget'); }
-    if (indifferent.test(turn) && pending.includes('date')) { date = null; dateKnown = true; explicit.add('date'); }
+    if (indifferent.test(turn) && pending.includes('date')) { date = null; dateKnown = true; staleHistoricalDate = false; explicit.add('date'); }
     if (indifferent.test(turn) && pending.includes('format')) { format = { ...formats[1], goal: 'new', query: 'досуг' }; context.goal = 'new'; explicit.add('format'); }
     if (pending.includes('budget') && /^\d{1,6}$/u.test(turn.trim())) { context = parseContext(`${turn} тенге`, context); budgetKnown = true; explicit.add('budget'); }
     const terms = searchTerms(positiveText);

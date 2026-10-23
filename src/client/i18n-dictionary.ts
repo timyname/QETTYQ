@@ -3,6 +3,8 @@ import { ORGANIZER_TRANSLATIONS } from './i18n-organizer';
 import { POLICY_TRANSLATIONS } from './i18n-policy';
 import { ROUTE_TRANSLATIONS } from './i18n-route';
 const rows = `
+Действия с карточкой|Карточка әрекеттері|Card actions
+Эта ссылка больше не доступна. Посмотри актуальные места и события в подборке.|Бұл сілтеме енді қолжетімсіз. Өзекті орындар мен оқиғаларды топтамадан қара.|This link is no longer available. Browse the current places and events in the feed.
 Найти на карте|Картадан табу|Find on map
 Ищем в каталоге и адресах…|Каталог пен мекенжайлардан іздеп жатырмыз…|Searching places and addresses…
 Результаты поиска на карте|Картадағы іздеу нәтижелері|Map search results

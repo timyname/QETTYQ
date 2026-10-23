@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { createClientMemory } from "../datastore/client-memory";
-import { normalizeDialogueHistory } from "../pilot/chat-history";
+import { normalizePersistedDialogueHistory } from "../assistant/anchored-history";
 import { blockCrossSiteMutation, jsonResponse, readJson, requireSession } from "../session/http";
 import type { MemoryOperation, MemoryService, MemoryState } from "./contracts";
 
@@ -126,7 +126,8 @@ export function createMemoryService(db: DatabaseSync, options: { production: boo
         const token = existing(request);
         if (!token || !memory.hasConsent(token, "ai_transfer")) return null;
         const result = memory.aiContext(token);
-        return { ...result, history: normalizeDialogueHistory(result.history) };
+        const bounded = normalizePersistedDialogueHistory(result.history, clock());
+        return { ...result, history: bounded.history, historyCreatedAtMs: bounded.historyCreatedAtMs };
       } catch { return null; }
     },
     async readForDialogue(request) {
@@ -135,20 +136,11 @@ export function createMemoryService(db: DatabaseSync, options: { production: boo
         purge();
         const token = existing(request);
         if (!token || !memory.hasConsent(token, "profile") && !memory.hasConsent(token, "dialogue")) return null;
-        const currentTime = clock();
-        const astanaDay = (value: number) => new Date(value + 5 * 3_600_000).toISOString().slice(0, 10);
-        const today = astanaDay(currentTime);
         const messages = memory.messages(token);
-        // The replay parser currently has one request clock. Replaying an old
-        // "tomorrow" using today's clock would invent a new date. Until trusted
-        // per-turn timestamps are supported, retain the stored transcript for
-        // the user's history UI but only replay today's local turns. Do not
-        // change ai_transfer policy or grant new provider access here.
-        const sameDayMessages = messages.filter(message => Number.isSafeInteger(message.createdAtMs)
-          && message.createdAtMs <= currentTime && astanaDay(message.createdAtMs) === today);
+        const bounded = normalizePersistedDialogueHistory(messages, clock());
         return { usage: "local_deterministic_only", historyTrust: "untrusted_personal_context",
-          historyWindow: "same_astana_calendar_day", omittedHistoryCount: messages.length - sameDayMessages.length,
-          preferences: memory.readProfile(token), history: normalizeDialogueHistory(sameDayMessages) };
+          historyWindow: "trusted_persisted_turn_dates", ...bounded,
+          preferences: memory.readProfile(token) };
       } catch { return null; }
     },
     async recordExchange(request, exchange) {

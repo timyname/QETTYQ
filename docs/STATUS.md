@@ -1,5 +1,14 @@
 # Статус QETTYQ
 
+## GLM, две фотографии и междневная память · v18 · 24.10.2026
+
+- Сервис/deploy: `qettyq:vps-20261024-18` опубликован, healthy,176.2MiB/640MiB. Immutable build input tree `8683af6ad622ed15d27274bed17acfc9d8743381`; image manifest-list `82b709b95d7e3600a80ef2a8fc50393b44d7be8e35714b6cafd009b77a64cb4f`. Проверена SQLite backup; SSH authorized_keys hash не изменился; другие проекты не менялись. Первая немедленная health-проверка после recreate получила reset, последующие internal/public HTTPS дали200/healthy.
+- GLM: завершённый ZCode report извлечён в A-glm-zcode-audit-extracted. B4 подтверждён/исправлен: видимые44px like/skip. B5 — подпись категорий, не лишние likes. B6 — безопасные публичные hash URLs, Back/Forward, reload и отложенная event-навигация. B1 low-res286px не подтверждён: реальный JPEG720×960/master1086×1448; остальные опровергнутые visual claims не «исправлялись». Недоступность AI/2ГИС не обходилась новым ключом/лимитом.
+- Данные: ещё2 publisher фото (Культура Диктует, Chaleur), POI8/749; афиша16 изображений.21 private JPEG/3027791B; SHA256 sorted JSON path/sha256/bytes manifest `9d4d389d03cc9e9cca2fb91c33581c28d292d4e314c486224e5b9313c6853370`. Branch/address identity, rights/credit/expiry/no-store сохранены; placeholders/неоднозначные филиалы исключены.
+- Память/RAG: server-write clocks закрепляют относительные даты RU/KK/EN за исходным днём. Прошедшая дата/старые выходные → уточнение; текущая дата/confirmed деньги и время имеют приоритет. Exact full role/text replay может получить только соответствующие серверные часы; divergence не заимствует их. Local-only производный запрос блокируется для Google.20turns/6KiB, consent/TTL/delete без изменений. Embeddings/hybrid не включались.
+- Проверки: изолированный release864/864 unit/integration75files, typecheck/scopedESLint/build PASS;36/36 targeted E2E PASS1.0min; production canary восстановил память в новой guest session, сохранил7000/90, подтвердил MEMORY_LOCAL_ONLY,8photo/16posters/21JPEG hashes/no-store и удаление собственной тестовой памяти. Browser live Chaleur decoded/photo+public deep link подтверждены; screenshot output/playwright/qettyq-v18-chaleur-live.png.
+- AI/бюджеты: read-only production preflight0provider calls, USD10alreadyreserved, remainingCalls0/PUBLIC_ACCOUNTING_BLOCKED; это accounting reservation, не invoice. No paid simulation/provider calls. Маршруты — регрессия multistop, алгоритм не менялся. Physical iPhone/native reinstall не проверялись. Презентация, видео и заявка не менялись.
+
 ## Лента, локальная память и shared cap · v17 · 24.10.2026
 
 - Web опубликован: `qettyq:vps-20261024-17`, healthy,186.9MiB/640MiB. Immutable build input tree `824563eec08b48ed7f34e1c853d6a41349fe3655`; image manifest `a87580a98e2a988d2abc7941ff700cbb8e436d1bd3943334b9f120f945500983`. v16 был только build candidate, на live не переключался; до v17 работал v15. Backup verified, SSH сохранён, другие проекты не менялись.

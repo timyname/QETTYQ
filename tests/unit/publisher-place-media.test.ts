@@ -40,6 +40,24 @@ describe('publisher venue photos with exact independently observed identity', ()
       expect(resolvePublisherPlaceMedia(p.placeId, data(p), now)).toBeNull();
     }
   });
+  it('binds Kultura Diktuet by its observed exact Syganak33 address, not a generic café photo', () => {
+    const p = registry.records.find(p => p.placeId === 'osm:node:12959449801') as PublisherPlaceRecord;
+    expect(p.sourceName).toBe('Культура Диктует');
+    expect(p.identity.method).toBe('exact_name_and_observed_address');
+    expect(validPublisherPlaceIdentity(p)).toBe(true);
+    expect(resolvePublisherPlaceMedia(p.placeId, registry, now)?.src).toBe('/api/media/places/2d43f7fa56a36fd98059239c52b8c7881893238a5c8e2ee297a2da2a3a9bc19d');
+    expect(validPublisherPlaceIdentity({ ...p, sourceHouse: '35' })).toBe(false);
+  });
+  it('binds Chaleur only when both source and catalog points are inside observed AbuDhabiPlaza60/5', () => {
+    const p = registry.records.find(p => p.placeId === 'osm:node:10170946745') as PublisherPlaceRecord;
+    expect(p.sourceName).toBe('Chaleur');
+    expect(validPublisherPlaceIdentity(p)).toBe(true);
+    expect(resolvePublisherPlaceMedia(p.placeId, registry, now)?.src).toBe('/api/media/places/fb1d94d1254eb55a1abd921c320b5e58253ca3f2a716ca8ab26829eaf74e21db');
+    const outside = structuredClone(p);
+    outside.sourceLat = 51.121;
+    expect(validPublisherPlaceIdentity(outside)).toBe(false);
+    expect(resolvePublisherPlaceMedia(p.placeId, { ...registry, records: [outside] }, now)).toBeNull();
+  });
   it('requires an actual closed shared building polygon, not a near-point match', () => {
     for (const boundary of [undefined, [[71.43, 51.12], [71.431, 51.12], [71.431, 51.121], [71.43, 51.12]]]) {
       const p = fixture(); p.identity.boundary = boundary;
@@ -61,7 +79,7 @@ describe('publisher venue photos with exact independently observed identity', ()
     }
   });
   it('verifies real private JPEGs and gated served bytes by SHA, and denies expired media', async () => {
-    expect(registry.records).toHaveLength(3);
+    expect(registry.records).toHaveLength(5);
     for (const record of registry.records) {
       const bytes = readFileSync(`data/place-media-cache/${record.sha256}.jpg`);
       expect(bytes.length).toBe(record.bytes);

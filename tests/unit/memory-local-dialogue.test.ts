@@ -60,7 +60,7 @@ describe("local deterministic memory context, real SQLite and independent scopes
     expect((await memory.handle(request("PATCH", preferences), "profile")).status).toBe(200);
     const saved = await memory.readForDialogue!(request());
     expect(saved).toEqual({ usage: "local_deterministic_only", historyTrust: "untrusted_personal_context",
-      historyWindow: "same_astana_calendar_day", omittedHistoryCount: 0, preferences, history: [] });
+      historyWindow: "trusted_persisted_turn_dates", omittedHistoryCount: 0, preferences, history: [], historyCreatedAtMs: [] });
     expect(saved).not.toHaveProperty("visits");
     expect(await memory.readForAI(request())).toBeNull();
   });
@@ -107,12 +107,16 @@ describe("local deterministic memory context, real SQLite and independent scopes
     await memory.handle(request("PATCH", preferences), "profile"); await exchange(1);
     time += 2000;
     const saved = (await memory.readForDialogue!(request()))!;
-    expect(saved).toMatchObject({ preferences, history: [], omittedHistoryCount: 2 });
+    expect(saved).toMatchObject({ preferences, omittedHistoryCount: 0, historyCreatedAtMs: [time - 2000, time - 2000] });
+    const replayed = prepareLeisureDialogue({ text: "Два часа", history: saved.history, historyCreatedAtMs: saved.historyCreatedAtMs,
+      context: pilotContextSchema.parse({}), now: time });
+    expect(replayed.retrievalText).toContain("2026-10-25");
+    expect(replayed.retrievalText).not.toContain("2026-10-26");
     expect((await (await memory.handle(request("GET"), "state")).json()).messages).toHaveLength(2);
     await exchange(2, "Сегодня хочу кофе");
     const current = (await memory.readForDialogue!(request()))!;
-    expect(current.history).toHaveLength(2); expect(current.omittedHistoryCount).toBe(2);
-    expect(current.history[0].text).toBe("Сегодня хочу кофе");
+    expect(current.history).toHaveLength(4); expect(current.omittedHistoryCount).toBe(0);
+    expect(current.history[2].text).toBe("Сегодня хочу кофе");
   });
   it("uses Astana day, not UTC day, for same-day history", async () => {
     time = Date.parse("2026-10-24T23:59:00Z"); await grant("dialogue"); await exchange(1);

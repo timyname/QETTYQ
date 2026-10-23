@@ -1,5 +1,14 @@
 # Решения
 
+## Доверенные междневные часы и проверяемый GLM-аудит · 24.10.2026
+
+- Внешний GLM report — untrusted evidence: исправлять независимо подтверждённые B4/B5/B6, не превращать ошибку visual model или environment budget block в баг кода. Сохранены метод, self-refutations и ограничения отдельно от QA.
+- Память не отбрасывает вчерашнюю переписку, но дату относительных слов вычисляет deterministic parser по server-write timestamp. Вектор приватный, выровнен с bounded transcript; не DTO браузера и не prompt модели. Нет доверенного совпадения всей role/text истории — нет заимствованных часов. Истёкшая дата требует уточнения, не скрытого переноса на сегодня.
+- Использование local-only часов тоже является использованием локальной памяти: даже при присланном клиентом одинаковом transcript производный Google-запрос запрещён. Consent на историю не равен external-transfer consent; gates/TTL/delete и shared AI cap не расширены.
+- Публичная навигация через allowlisted hash routes и проверенные catalog/feed IDs, без приватного плана, координат, бюджета, настроек или истории чата в ссылке. Pending URL ждёт загрузку, явный UI-переход отменяет ожидание; malformed/unknown ID возвращает feed с локализованным notice.
+- Фото только подтверждённого филиала, фактический JPEG с SHA/bytes/native visual check. Два новых интерьера явно исторические2022. Не заменять отсутствующий снимок чужим филиалом или synthetic image ради покрытия. Сохраняются noncommercial/credit/expiry gates; private bytes не публикуются в Git.
+- Сборка из отдельного git-tree исключает посторонние mobile/PWA/root-config edits. Общие конфиги/package/lock не включались в релиз. При проверке через общий node_modules pnpm синхронизировал зависимости baseline; после QA зависимости текущего рабочего lockfile восстановлены offline/frozen/ignore-scripts, исходники и чужие изменения сохранены.
+
 ## Local-only memory, размер медиа и Sybil budget · 24.10.2026
 
 - Афиша использует одну геометрию rail100%/min-width0 и16:10 frame; содержимое posters contain, без генеративного заполнения/обрезки текста. Venue/detail размеры не менялись. Проверены крайние natural aspect ratios,404/missing и длинные названия.

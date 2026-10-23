@@ -1,5 +1,16 @@
 # Следующие шаги
 
+## После v18 · 24.10.2026
+
+- [x] Забрать финальный GLM ZCode report; подтвердить/исправить скрытые onboarding actions, семантику счётчика и публичную навигацию. Опровергнутые visual claims не реализовывать.
+- [x] Междневный server-memory replay с исходными Astana clocks, expired-date clarification, API restart tests и local external-transfer guard.
+- [x] Ещё2 реальных venue фото, live8/749 и16афиш; SHA/rights/expiry/no-store проверены.864unit/integration+36targetedE2E+build/livecanary PASS; v18 опубликован, SSH сохранён.
+- [ ] Расширять фотографии/адреса по конкретному филиалу и лицензии; пока741место без approved фото. Рассмотреть ранее отклонённые homoglyph aliases только с отдельным identity proof, не ослаблять общий matcher.
+- [ ] RAG: закрыть source-denied evaluation gaps до embeddings/hybrid; прежние quality gates/caps не обходить. Продумать представление исторического weekend-range вместо текущего честного уточнения. Browser-only история без trusted stored match не получает исторические clocks.
+- [ ] OpenAI shared approval уже занят резервамиUSD10; Sybil paid API-run не запускать без нового отдельного решения владельца. GLM app entitlement не API-ключ и не доказанный остаток500млн.
+- [ ] Physical iPhone: native memory-cookie persistence/relaunch, keyboard/safe-area/touch и2ГИС availability проверить отдельно. B1 image softness требует exact asset/network evidence, не искусственного upscale.
+- [ ] Презентация/видео/заявка в этом релизе не менялись.
+
 ## После v17 · 24.10.2026
 
 - [x] Опубликованы стабильная геометрия афиш, Uno realphoto (6/749), local-only server memory restore и blocked-AI deterministic fallback;829unit/integration+13targetedE2E+live canary PASS.

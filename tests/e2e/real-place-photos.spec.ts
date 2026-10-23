@@ -97,8 +97,11 @@ for (const id of ids) for (const width of [390, 430]) {
       if (id === ids[1] && width === 430) {
         control.brokenAsset = true;
         await page.reload();
-        // Detail is deliberately not restorable; reload returns to the feed with
-        // the same real venue facts and an unknown asset SHA for fault injection.
+        // Public entity links now restore detail. Preserve the same 404 fault
+        // injection while explicitly returning to the feed for its fallback check.
+        await expect(page).toHaveURL(url => url.hash === `#/place/${encodeURIComponent(place.id)}`);
+        await expect(page.locator('[data-screen="detail"]').getByRole('img', { name: /^Фото пока нет:/ })).toBeVisible();
+        await page.getByRole('navigation').getByRole('button', { name: 'Для тебя', exact: true }).click();
         const failedCard = page.getByRole('main', { name: 'Персональная лента', exact: true }).getByRole('article');
         await expect(failedCard.getByRole('img', { name: /^Фото пока нет:/ })).toBeVisible();
         await expect(failedCard.getByRole('heading', { name: place.name, exact: true })).toBeVisible();
