@@ -86,13 +86,14 @@ test('synthetic_test: афиша фильтрует сегодня, сохран
 
 test('synthetic geocoded event is selectable on the map and routable without invented duration or generated photo', async ({ page, context }) => {
   await installOfflineTestGuards(page);
+  await page.clock.setFixedTime(new Date(NOW));
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: 51.13, longitude: 71.44 });
-  const event = { ...today, lat: 51.1282, lon: 71.4304 };
+  const event = { ...today, lat: 51.1282, lon: 71.4304, freshness: 'fresh' };
   // Isolate the event marker instead of asserting that a 749-POI cluster is an
   // individual marker before zoom. Clustering is separately tested by MapCanvas.
   await page.route('**/api/catalog?**', route => route.fulfill({ json: { items: [], dataMode: 'synthetic_test' } }));
-  await page.route('**/api/events', route => route.fulfill({ json: { items: [event], dataMode: 'snapshot', freshness: 'stale', fetchedAt: NOW } }));
+  await page.route('**/api/events', route => route.fulfill({ json: { items: [event], dataMode: 'snapshot', freshness: 'fresh', fetchedAt: NOW } }));
   await page.route('**/api/plans', route => {
     expect(route.request().postDataJSON().placeIds).toEqual([event.id]);
     return route.fulfill({ json: { plan: { id: 'synthetic-event-unknown-duration', stops: [{ ...event, durationState: 'unknown', price: null }], totalMinutes: null, travelMinutes: null, visitMinutes: null, remainingMinutes: null, distanceKm: null, budget: { min: null, max: null }, feasibility: 'uncertain', warnings: ['DURATION_UNKNOWN'], legs: [] } } });

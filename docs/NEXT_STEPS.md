@@ -1,5 +1,18 @@
 # Следующие шаги
 
+## После v20 · 24.10.2026
+
+- [x] Address-only event → общий verified derived coordinate DTO → фильтр/маркер карты → ordered plan, reordering без потери предыдущих остановок. Жастар проверен live; источник/expiry/ambiguous guards и duplicate-marker fix протестированы.
+- [x] Delish и Меруерт: 12/749 реальных venue photos. Точные named info/map requests и USER-only междневный SQLite replay; no unnecessary Google/event lookup. v20 опубликован, SSH сохранён, бюджеты не увеличены.
+- [ ] Текущий срез: 11 из15 событий ещё без надёжных координат. Следующий проверяемый шаг — разрешённый source/address correspondence для сокращённых улиц/филиалов; нельзя угадывать по фамилии или «единственному театру». Индекс OSM истекает через35дней и требует разрешённого обновления, не вечный hardcoded geo.
+- [ ] 737 мест без approved фото. Дальше прямые владельцы/лицензированные источники и проверка конкретного филиала; historical photo не равна сегодняшнему интерьеру. В текущей афише11/15 approved poster, новые event URLs требуют отдельной media-проверки. Сократить длинную техническую photo-credit пояснительную часть в UI, сохранив обязательную атрибуцию и доступ к деталям.
+- [ ] RAG quality: прежние7 assertion gaps/semantic gate; это не универсальная ChatGPT-память. Долговременная память ограничена consent/TTL/20turns/6KiB. Проверить physical iPhone cookie/relaunch, touch/keyboard и2GIS availability отдельно.
+- [ ] Большие clock gaps делают длительные локальные E2E нестабильными; повторить единый43-case run в стабильной непрерывной среде. Успешные поднаборы/неуспешные прогоны сохранены честно, checks не ослаблялись.
+- [ ] OpenAI/Sybil shared USD10 полностью зарезервирован; не сбрасывать ledger/не расширять бюджет. Презентация, видео и заявка не обновлялись; фонового обещания не запущено.
+
+- [ ] В live browser 2GIS unavailable → рабочий OSM fallback. Отдельно выяснить актуальную причину недоступности в прежнем месячном лимите, не расширяя origin/quota и не скрывая attribution.
+
+
 ## После v19 · 24.10.2026
 
 - [x] Опубликованы10/749реальных фото и botgardenpond, legacy single-venue article JPEG support, context/reference corrections, exact known venue search, source guard передtop3.960unit/integration+19E2E+build/livecanary PASS; SSH сохранён.

@@ -6,8 +6,8 @@ import type { PublisherPlaceRecord } from '../../src/server/media/publisher-plac
 
 /** Real reviewed, branch-matched restaurant JPEGs and real gated media handler.
  * Catalogue/chat delivery is mocked snapshot data, never live recommendation. */
-const ids = ['osm:node:12041597269', 'osm:node:4953253121', 'osm:way:237347726'] as const;
-const now = '2026-10-24T07:00:00.000Z';
+const ids = ['osm:node:12041597269', 'osm:node:4953253121', 'osm:way:237347726', 'osm:node:10248180510', 'osm:node:4913160607'] as const;
+const now = '2026-10-24T12:00:00.000Z';
 
 async function fixture(page: Page, id: string) {
   const original = pilotPlaces.find(place => place.id === id);

@@ -1,5 +1,18 @@
 # Статус QETTYQ
 
+## Адрес события → карта → план · v20 · 24.10.2026
+
+- Опубликован `qettyq:vps-20261024-20`, healthy, 203.3 MiB / 640 MiB. Build input tree `ca14c7e2cee239ae60de4dc78d6be9816a26d448`; image `c5dd582a8fcef4033abb3e2fd43d081f6624471c08c6831a4577059d1ab57b27`. Backup проверен; SSH сохранён, hash прежний; изменён только QETTYQ compose app.
+- Общий permission-aware enrichment для /events, /chat и /plans: точный адрес/площадка, OSM provenance, expiry/revoke fail closed. Исправлены көш./даңғ. и наблюдаемые multilingual street labels. Неоднозначные дома/ненаблюдаемые aliases не угадываются. Текущий live срез: 15 событий, 4 с координатами, 11 с проверенной афишей; две афиши Жастар проверенно получают точку здания. Это не обещание координат всем событиям.
+- UI: «Показать на карте», отдельный фильтр событий, сохранение порядка предыдущих остановок. Новый E2E обнаружил дубли маркеров при синхронном fitBounds; reentrancy guard исправлен. Неактуальные/неполные события не добавляются в план; неизвестная длительность не заменяется нулём. По frontend-design/design-intelligence сохранена существующая стеклянная система без редизайна.
+- Реальные фото: 12/749 (4 Commons + 8 publisher), новые Delish 2022 и Меруерт 2021. 24 private JPEG / 3350072 bytes, sorted manifest SHA `2866422150f5b8fc11bc233f397022ba8a43b809b612136b16844b66267cee64`. Это исторические снимки, не гарантия сегодняшнего интерьера. Генерации/удаления или добавления watermark не было.
+- Память: USER-only точное имя в RU/KK/EN info/map запросах, сохранение места при date/time/budget follow-up, уточнение неизвестного имени вместо старого кофе. Реальная SQLite проверка переоткрытия через два дня и нового guest; consent/TTL/delete сохранены. Ненужные Google/event calls исключены.
+- Проверки изолированного релиза: 1061/1061 unit/integration (90 файлов), typecheck, scoped lint, Docker build PASS. Все 43 выбранных E2E-сценария успешно покрыты несколькими прогонами; единый длинный прогон имел тайм-ауты при больших скачках времени — не заявляется 43/43 в одном запуске. Fixed RAG eval: 36/40 outcome, 33/40 all assertions, forbidden 0; quality gate не пройден, gold/corpus не менялись.
+- Live canary: exact address DTO → три ordered stops → reorder; known-name + tomorrow server memory; 12 photos, 24 exact publisher SHA/no-store + 4 Commons SHA PASS. Собственная тестовая память удалена и проверена. OpenAI reserved USD10, remainingCalls0 / ACCOUNTING_BLOCKED; новых paid calls 0. Презентация/видео/заявка не изменялись.
+
+- Живой браузер: Delish real photo и «Мама!» → map marker → та же карточка подтверждены. 2ГИС в этой сессии недоступна, карта использует рабочий OSM fallback; ключ/квота не расширялись. Скриншоты в output/playwright/qettyq-v20-*-live.png.
+
+
 ## Фото / source-aware retrieval / контекст · v19 · 24.10.2026
 
 - Сервис/deploy: `qettyq:vps-20261024-19` опубликован, healthy,178.2MiB/640MiB. Immutable input tree `25d6263e1ed283bb7914012dbc7ef6d26a186914`; image manifest-list `30cdc782e47b85b97cf6eccb24d4b9f0c71497cd6c9d6cda36b2449286f22eab`. Проверена SQLite backup; SSH hash неизменен; обновлён только compose app, другие проекты не менялись.

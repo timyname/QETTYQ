@@ -86,7 +86,8 @@ export function resolvePublisherPlaceMedia(placeId: string, input: unknown = reg
       || !/^https:\/\/sxodim\.com\/astana\/place\/[a-z0-9-]+$/u.test(p.sourcePageUrl)
       || p.articleImageEvidence !== undefined && !validArticleImageEvidence(p)
       || !(/^https:\/\/sxodim\.com\/uploads\/posts\/[a-z0-9/_.-]+\.jpg$/iu.test(p.sourceImageUrl)
-        || validArticleImageEvidence(p) && /^https:\/\/sxodim\.com\/uploads\/astana\/20\d{2}\/\d{2}\/[a-z0-9_.-]+\.jpg$/iu.test(p.sourceImageUrl)) || p.sourceImageUrl.includes('..')
+        || validArticleImageEvidence(p) && (/^https:\/\/sxodim\.com\/uploads\/astana\/20\d{2}\/\d{2}\/[a-z0-9_.-]+\.jpg$/iu.test(p.sourceImageUrl)
+          || /^https:\/\/sxodim\.com\/uploads\/images\/20\d{2}\/\d{2}\/\d{2}\/optimized\/[a-f0-9]{32}_800xauto-q-85\.jpg$/iu.test(p.sourceImageUrl))) || p.sourceImageUrl.includes('..')
       || !/^[a-f0-9]{64}$/u.test(p.sha256) || p.mime !== 'image/jpeg' || !plain(p.alt) || !plain(p.modifications)
       || !Number.isInteger(p.bytes) || p.bytes < 100 || p.bytes > 3_000_000
       || !Number.isInteger(p.width) || !Number.isInteger(p.height) || Math.min(p.width, p.height) < 64 || Math.max(p.width, p.height) > 3000

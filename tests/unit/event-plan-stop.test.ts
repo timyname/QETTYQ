@@ -21,7 +21,9 @@ describe('mixed event and place plan', () => {
   it('uses observed start/end duration when provided', () => {
     expect(eventPlanStop({ ...event, endsAt: '2026-10-22T15:30:00Z' }, now)).toMatchObject({ durationMinutes: 90, durationState: 'observed' });
   });
-  it.each([{ ...event, lat: null }, { ...event, freshness: 'stale' as const }, { ...event, startsAt: '2026-10-20T14:00:00Z' }])('rejects missing geometry, stale or expired occurrences', value => {
+  it.each([{ ...event, lat: null }, { ...event, freshness: 'stale' as const }, { ...event, startsAt: '2026-10-20T14:00:00Z' },
+    { ...event, endsAt: 'not-a-date' }, { ...event, endsAt: '2026-10-22T13:00:00Z' },
+    { ...event, expiresAt: '2026-10-20T00:00:00Z' }, { ...event, expiresAt: 'invalid' }])('rejects missing geometry, stale or expired occurrences', value => {
     expect(eventPlanStop(value, now)).toBeNull();
   });
   it('unknown visit does not erase arrival at that stop but invalidates later ETA', () => {

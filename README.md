@@ -1,5 +1,23 @@
 # QETTYQ
 
+### Address-to-map pilot · 24 October 2026
+
+Event addresses use the approved local OSM address/venue index, never a guessed
+coordinate or a paid geocoder. `/api/events`, chat retrieval and `/api/plans`
+share the same permission-aware enrichment. Exact unique matches expose derived
+coordinates and source attribution; ambiguous addresses remain unresolved.
+An event detail can focus its marker with **Показать на карте**, and fresh,
+scheduled events with known coordinates can join the existing ordered plan.
+Unknown event durations/prices remain unknown; stale events cannot enter plans.
+
+Reviewed real venue photos now cover **12/749** places (4 Commons, 8 publisher),
+not the whole catalogue. Photo provenance, byte hashes, review expiry and private
+media delivery remain enforced. Generated illustrations are not venue photos;
+adding a watermark is not treated as permission to reuse someone else's work.
+Exact named-place requests and bounded user-only history preserve the selected
+venue across date/time/budget follow-ups; persistent memory still needs consent.
+No budget increase or new paid provider is introduced by this update.
+
 ## Фото и контекстный поиск · v19 · 24 октября 2026
 
 - Реальные фото10/749 мест (было8): добавлены Якитория и Президентский парк; ботсад теперь показывает пруд/закат вместо крупного плана растения. Фотографии датированы2018/2012/2026 соответственно, не обещают сегодняшний вид. Для legacy Sxodim JPEG требуется отдельно проверенная секция одной статьи с названием/адресом конкретного филиала; источник фото ведёт на статью, география сверяется с canonical venue.

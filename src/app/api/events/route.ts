@@ -3,6 +3,7 @@ import { resolveEventMedia } from "../../../server/ingestion/sxodim-live";
 import { getHostedRuntime, type HostedRuntime } from "../../../server/pilot/host-runtime";
 import { sourcePermission } from "../../../server/retrieval/source-permission";
 import { applicationSourcePolicy } from "../../../server/retrieval/application-source-policy";
+import { publicEventLocations } from "../../../server/ingestion/public-event-locations";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export async function handleEvents(request: Request, events: HostedRuntime["even
     return Response.json({ items: [], dataMode: "unavailable", freshness: "unavailable", warnings: ["Не удалось проверить афишу. События не выдумываются."], error: { code: "EVENTS_UNAVAILABLE" } }, { status: 503, headers });
   }
   const now = Date.now(), resolveSourcePolicy = events.resolveSourcePolicy ?? applicationSourcePolicy;
+  data = publicEventLocations(data, resolveSourcePolicy);
   const items = data.items.filter(event => sourcePermission(event.provenance.sourceId, 'display', resolveSourcePolicy, now).allowed
     && (!date || localDate(event.startsAt) === date) && (!query || `${event.name} ${event.venueName ?? ""} ${event.category ?? ""}`.toLowerCase().includes(query))).map(event => ({ ...event, media: resolveEventMedia(event, { allowCategoryIllustration: false }) }));
   return Response.json({ ...data, items, cityId: "astana", requestId: crypto.randomUUID(), generatedAt: new Date().toISOString(), total: items.length }, { status: data.dataMode === "unavailable" ? 503 : 200, headers });

@@ -102,11 +102,17 @@ export function MapLibreCanvas(props: MapCanvasProps) {
       const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 220;
       let fittedRoute: RouteGeometry | null = null;
       let focusedRevision: number | undefined;
+      let rendering = false;
 
       const render = () => {
         // React can detach the host before a queued ResizeObserver/map event runs.
         const container = host.current;
-        if (disposed || failed || !didLoad || !container?.isConnected || map.current !== view) return;
+        if (disposed || failed || !didLoad || !container?.isConnected || map.current !== view || rendering) return;
+        // Zero-duration fitBounds emits moveend synchronously. Its nested render
+        // must not append a second marker batch while this one is still running.
+        // This pass projects against the new bounds; later real moves still render.
+        rendering = true;
+        try {
         removeMarkers();
         const bounds = container.getBoundingClientRect();
         const current = latest.current;
@@ -173,6 +179,7 @@ export function MapLibreCanvas(props: MapCanvasProps) {
           const dot = document.createElement('div'); dot.className = s.origin; dot.setAttribute('role', 'img'); dot.setAttribute('aria-label', translateText('Точка старта маршрута', language));
           markers.current.push(new gl.Marker({ element: dot }).setLngLat([origin.lon, origin.lat]).addTo(view));
         }
+        } finally { rendering = false; }
       };
       renderMarkers.current = render;
       view.on('load', () => {

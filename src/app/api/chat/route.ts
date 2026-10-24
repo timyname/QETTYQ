@@ -12,6 +12,7 @@ import { resolveCurrentNamedPlace } from "../../../server/assistant/named-place"
 import { sourcePermission } from "../../../server/retrieval/source-permission";
 import { applicationSourcePolicy } from "../../../server/retrieval/application-source-policy";
 import { liveEventsService } from "../../../server/ingestion/live-events";
+import { publicEventLocations } from "../../../server/ingestion/public-event-locations";
 import { answerSmartAssistant, type SmartAssistantResult } from "../../../server/pilot/smart-assistant";
 import { getLocalAITestGate, reserveLocalAITestCall } from "../../../server/pilot/ai-test-quota";
 import type { PublicAIRuntime } from "../../../server/pilot/public-ai-runtime";
@@ -84,7 +85,9 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   const resolveSourcePolicy = events.resolveSourcePolicy ?? applicationSourcePolicy;
   const currentNamedPlace = sourcePermission('osm-overpass-poi', 'display', resolveSourcePolicy, now).allowed
     ? resolveCurrentNamedPlace(parsed.data.text, pilotPlaces) : undefined;
-  const dialogue = prepareLeisureDialogue({ text: parsed.data.text, history, historyCreatedAtMs, currentNamedPlace, context, confirmedFields, language: parsed.data.language, now });
+  const resolveUserNamedPlace = sourcePermission('osm-overpass-poi', 'display', resolveSourcePolicy, now).allowed
+    ? (text: string) => resolveCurrentNamedPlace(text, pilotPlaces) : undefined;
+  const dialogue = prepareLeisureDialogue({ text: parsed.data.text, history, historyCreatedAtMs, currentNamedPlace, resolveUserNamedPlace, context, confirmedFields, language: parsed.data.language, now });
   trace.mark("dialogue");
   const remember = async (reply: string, mode: "openai" | "deterministic") => {
     if (!memory) return false;
@@ -102,7 +105,8 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
       traceId ? { "x-qettyq-trace-id": traceId } : undefined);
   }
   const retrievalText = dialogue.retrievalText, effectiveContext = dialogue.context;
-  let result = await answerPilotChatWithEvents(retrievalText, effectiveContext, { getEvents: () => events.get(), resolveSourcePolicy, venueOnly: Boolean(currentNamedPlace) });
+  const prepareEvents = (feed: Awaited<ReturnType<typeof events.get>>) => publicEventLocations(feed, resolveSourcePolicy);
+  let result = await answerPilotChatWithEvents(retrievalText, effectiveContext, { getEvents: () => events.get(), prepareEvents, resolveSourcePolicy, venueOnly: dialogue.resolvedPlaceName !== null });
   const constrain = () => {
     result.items = sourcePermission('osm-overpass-poi', 'display', resolveSourcePolicy, now).allowed
       ? filterDialogueCandidates(result.items, dialogue) : [];
@@ -130,7 +134,7 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
         const plan = contradicts ? { ...proposedPlan, intent: knownIntent as "food" | "events" | "places", query: retrievalText.slice(0, 240), cuisineOrDish: null } : proposedPlan;
         if ((plan.intent === "general" || plan.intent === "clarify") && dialogue.intent === "general") result = { ...result, reply: localizedClarification(parsed.data.language), items: [], events: [], eventEvidence: [], eventsMeta: null };
         if (plan.intent === "events") result = await answerPilotChatWithEvents(retrievalText, effectiveContext, {
-          getEvents: () => events.get(), forceEvents: true, semanticText: plan.query, resolveSourcePolicy,
+          getEvents: () => events.get(), prepareEvents, forceEvents: true, semanticText: plan.query, resolveSourcePolicy,
         });
         if (plan.intent === "places" && result.items.length) {
           // Re-query only the already admissible pool; model terms cannot widen it.
@@ -174,7 +178,7 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   }
   if (result.proposedContext.goal === "food" && !googlePlaces) {
     const google = getGooglePlacesRuntime();
-    googlePlaces = currentNamedPlace ? unavailableGooglePlaces("CATALOG_NAME_MATCH")
+    googlePlaces = dialogue.resolvedPlaceName !== null ? unavailableGooglePlaces("CATALOG_NAME_MATCH")
       : localMemoryUsed ? unavailableGooglePlaces("MEMORY_LOCAL_ONLY")
       : result.proposedContext.strictBudget && result.proposedContext.budget !== null
       ? unavailableGooglePlaces("GOOGLE_PRICE_NOT_VERIFIED")

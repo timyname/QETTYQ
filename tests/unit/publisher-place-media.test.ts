@@ -5,7 +5,7 @@ import registry from '../../data/publisher-place-media.json';
 import { resolvePublisherPlaceMedia, validPublisherPlaceIdentity, type PublisherPlaceRecord } from '../../src/server/media/publisher-place-media';
 import { readPublisherPlaceImage } from '../../src/server/media/publisher-place-files';
 import { getPlaceMedia } from '../../src/server/media/commons-place-media';
-const now = Date.parse('2026-10-24T00:00:00Z');
+const now = Date.parse('2026-10-24T12:00:00Z');
 const fixture = () => structuredClone(registry.records[0]) as PublisherPlaceRecord;
 const data = (p = fixture()) => ({ ...registry, records: [p] });
 describe('publisher venue photos with exact independently observed identity', () => {
@@ -94,6 +94,36 @@ describe('publisher venue photos with exact independently observed identity', ()
     const png = structuredClone(original); png.sourceImageUrl = png.sourceImageUrl.replace('.jpg', '.png');
     expect(resolvePublisherPlaceMedia(png.placeId, { ...registry, records: [png] }, now)).toBeNull();
   });
+  it.each([
+    ['osm:node:10248180510', 'Delish', '49071fa16c1dc6f2229a68e262ea89048e1da3ec18e0a1261a70a9af5e598146'],
+    ['osm:node:4913160607', 'Меруерт', 'bf220e216e7cafdd59821d4d0d303c7cbc4b1b29b05616bcb45e54e951d90934'],
+  ])('resolves %s only through its exact dated publisher article JPEG and shared address polygon', (placeId, name, hash) => {
+    const p = registry.records.find(record => record.placeId === placeId) as PublisherPlaceRecord;
+    expect(p.sourceName).toBe(name);
+    expect(p.identity.method).toBe('exact_name_and_shared_address_building');
+    expect(validPublisherPlaceIdentity(p)).toBe(true);
+    expect(resolvePublisherPlaceMedia(placeId, registry, now)).toMatchObject({
+      kind: 'publisher_place_photo', src: `/api/media/places/${hash}`, sourceUrl: p.articleImageEvidence?.sourceArticleUrl,
+    });
+    const outside = structuredClone(p); outside.sourceLon += 0.0008;
+    expect(resolvePublisherPlaceMedia(placeId, { ...registry, records: [outside] }, now)).toBeNull();
+  });
+  it('allows uploads/images only with precise reviewed article evidence and the bounded dated JPEG path', () => {
+    const original = registry.records.find(record => record.placeId === 'osm:node:10248180510') as PublisherPlaceRecord;
+    const noProof = structuredClone(original); delete noProof.articleImageEvidence;
+    expect(resolvePublisherPlaceMedia(noProof.placeId, { ...registry, records: [noProof] }, now)).toBeNull();
+    for (const sourceImageUrl of [
+      'https://sxodim.com/uploads/images/anything.jpg',
+      original.sourceImageUrl.replace('/optimized/', '/'),
+      original.sourceImageUrl.replace('_800xauto-q-85.jpg', '_800xauto-q-85.png'),
+      original.sourceImageUrl.replace('_800xauto-q-85.jpg', '_800xauto-q-85.jpg?key=private'),
+      original.sourceImageUrl.replace('07b35e02dad6b750dd6959e2a56ac939', 'other'),
+      original.sourceImageUrl.replace('sxodim.com', 'example.com'),
+    ]) {
+      const p = { ...original, sourceImageUrl };
+      expect(resolvePublisherPlaceMedia(p.placeId, { ...registry, records: [p] }, now)).toBeNull();
+    }
+  });
   it('blocks expired/revoked/restricted media and commercial or disabled scope', () => {
     const p = fixture();
     for (const patch of [{ status: 'revoked' as const }, { visualVerified: false }, { knownThirdPartyRestriction: true }, { reviewExpiresAt: new Date(now).toISOString() }]) {
@@ -109,7 +139,7 @@ describe('publisher venue photos with exact independently observed identity', ()
     }
   });
   it('verifies real private JPEGs and gated served bytes by SHA, and denies expired media', async () => {
-    expect(registry.records).toHaveLength(6);
+    expect(registry.records).toHaveLength(8);
     for (const record of registry.records) {
       const bytes = readFileSync(`data/place-media-cache/${record.sha256}.jpg`);
       expect(bytes.length).toBe(record.bytes);

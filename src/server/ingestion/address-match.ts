@@ -9,8 +9,9 @@ export type AddressMatch = { lat: number; lon: number; sourceUrl: string; asOf: 
   quality: 'derived'; method: 'osm-exact-address-v1'; precision: 'building_or_address_point' };
 
 const normalize = (value: string) => value.normalize('NFKC').toLowerCase().replaceAll('ё', 'е')
+  .replace(/[\u200b-\u200d\ufeff]/gu, '')
   .replace(/[«»"'’]/gu, '').replace(/\b(?:street|avenue)\b/gu, ' ')
-  .replace(/(?:^|\s)(?:улица|ул\.?|проспект|просп\.?|пр\.?|пр-т|көшесі|даңғылы)(?=\s|$)/gu, ' ')
+  .replace(/(?:^|\s)(?:улица|ул\.?|проспект|просп\.?|пр\.?|пр-т|көшесі|көш\.?|к\.|даңғылы|даңғ\.?)(?=\s|$)/gu, ' ')
   .replace(/[.,]/gu, ' ').replace(/\s+/gu, ' ').trim();
 const house = (value: string) => value.normalize('NFKC').toLowerCase().trim().replace(/\s+/gu, '')
   .replace(/(?<=\d)-(?=[\p{L}])/gu, '');
@@ -38,7 +39,9 @@ export function createAddressMatcher(index: AddressIndex, now: number | (() => n
   if (usable) for (const entry of index.entries.filter(valid)) {
     const number = parseHouse(entry.houseNumber);
     if (!number || number.length > 30) continue;
-    for (const street of new Set([entry.street, ...(entry.streetAliases ?? [])].map(normalize).filter(Boolean))) {
+    // Semicolon-delimited multilingual addr:street values are observed names,
+    // not one fabricated joined street. Keep each whole observed label intact.
+    for (const street of new Set([entry.street, ...(entry.streetAliases ?? [])].flatMap(value => value.split(';')).map(normalize).filter(Boolean))) {
       const houses = streets.get(street) ?? new Map<string, AddressIndex['entries']>();
       const points = houses.get(number) ?? [];
       points.push(entry); houses.set(number, points); streets.set(street, houses);

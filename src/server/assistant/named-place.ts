@@ -1,15 +1,30 @@
 import type { Place } from '../../domain/types';
 
 const normalized = (text: string) => text.normalize('NFC').trim().replace(/\s+/gu, ' ').toLocaleLowerCase('ru-RU');
+const exactRequests = [
+  /^расскажи(?:те)?\s+(?:мне\s+)?(?:про|о)\s+(.+?)[.!?]?$/u,
+  /^покажи(?:те)?\s+(?:мне\s+)?(.+?)\s+на\s+карте[.!?]?$/u,
+  /^tell\s+me\s+about\s+(.+?)[.!?]?$/u,
+  /^show\s+(.+?)\s+on\s+(?:the\s+)?map[.!?]?$/u,
+  /^(.+?)\s+туралы\s+айтып\s+бер(?:іңіз)?[.!?]?$/u,
+  /^(.+?)\s+картадан\s+көрсет(?:іңіз)?[.!?]?$/u,
+];
 
-/** Exact current utterance only. No guessed intent from assistant prose, fuzzy
+/** Recognizes only the explicit whole request form; it does not establish identity. */
+export function exactNamedPlaceRequest(text: string): string | undefined {
+  const utterance = normalized(text);
+  return exactRequests.map(pattern => utterance.match(pattern)?.[1]).find(Boolean);
+}
+
+/** Exact current name or whole informational/map request only. No guessed intent from assistant prose, fuzzy
  * aliasing, coordinates, arbitrary IDs or choosing a branch of a chain. */
 export function resolveCurrentNamedPlace(text: string, places: readonly Place[]):
   { name: string; goal: 'food' | 'walk' | 'activity' } | undefined {
-  const current = normalized(text);
-  if (!current || current.length < 3) return;
+  const utterance = normalized(text);
+  if (!utterance || utterance.length < 3) return;
+  const request = exactNamedPlaceRequest(text);
   const matches = places.filter(place => [place.name, ...Object.values(place.nameTranslations ?? {})]
-    .some(name => normalized(name) === current));
+    .some(name => normalized(name) === utterance || request !== undefined && normalized(name) === request));
   if (matches.length !== 1) return;
   const place = matches[0];
   const goal = place.tags.some(tag => ['food', 'cafe', 'restaurant', 'fast_food'].includes(tag)) ? 'food'

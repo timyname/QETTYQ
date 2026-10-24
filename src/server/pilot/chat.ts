@@ -63,7 +63,7 @@ export function filterChatEvents(events: LiveAstanaEvent[], text: string, contex
 }
 
 /** The only network dependency is the fixed-source, hourly cached service passed by the route. */
-export async function answerPilotChatWithEvents(text: string, context: PilotContext, options: { getEvents: () => Promise<LiveEventsResult>; now?: () => number; forceEvents?: boolean; semanticText?: string; resolveSourcePolicy?: SourcePolicyResolver; venueOnly?: boolean }) {
+export async function answerPilotChatWithEvents(text: string, context: PilotContext, options: { getEvents: () => Promise<LiveEventsResult>; prepareEvents?: (feed: LiveEventsResult) => LiveEventsResult; now?: () => number; forceEvents?: boolean; semanticText?: string; resolveSourcePolicy?: SourcePolicyResolver; venueOnly?: boolean }) {
   const base = answerPilotChat(text, context);
   const query = text.toLocaleLowerCase("ru-RU");
   if (options.venueOnly || cinemaQuery.test(query) || !options.forceEvents && !eventQuery.test(query)) return { ...base, events: [] as LiveAstanaEvent[], eventEvidence: [] as EventEvidence[], eventsMeta: null };
@@ -73,6 +73,9 @@ export async function answerPilotChatWithEvents(text: string, context: PilotCont
   catch {
     data = { dataMode: "unavailable", freshness: "unavailable", cacheStatus: "miss", fetchedAt: null, expiresAt: null, source: null, coverage: null, items: [], warnings: ["Не удалось проверить афишу. События не выдумываются."] };
   }
+  // Provider outages are recoverable; a broken internal transformation is not
+  // a provider outage and must reach the trace/error boundary above this layer.
+  if (options.prepareEvents) data = options.prepareEvents(data);
   // Preserve the original explicit preference mode even when parsing the event noun proposes activity.
   const retrieval = retrieveAuthorizedEventEvidence(data, text, { ...base.proposedContext, goal: context.goal }, now,
     { semanticText: options.semanticText, resolveSourcePolicy: options.resolveSourcePolicy ?? applicationSourcePolicy });

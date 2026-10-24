@@ -1,5 +1,6 @@
 'use client';
 import { includePlanStop } from '../client/plan-selection';
+import { eventPlanStop } from '../server/pilot/event-plan-stop';
 import { selectChatHistory, inferReplyContextOrigin } from '../client/chat-memory-context';
 
 import { Localize, LanguageProvider, useI18n, translateText, formatMoney, formatDate } from '../client/i18n';
@@ -316,6 +317,8 @@ function PilotAppContent() {
   }, [memory, saved, screen, swipeChoices, ready]);
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'auto', block: 'nearest' }); }, [memory.dialogue.length, busy]);
   const filtered = useMemo(() => catalog.filter(c => (filter === 'all' || c.tags.includes(filter)) && (!search.trim() || mapSearchMatches(`${c.name} ${c.address ?? ''}`, search))), [catalog, filter, search]);
+  const mapEvents = useMemo(() => [...new Map([...chatEvents, ...(selectedEvent ? [selectedEvent] : []), ...(liveFeed?.items ?? [])]
+    .map(event => [event.id, event])).values()], [chatEvents, selectedEvent, liveFeed]);
   const shown = hasDiscovered ? cards : catalog.filter(c => c.tags.some(t => context.likedTags.includes(t))).slice(0, 3);
   const updateContext = (patch: Partial<PilotContext>) => {
     setContext(prev => ({ ...prev, ...patch }));
@@ -372,7 +375,7 @@ function PilotAppContent() {
     }, () => { setBusy(false); setNotice('Доступ не получен. Можно выбрать старт на карте или продолжить без него.'); }, { timeout: 10000, maximumAge: 60000 });
   }
   const mapSelect = useCallback((id: string) => {
-    const occurrence = liveFeed?.items.find(event => event.id === id);
+    const occurrence = mapEvents.find(event => event.id === id);
     if (occurrence) { setSelectedEvent(occurrence); setEventBack('map'); setScreen('event'); return; }
     const card = catalog.find(c => c.id === id);
     if (!card) return;
@@ -383,7 +386,16 @@ function PilotAppContent() {
       setPickingVenue(false); setOrganizerScreen('schedule'); setScreen('organizer');
       setNotice('Площадка выбрана. Это не подтверждает согласие организатора площадки.');
     } else setSelected(card);
-  }, [catalog, pickingVenue, liveFeed]);
+  }, [catalog, pickingVenue, mapEvents]);
+  function showEventOnMap(event: LiveAstanaEvent) {
+    const current = mapEvents.find(item => item.id === event.id) ?? event;
+    const stop = eventPlanStop(current);
+    if (!stop) { setNotice('Событие пока недоступно для маршрута. Обнови афишу и проверь адрес.'); return; }
+    setSelectedEvent(current); setSelected(null); setPickingOrigin(false); setPickingVenue(false);
+    setFilter('events'); setSearch(''); setMapResults([]); setMapSearchMessage('');
+    setMapFocus({ lat: stop.lat, lon: stop.lon, revision: ++mapQueryRevision.current });
+    navigate('map');
+  }
   const pickPoint = useCallback((point: Point) => {
     if (!pickingOrigin) return;
     if (point.lat < 50.8 || point.lat > 51.5 || point.lon < 70.8 || point.lon > 72) { setNotice('Выберите точку в пилотной зоне Астаны.'); return; }
@@ -449,14 +461,22 @@ function PilotAppContent() {
     catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
   async function evaluateStop(id: string) {
+    const occurrence = mapEvents.find(event => event.id === id);
+    if (occurrence && !eventPlanStop(occurrence)) { setNotice('Событие пока недоступно для маршрута. Обнови афишу и проверь адрес.'); return; }
     const ids = includePlanStop(planIds, id);
     if (!ids.includes(id)) { setNotice('В одном плане до 5 мест.'); return; }
     setPlanIds(ids);
     await buildPlan(ids);
   }
   function addToPlan(card: Card) {
-    setPlanIds(prev => prev.includes(card.id) ? prev : [...prev, card.id].slice(0, 5));
+    setPlanIds(prev => includePlanStop(prev, card.id));
     setNotice(planIds.includes(card.id) ? 'Место уже в плане.' : planIds.length >= 5 ? 'В одном плане до 5 мест.' : 'Добавлено в план.');
+  }
+  function addEventToPlan(event: LiveAstanaEvent) {
+    if (!eventPlanStop(mapEvents.find(item => item.id === event.id) ?? event)) { setNotice('Событие пока недоступно для маршрута. Обнови афишу и проверь адрес.'); return; }
+    const ids = includePlanStop(planIds, event.id);
+    if (!ids.includes(event.id)) { setNotice('В одном плане до 5 мест.'); return; }
+    setPlanIds(ids); setNotice(planIds.includes(event.id) ? 'Событие уже в плане.' : 'Добавлено в план.');
   }
   async function sharePlan(departure?: string, displayedTotal: number | null = plan?.totalMinutes ?? null) {
     if (!plan) return;
@@ -487,7 +507,7 @@ function PilotAppContent() {
     {!['swipe', 'detail', 'event'].includes(screen) && <header className={s.header}><button disabled={!ready} className={s.logo} aria-label="QETTYQ — на главную" onClick={() => navigate('feed')}>QETTYQ<span>•</span></button>{screen !== 'welcome' && <><button disabled={!ready} className={s.city} onClick={() => setNotice('Сейчас мы гуляем по Астане. Другие города добавим, когда для них будут проверенные места и события.')}><MapPin size={14} /> Астана</button><button disabled={!ready} className={s.round} aria-label={screen === 'feed' ? 'Изменить условия' : 'Настройки'} onClick={() => navigate(screen === 'feed' ? 'conditions' : 'settings')}><Settings size={20} /></button></>}</header>}
     {error && <div role="alert" className={s.error}>{error}<button aria-label="Закрыть ошибку" onClick={() => setError('')}><X size={16} /></button></div>}
     <AnimatePresence>{notice && <motion.div key={notice} role="status" className={s.notice} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: .35 }}><span className={s.noticeIcon} aria-hidden="true"><Check size={18} /></span><span>{notice}</span><button aria-label="Закрыть уведомление" onClick={() => setNotice('')}><X size={16} /></button></motion.div>}</AnimatePresence>
-    {screen === 'event' && selectedEvent && <EventDetail event={selectedEvent} saved={saved.includes(selectedEvent.id)} onSave={() => toggleSave(selectedEvent.id)} onAddToPlan={() => { setPlanIds(prev => prev.includes(selectedEvent.id) ? prev : [...prev, selectedEvent.id].slice(0, 5)); setNotice('Добавлено в план.'); }} onBuildPlan={() => void evaluateStop(selectedEvent.id)} onBack={() => navigate(eventBack)} />}
+    {screen === 'event' && selectedEvent && <EventDetail event={mapEvents.find(event => event.id === selectedEvent.id) ?? selectedEvent} saved={saved.includes(selectedEvent.id)} onSave={() => toggleSave(selectedEvent.id)} onShowOnMap={() => showEventOnMap(selectedEvent)} onAddToPlan={() => addEventToPlan(selectedEvent)} onBuildPlan={() => void evaluateStop(selectedEvent.id)} onBack={() => navigate(eventBack)} />}
     {screen === 'welcome' && <main className={s.welcome}><div className={s.welcomeArt}><Image src="/assets/astana-welcome-v2.png" fill priority sizes="430px" alt="Иллюстрация: рука с QETTYQ на фоне Байтерека и современной Астаны" /><div className={s.photoShade} /></div><section className={s.welcomeCopy}><h1>Не знаешь, как<br />провести время?</h1><p>Расскажи нам о своих предпочтениях.</p><button disabled={!ready} className={s.primary} onClick={() => navigate('swipe')}>Выбрать свой вайб <ArrowRight size={19} /></button></section></main>}
     {screen === 'swipe' && <SwipeDeck choices={swipeChoices} setChoices={setSwipeChoices} onBack={() => navigate('welcome')} onFinish={tags => { updateContext({ likedTags: tags }); navigate('conditions'); }} />}
     {screen === 'conditions' && <main className={`${s.pad} ${s.conditions}`}><h1>Сколько времени<br />на себя?</h1><section className={s.panel}><label htmlFor="minutes">Свободное время <b>{context.minutes} мин</b></label><input id="minutes" aria-label="Свободное время" type="range" min="20" max="720" step="10" value={context.minutes} onChange={e => updateContext({ minutes: +e.target.value })} /><BudgetControl value={context.budget} strict={context.strictBudget} onChange={budget => updateContext({ budget })} onStrictChange={strictBudget => updateContext({ strictBudget })} /><div className={s.originControls}><h2>Откуда начнём?</h2><p>{context.origin ? 'Старт выбран. Точка хранится только до закрытия страницы.' : 'Выбери старт, чтобы оценить время дороги. Можно продолжить без него.'}</p><button className={s.secondary} disabled={busy} onClick={locate}><MapPin size={18} /> Поделиться геопозицией</button><button className={s.textButton} onClick={() => beginOriginSelection('conditions')}>Выбрать старт на карте</button>{context.origin && <button className={s.textButton} onClick={() => updateContext({ origin: null })}>Убрать точку старта</button>}</div></section><button className={s.primary} disabled={busy || !ready} onClick={() => void discover()}>{busy ? 'Проверяем условия…' : 'Показать подборку'}<ArrowRight size={18} /></button></main>}
@@ -498,8 +518,8 @@ function PilotAppContent() {
 
     </main>}
     {screen === 'map' && <main className={s.mapScreen}>
-      <div className={s.mapToolbar}><h1>{pickingOrigin ? 'Выбери точку старта' : pickingVenue ? 'Выбери площадку' : 'Город на карте'}</h1><form className={mapSearchCss.form} role="search" onSubmit={event => void findOnMap(event)}><input type="search" enterKeyHint="search" autoComplete="off" autoCapitalize="none" maxLength={160} aria-label="Поиск места на карте" placeholder="Место или адрес" value={search} onChange={e => { setSearch(e.target.value); ++mapQueryRevision.current; setMapResults([]); setMapSearchMessage(''); }} /><button type="submit" aria-label="Найти на карте" disabled={mapSearchBusy || search.trim().length < 2}><Search size={20} /></button></form>{mapSearchBusy && <p role="status" className={mapSearchCss.message}>Ищем в каталоге и адресах…</p>}{mapSearchMessage && <p role="status" className={mapSearchCss.message}>{mapSearchMessage}</p>}{mapResults.length > 0 && <ul className={mapSearchCss.results} aria-label="Результаты поиска на карте">{mapResults.map(result => <li key={result.id}><button type="button" onClick={() => chooseMapResult(result)}><b translate="no">{result.title}</b>{result.address && <small translate="no">{result.address}</small>}{result.kind === 'address' && <small>Адресная точка OpenStreetMap · вход уточняйте</small>}</button></li>)}</ul>}<div className={s.chips}>{[['all', 'Все места'], ['park', 'Прогулки'], ['cafe', 'Кофе'], ['theatre', 'Театры']].map(([value, label]) => <button key={value} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</div></div>
-      <div className={s.mapViewport}><CityMap points={[...filtered.map(c => ({ id: c.id, title: c.name, lat: c.lat, lon: c.lon, dateLabel: 'Расписание уточняйте', category: c.category })), ...(!pickingVenue && !pickingOrigin && filter === 'all' ? (liveFeed?.items ?? []).filter(event => event.lat !== null && event.lon !== null && (!search.trim() || mapSearchMatches(`${event.name} ${event.address ?? ''}`, search))).map(event => ({ id: event.id, title: event.name, lat: event.lat!, lon: event.lon!, dateLabel: formatDate(event.startsAt, language, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }), category: event.category ?? 'Событие' })) : [])]} activeId={selected?.id ?? ''} focusPoint={mapFocus} onSelect={mapSelect} onPick={pickPoint} origin={context.origin} /></div>
+      <div className={s.mapToolbar}><h1>{pickingOrigin ? 'Выбери точку старта' : pickingVenue ? 'Выбери площадку' : 'Город на карте'}</h1><form className={mapSearchCss.form} role="search" onSubmit={event => void findOnMap(event)}><input type="search" enterKeyHint="search" autoComplete="off" autoCapitalize="none" maxLength={160} aria-label="Поиск места на карте" placeholder="Место или адрес" value={search} onChange={e => { setSearch(e.target.value); ++mapQueryRevision.current; setMapResults([]); setMapSearchMessage(''); }} /><button type="submit" aria-label="Найти на карте" disabled={mapSearchBusy || search.trim().length < 2}><Search size={20} /></button></form>{mapSearchBusy && <p role="status" className={mapSearchCss.message}>Ищем в каталоге и адресах…</p>}{mapSearchMessage && <p role="status" className={mapSearchCss.message}>{mapSearchMessage}</p>}{mapResults.length > 0 && <ul className={mapSearchCss.results} aria-label="Результаты поиска на карте">{mapResults.map(result => <li key={result.id}><button type="button" onClick={() => chooseMapResult(result)}><b translate="no">{result.title}</b>{result.address && <small translate="no">{result.address}</small>}{result.kind === 'address' && <small>Адресная точка OpenStreetMap · вход уточняйте</small>}</button></li>)}</ul>}<div className={s.chips}>{[['all', 'Все места'], ['events', 'События'], ['park', 'Прогулки'], ['cafe', 'Кофе'], ['theatre', 'Театры']].map(([value, label]) => <button key={value} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</div></div>
+      <div className={s.mapViewport}><CityMap points={[...filtered.map(c => ({ id: c.id, title: c.name, lat: c.lat, lon: c.lon, dateLabel: 'Расписание уточняйте', category: c.category })), ...(!pickingVenue && !pickingOrigin && (filter === 'all' || filter === 'events') ? mapEvents.filter(event => eventPlanStop(event) !== null && (!search.trim() || mapSearchMatches(`${event.name} ${event.address ?? ''}`, search))).map(event => ({ id: event.id, title: event.name, lat: event.lat!, lon: event.lon!, dateLabel: formatDate(event.startsAt, language, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }), category: event.category ?? 'Событие' })) : [])]} activeId={selected?.id ?? (filter === 'events' ? selectedEvent?.id ?? '' : '')} focusPoint={mapFocus} onSelect={mapSelect} onPick={pickPoint} origin={context.origin} /></div>
       <button className={`${s.round} ${s.locate}`} aria-label="Моё местоположение" disabled={busy} onClick={locate}><MapPin size={19} /></button>
       {!pickingOrigin && !pickingVenue && planIds.length > 0 && <button className={s.mapPlanToggle} aria-label={`Мой план · ${planIds.length}`} disabled={busy} onClick={() => void buildPlan(planIds, true)}><Route size={22} /><span>{planIds.length}</span></button>}
       {pickingOrigin ? <section className={s.mapSheet}><p>Нажми на карту. Адрес не попадёт в постоянную память.</p><button className={s.secondary} onClick={() => { setPickingOrigin(false); navigate(originReturn.current); }}>Продолжить без изменения</button></section> : selected ? <section className={s.mapSheet}><button className={s.mapClose} aria-label="Закрыть выбранное место" onClick={() => setSelected(null)}><X size={16} /></button>{mini(selected, 'map')}<div className={s.mapActions}><button className={planIds.includes(selected.id) ? `${s.round} ${s.planCheck}` : s.secondary} aria-label={planIds.includes(selected.id) ? 'Добавлено в план' : 'В план'} aria-pressed={planIds.includes(selected.id)} onClick={() => addToPlan(selected)}>{planIds.includes(selected.id) ? <Check size={20} /> : <><Plus size={17} /> В план</>}</button><button className={s.primary} disabled={busy} onClick={() => void evaluateStop(selected.id)}>Оценить путь</button></div></section> : pickingVenue ? <section className={s.mapSheet}><p>Нажми на маркер площадки, чтобы добавить её адрес в черновик. Или введи адрес вручную в форме.</p></section> : <div className={s.mapQuickActions}><button onClick={() => beginOriginSelection('map')}>Выбрать старт на карте</button><button onClick={() => navigate('feed')}>Открыть афишу</button></div>}

@@ -1,5 +1,21 @@
 # Отчёт проверки
 
+## v20 · Адрес → маркер → ordered plan, фото и память · 24.10.2026
+
+- Immutable code tree: `ca14c7e2cee239ae60de4dc78d6be9816a26d448`. Отдельный archive без чужих mobile/PWA/config изменений; approved private JPEG добавлены по manifest, не весь cache.
+- Выполнены существующие runner entrypoints напрямую через bundled Node: `node node_modules/vitest/vitest.mjs run --maxWorkers=1` — 1061/1061, 90 файлов; `node node_modules/typescript/bin/tsc --noEmit`; scoped `node node_modules/eslint/bin/eslint.js <changed-ts-files>` — PASS. Workspace с чужими тестами отдельно дал 1066/1066, но это не release count.
+- Docker: `docker buildx build --platform linux/amd64 --load --tag qettyq:vps-20261024-20 .` из private archive, Next production build/typecheck PASS. Данные: 24 JPEG / 3350072 bytes, byte SHA verified; 4 Commons asset unchanged.
+- E2E: существующий `@playwright/test/cli.js test`, PORT3090, workers1. 43 выбранных сценария: event-detail-map-plan, live-events, real-place-photos, multistop-real-api, local-chat, public-navigation, qa-language-memory, real-publisher-photos. Длинные прогоны имели clock-gap/timeouts (также worker-start timeout в первом unit run); проверки не отключались и тайм-ауты не увеличивались. Финально 1061 units PASS; E2E 38/43 в большом повторе, 10/10 focused route/navigation и 2/2 baseline390/430 дополнили все failed cases успешными повторениями. Не выдаём это за единый 43/43 run.
+- Новый браузерный сценарий проверяет ровно один marker и обычный click, event filter/focus, сохранение двух прежних venue IDs при добавлении/evaluate event. Actual API integration независимо проверяет address-only input, одинаковые coords DTO/stop, три остановки/reorder, ambiguous house, revoked source, stale event. Браузерные fixtures помечены synthetic; источник и paid routing не подменены «успешной live-интеграцией».
+- Новые Delish/Меруерт JPEG реально декодируются в feed/detail на390/430px, неправильный SHA даёт честный placeholder. Никаких Google/OpenAI/imagegen paid calls.
+- `node node_modules/tsx/dist/cli.mjs scripts/eval-rag.ts`: deterministic repeat, outcome36/40, assertions33/40, forbidden0, recall.810345/n29, nDCG.852822/n29; holdout12/16, без улучшения semantic gate. Gold/corpus hashes прежние.
+- VPS: backup PASS; local/remote image ID совпал; compose updated only app; healthy203.3MiB/640MiB; SSH hash неизменен. Read-only budget preflight: cap/reserved10000000microUSD, remainingCalls0, ACCOUNTING_BLOCKED; ledger не менялся. Первый stdin preflight завис, повтор через node-e с корректным argv fail-closed прочитал статус, не делал provider call.
+- Live canary PASS: address-linked «Мама!» exact51.1905938/71.4057965 → ordered3/reorder; known Astana Opera после другой темы + tomorrow; server consent memory/no client history; 12photos, 11current posters,24publisher exactSHA/no-store +4Commons exactSHA. Canary memory и session data удалены и проверены. Physical iPhone/native keyboard/relaunch и внешнее начало 2GIS-маршрута не проверялись.
+- Скриншот настоящей опубликованной Delish: `output/playwright/qettyq-v20-delish-live.png`. Документы агентов: A-event-address-map, A-event-detail-map-ui, A-rag-memory-event-context, A-venue-photos-wave4 (20261024). Презентация/видео/заявка не изменялись.
+
+- Live CUA отдельно проверил «Мама!» → Показать на карте → точка возле Театр Жастар → открытие той же карточки. `output/playwright/qettyq-v20-event-actions-live.png` показывает адрес/derived attribution/действия. В браузере 2GIS unavailable, рабочая OSM-карта; успешную 2GIS интеграцию не заявляем.
+
+
 ## v19 · контекст / source scope / реальные фото · 24.10.2026
 
 - Изолированный tree25d6263e1ed283bb7914012dbc7ef6d26a186914: `node .../vitest/vitest.mjs run --maxWorkers=2` **960/96082files PASS28.22s**. Предварительный workspace931, затем963 PASS дофинальных media cases; foreign API/PWA тесты не включены в release tree. Typescript `tsc --noEmit`, scopedESLint всех изменённых TS и diff-check PASS.

@@ -4,6 +4,7 @@ import { normalizeDialogueHistory, type RecentChatMessage } from '../pilot/chat-
 import { redactDecimalCoordinates } from '../pilot/location-redaction';
 import { isNegatedMention } from '../retrieval/lexical-query';
 import { astanaCalendarDay } from './anchored-history';
+import { exactNamedPlaceRequest } from './named-place';
 
 export type DialogueLanguage = 'ru' | 'kk' | 'en';
 export type DialogueQuestion = { field: 'format' | 'date' | 'budget'; text: string };
@@ -14,6 +15,8 @@ export type LeisureDialogue = {
   intent: 'date' | 'food' | 'events' | 'places' | 'general'; context: PilotContext;
   retrievalText: string; explicitFields: string[]; excludedTags: string[];
   historyUsed: number; reset: boolean; warnings: string[];
+  /** Internal routing hint from the allowed server catalog, never assistant prose. */
+  resolvedPlaceName: string | null;
 };
 
 const formats = [
@@ -121,9 +124,11 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
   /** Internal only: authenticated SQLite write times, aligned with normalized history.
    * API callers MUST NOT populate this from browser-supplied timestamps. */
   historyCreatedAtMs?: readonly number[];
-  /** Internal only: unique exact whole-current-utterance match in the allowed
+  /** Internal only: unique exact current name/request match in the allowed
    * server catalog. Never infer it from history, assistant prose or a model. */
   currentNamedPlace?: { name: string; goal: 'food' | 'walk' | 'activity' };
+  /** Internal server callback for bounded USER turns only. Never client input. */
+  resolveUserNamedPlace?: (text: string) => { name: string; goal: 'food' | 'walk' | 'activity' } | undefined;
   confirmedFields?: readonly DialogueConfirmedField[] }): LeisureDialogue {
   const language = input.language ?? 'ru', copy = labels[language], now = input.now ?? Date.now();
   const current = redactDecimalCoordinates(input.text, '[координаты скрыты]').slice(0, 1000);
@@ -144,13 +149,14 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
   let intent: LeisureDialogue['intent'] = 'general', romantic = false, format: FormatChoice | null = null;
   let date: string | null = null, dateKnown = false, staleHistoricalDate = false, budgetKnown = context.budget !== null;
   let query = '', pending: DialogueQuestion['field'][] = [], unresolvedReference: 'reference' | 'alternative' | null = null;
+  let resolvedPlaceName: string | null = null;
   const explicit = new Set<string>(), excluded = new Set<string>();
   const missing = (): DialogueQuestion['field'][] => {
     if (unresolvedReference) return ['format'];
     if (staleHistoricalDate) return ['date'];
     if (!romantic && !turns.some(turn => vague.test(turn.text))) return [];
     return [...(!format ? ['format' as const] : []), ...(!dateKnown ? ['date' as const] : []),
-      ...(format?.key === 'food' && !budgetKnown ? ['budget' as const] : [])];
+      ...(format?.goal === 'food' && !budgetKnown ? ['budget' as const] : [])];
   };
   for (const [turnIndex, timedTurn] of turns.entries()) {
     const turn = timedTurn.text;
@@ -163,6 +169,7 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
         format = formats.find(entry => entry.goal === context.goal)
           ?? { ...formats[1], goal: 'new', query: 'досуг' };
         query = format.query;
+        resolvedPlaceName = null;
         if (!romantic) intent = format.key;
       }
     }
@@ -213,28 +220,37 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
     if (pending.includes('budget') && /^\d{1,6}$/u.test(turn.trim())) { context = parseContext(`${turn} тенге`, context); budgetKnown = true; explicit.add('budget'); }
     const terms = searchTerms(positiveText);
     const unresolved = referenceOnly.test(turn.trim()) ? 'reference' : alternativeOnly.test(turn.trim()) ? 'alternative' : null;
-    if (unresolved) { unresolvedReference = unresolved; query = ''; }
-    else if (selected || positiveCuisine) { unresolvedReference = null; query = terms || selected?.query || 'еда'; }
+    if (unresolved) { unresolvedReference = unresolved; query = ''; resolvedPlaceName = null; }
+    else if (selected || positiveCuisine) { unresolvedReference = null; query = terms || selected?.query || 'еда'; resolvedPlaceName = null; }
     else if (terms && !amount.test(turn) && !duration.test(turn) && !indifferent.test(turn) && !budgetOptOut.test(turn) && !acknowledgementOnly.test(turn.trim()) && !day) {
-      query = `${query} ${terms}`.trim(); unresolvedReference = null;
+      query = `${query} ${terms}`.trim(); unresolvedReference = null; resolvedPlaceName = null;
     }
-    if (turnIndex === turns.length - 1 && input.currentNamedPlace) {
-      const named = input.currentNamedPlace;
+    let named = turnIndex === turns.length - 1 ? input.currentNamedPlace : undefined;
+    if (!named && !unresolved && input.resolveUserNamedPlace) {
+      try { named = input.resolveUserNamedPlace(turn); } catch { /* A failed source lookup never establishes identity. */ }
+    }
+    if (!unresolved && named) {
       format = { ...formats[1], key: 'places', goal: named.goal, query: named.name };
       context.goal = named.goal; intent = 'places'; query = named.name;
+      resolvedPlaceName = named.name;
       unresolvedReference = null; explicit.add('format');
+    }
+    if (!unresolved && !named && !selected && !positiveCuisine && exactNamedPlaceRequest(turn)) {
+      // A whole info/map request with an unknown or ambiguous name is not
+      // permission to recycle an earlier coffee/place suggestion.
+      unresolvedReference = 'reference'; query = ''; resolvedPlaceName = null;
     }
     pending = missing().slice(0, 2);
   }
   const genericGreeting = greeting.test(current);
-  if (genericGreeting) { intent = 'general'; pending = []; }
+  if (genericGreeting) { intent = 'general'; pending = []; resolvedPlaceName = null; }
   const questions = pending.map(field => ({ field, text: field === 'format' && unresolvedReference ? copy[unresolvedReference] : copy[field] }));
   const action = genericGreeting || questions.length ? 'clarify' : 'retrieve';
   const excludes = exclusions.filter(entry => excluded.has(entry.tag));
   const retrievalText = [query || format?.query || current, ...excludes.map(entry => `без ${entry.term}`), date].filter(Boolean).join(' ').slice(0, 1000);
   return { action, reply: genericGreeting ? copy.greeting : questions.length ? copy.lead + questions.map(question => question.text).join(' ') : copy.ready,
     questions, intent, context, retrievalText, explicitFields: [...explicit], excludedTags: [...excluded],
-    historyUsed: history.length, reset,
+    historyUsed: history.length, reset, resolvedPlaceName,
     warnings: romantic ? [language === 'ru' ? 'Атмосфера и пригодность места для свидания не подтверждены источником; это предпочтение, не факт о заведении.'
       : language === 'kk' ? 'Кездесуге лайық атмосфера дереккөзбен расталмаған; бұл орын туралы факт емес, талғам.'
         : 'A date-friendly atmosphere is a preference, not a verified venue fact.'] : [],

@@ -313,6 +313,235 @@
       "sha256": "51798fc98fa8f03eafc369c73ea02871090ca63521cf78fdda58a0a668cc6ec1",
       "bytes": 98605,
       "alt": "Интерьер террасы Якитория на Туран, 21, в статье Давай Сходим от 31 июля 2018 года; современный вид может отличаться."
+    },
+    {
+      "status": "approved",
+      "rightsBasis": "publisher_public_noncommercial_permission_with_credit_and_link",
+      "termsUrl": "https://sxodim.com/polzovatelskoe-soglashenie",
+      "reviewedAt": "2026-10-24T11:10:45Z",
+      "reviewExpiresAt": "2026-11-23T11:10:45Z",
+      "fetchedAt": "2026-10-24T11:10:45Z",
+      "mime": "image/jpeg",
+      "visualVerified": true,
+      "knownThirdPartyRestriction": false,
+      "modifications": "Exact served publisher article JPEG; no crop, retouching, added watermark or AI alteration. Photographer unknown. A separately reviewed single-venue section identifies the shown place and address; historical appearance, not today's availability.",
+      "width": 800,
+      "height": 1021,
+      "placeId": "osm:node:10248180510",
+      "sourcePageUrl": "https://sxodim.com/astana/place/delish",
+      "sourceImageUrl": "https://sxodim.com/uploads/images/2022/02/23/optimized/07b35e02dad6b750dd6959e2a56ac939_800xauto-q-85.jpg",
+      "sourceName": "Delish",
+      "sourceAddress": "Казахстан, Нур-Султан (Астана), улица Туркестан, 28А",
+      "sourceHouse": "28А",
+      "sourceStreetAlias": "улица Туркестан",
+      "sourceLat": 51.101298,
+      "sourceLon": 71.422883,
+      "catalogName": "Delish",
+      "catalogLat": 51.1010935,
+      "catalogLon": 71.4227958,
+      "articleImageEvidence": {
+        "sourceArticleUrl": "https://sxodim.com/astana/article/po-faktu-vesna-zavedeniya-s-vesennim-vaybom",
+        "sectionTitle": "Delish",
+        "sourceArticleAddress": "Туркестан 28А",
+        "sourceStreetAlias": "улица Туркестан",
+        "sourceHouse": "28А",
+        "singleVenueSection": true
+      },
+      "identity": {
+        "method": "exact_name_and_shared_address_building",
+        "observedStreet": "Түркістан көшесі",
+        "observedStreetAliases": [
+          "улица Туркестан",
+          "Turkistan Street"
+        ],
+        "streetAliasSourceUrl": "https://www.openstreetmap.org/way/165625144",
+        "observedHouse": "28А",
+        "osmSourceUrl": "https://www.openstreetmap.org/way/915699478",
+        "sourceAsOf": "2026-10-19T20:21:11Z",
+        "boundary": [
+          [
+            71.4229463,
+            51.1011484
+          ],
+          [
+            71.4231243,
+            51.1011232
+          ],
+          [
+            71.4233428,
+            51.1010923
+          ],
+          [
+            71.4233446,
+            51.1010669
+          ],
+          [
+            71.4235602,
+            51.1010357
+          ],
+          [
+            71.4237615,
+            51.1010065
+          ],
+          [
+            71.4237513,
+            51.1009788
+          ],
+          [
+            71.4237283,
+            51.1009159
+          ],
+          [
+            71.4237085,
+            51.1008621
+          ],
+          [
+            71.423497,
+            51.1008927
+          ],
+          [
+            71.423252,
+            51.1009281
+          ],
+          [
+            71.4232649,
+            51.1009632
+          ],
+          [
+            71.4230835,
+            51.1009895
+          ],
+          [
+            71.4228613,
+            51.1010216
+          ],
+          [
+            71.4227958,
+            51.1010935
+          ],
+          [
+            71.4227882,
+            51.101102
+          ],
+          [
+            71.4227214,
+            51.1011763
+          ],
+          [
+            71.4227906,
+            51.1013403
+          ],
+          [
+            71.4228491,
+            51.1014789
+          ],
+          [
+            71.4230725,
+            51.1014439
+          ],
+          [
+            71.423017,
+            51.101314
+          ],
+          [
+            71.4229463,
+            51.1011484
+          ]
+        ]
+      },
+      "sha256": "49071fa16c1dc6f2229a68e262ea89048e1da3ec18e0a1261a70a9af5e598146",
+      "bytes": 153867,
+      "alt": "Интерьер Delish на Туркестан, 28А, в статье Давай Сходим от 23 февраля 2022 года; современный вид может отличаться."
+    },
+    {
+      "status": "approved",
+      "rightsBasis": "publisher_public_noncommercial_permission_with_credit_and_link",
+      "termsUrl": "https://sxodim.com/polzovatelskoe-soglashenie",
+      "reviewedAt": "2026-10-24T11:10:45Z",
+      "reviewExpiresAt": "2026-11-23T11:10:45Z",
+      "fetchedAt": "2026-10-24T11:10:45Z",
+      "mime": "image/jpeg",
+      "visualVerified": true,
+      "knownThirdPartyRestriction": false,
+      "modifications": "Exact served publisher article JPEG; no crop, retouching, added watermark or AI alteration. Photographer unknown. A separately reviewed single-venue section identifies the shown place and address; historical appearance, not today's availability.",
+      "width": 800,
+      "height": 450,
+      "placeId": "osm:node:4913160607",
+      "sourcePageUrl": "https://sxodim.com/astana/place/meruert",
+      "sourceImageUrl": "https://sxodim.com/uploads/images/2021/07/16/optimized/80f9441512cfd975f34c10ef34ba9f3c_800xauto-q-85.jpg",
+      "sourceName": "Меруерт",
+      "sourceAddress": "Казахстан, Нур-Султан (Астана), проспект Республики, 19",
+      "sourceHouse": "19",
+      "sourceStreetAlias": "проспект Республики",
+      "sourceLat": 51.162923,
+      "sourceLon": 71.427474,
+      "catalogName": "Меруерт",
+      "catalogLat": 51.1629057,
+      "catalogLon": 71.4275426,
+      "articleImageEvidence": {
+        "sourceArticleUrl": "https://sxodim.com/astana/article/znamenitye-zavedeniya-pravogo-berega",
+        "sectionTitle": "Меруерт",
+        "sourceArticleAddress": "пр. Республики, 19",
+        "sourceStreetAlias": "проспект Республики",
+        "sourceHouse": "19",
+        "singleVenueSection": true
+      },
+      "identity": {
+        "method": "exact_name_and_shared_address_building",
+        "observedStreet": "Республика даңғылы",
+        "observedStreetAliases": [
+          "проспект Республики"
+        ],
+        "streetAliasSourceUrl": "https://www.openstreetmap.org/way/23979536",
+        "observedHouse": "19",
+        "osmSourceUrl": "https://www.openstreetmap.org/way/158630902",
+        "sourceAsOf": "2026-10-19T20:21:11Z",
+        "boundary": [
+          [
+            71.4273325,
+            51.1628478
+          ],
+          [
+            71.4273217,
+            51.1628854
+          ],
+          [
+            71.4272784,
+            51.1630554
+          ],
+          [
+            71.4274358,
+            51.1630712
+          ],
+          [
+            71.4274324,
+            51.1630845
+          ],
+          [
+            71.4276693,
+            51.1631082
+          ],
+          [
+            71.427762,
+            51.1627437
+          ],
+          [
+            71.4273677,
+            51.1627043
+          ],
+          [
+            71.4273545,
+            51.1627709
+          ],
+          [
+            71.4273325,
+            51.1628478
+          ]
+        ]
+      },
+      "sha256": "bf220e216e7cafdd59821d4d0d303c7cbc4b1b29b05616bcb45e54e951d90934",
+      "bytes": 69809,
+      "alt": "Фасад здания с рестораном Меруерт на проспекте Республики, 19, из статьи Давай Сходим 2021 года; это исторический снимок."
     }
   ]
 }

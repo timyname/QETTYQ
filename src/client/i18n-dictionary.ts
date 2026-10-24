@@ -3,6 +3,13 @@ import { ORGANIZER_TRANSLATIONS } from './i18n-organizer';
 import { POLICY_TRANSLATIONS } from './i18n-policy';
 import { ROUTE_TRANSLATIONS } from './i18n-route';
 const rows = `
+Данные события устарели. Обнови афишу перед добавлением в маршрут.|Іс-шара деректері ескірген. Маршрутқа қоспас бұрын афишаны жаңарт.|This event's data is out of date. Refresh the listings before adding it to your route.
+Событие не подтверждено в расписании. Проверь информацию у организатора.|Іс-шара кестеде расталмаған. Ақпаратты ұйымдастырушыдан нақтыла.|This event is not confirmed in the schedule. Check with the organizer.
+Дата события уже прошла или не подтверждена. Выбери актуальное событие.|Іс-шара күні өтіп кеткен немесе расталмаған. Өзекті іс-шараны таңда.|The event date has passed or is unconfirmed. Choose a current event.
+Нет подтверждённой точки события. Маршрут станет доступен после проверки адреса.|Іс-шараның расталған нүктесі жоқ. Мекенжай тексерілгеннен кейін маршрут қолжетімді болады.|This event has no verified map point. Routing will be available once its address is checked.
+Событие пока недоступно для маршрута. Обнови афишу и проверь адрес.|Іс-шара әзірге маршрутқа қолжетімсіз. Афишаны жаңартып, мекенжайды тексер.|This event cannot be routed yet. Refresh the listings and check its address.
+Событие уже в плане.|Іс-шара жоспарда бар.|This event is already in your plan.
+Показать на карте|Картадан көрсету|Show on map
 Действия с карточкой|Карточка әрекеттері|Card actions
 Эта ссылка больше не доступна. Посмотри актуальные места и события в подборке.|Бұл сілтеме енді қолжетімсіз. Өзекті орындар мен оқиғаларды топтамадан қара.|This link is no longer available. Browse the current places and events in the feed.
 Найти на карте|Картадан табу|Find on map

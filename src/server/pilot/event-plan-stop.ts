@@ -5,7 +5,10 @@ import type { PlanStop } from './plans';
 export function eventPlanStop(event: LiveAstanaEvent, now = Date.now()): PlanStop | null {
   if (event.lat === null || event.lon === null || !Number.isFinite(event.lat) || !Number.isFinite(event.lon)
     || event.lat < 50.8 || event.lat > 51.5 || event.lon < 70.8 || event.lon > 72
-    || !Number.isFinite(Date.parse(event.startsAt)) || Date.parse(event.endsAt ?? event.startsAt) <= now
+    || !Number.isFinite(Date.parse(event.startsAt)) || !Number.isFinite(Date.parse(event.endsAt ?? event.startsAt))
+    || event.endsAt !== null && Date.parse(event.endsAt) < Date.parse(event.startsAt)
+    || Date.parse(event.endsAt ?? event.startsAt) <= now
+    || event.expiresAt !== undefined && (!Number.isFinite(Date.parse(event.expiresAt)) || Date.parse(event.expiresAt) <= now)
     || event.freshness === 'stale' || event.status !== 'scheduled') return null;
   const supplied = event.durationMinutes;
   const fromDates = event.endsAt ? (Date.parse(event.endsAt) - Date.parse(event.startsAt)) / 60000 : null;

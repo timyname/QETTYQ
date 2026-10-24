@@ -4,13 +4,14 @@ import { Localize, useI18n, formatDate, formatNumber, type Language } from '../c
 
 import Image from 'next/image';
 import { ArrowLeft, ArrowUpRight, Bookmark, CalendarDays, ExternalLink, MapPin, Plus, Route } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ProgressRail } from './ProgressRail';
 import type { LiveAstanaEvent, EventMediaPlan } from '@/server/ingestion/sxodim-live';
 import s from './PilotApp.module.css';
 import art from './event-artwork.module.css';
-import { twoGisWalkingPlanUrl } from '@/client/2gis-navigation';
+import { twoGisWalkingPlanUrl } from '../client/2gis-navigation';
 import { appMediaUrl } from '../client/media-url';
+import { eventPlanStop } from '../server/pilot/event-plan-stop';
 
 export type LiveFeed = {
   items: LiveAstanaEvent[];
@@ -73,8 +74,20 @@ export function LiveEvents({ feed, loading, onOpen, saved, onSave }: { feed: Liv
   </section></Localize>;
 }
 
-export function EventDetail({ event, onSave, saved, onBack, onAddToPlan, onBuildPlan }: { event: LiveAstanaEvent; onSave: () => void; saved: boolean; onBack: () => void; onAddToPlan?: () => void; onBuildPlan?: () => void }) {
+export function eventPlanUnavailableReason(event: LiveAstanaEvent, now = Date.now()): string | null {
+  if (eventPlanStop(event, now)) return null;
+  if (event.freshness === 'stale') return 'Данные события устарели. Обнови афишу перед добавлением в маршрут.';
+  if (event.status !== 'scheduled') return 'Событие не подтверждено в расписании. Проверь информацию у организатора.';
+  if (!Number.isFinite(Date.parse(event.startsAt)) || Date.parse(event.endsAt ?? event.startsAt) <= now) return 'Дата события уже прошла или не подтверждена. Выбери актуальное событие.';
+  return 'Нет подтверждённой точки события. Маршрут станет доступен после проверки адреса.';
+}
+
+export function EventDetail({ event, onSave, saved, onBack, onAddToPlan, onBuildPlan, onShowOnMap }: { event: LiveAstanaEvent; onSave: () => void; saved: boolean; onBack: () => void; onAddToPlan?: () => void; onBuildPlan?: () => void; onShowOnMap?: () => void }) {
   const { language } = useI18n();
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 30_000); return () => window.clearInterval(timer); }, []);
+  const unavailable = eventPlanUnavailableReason(event, now);
+  const eligible = unavailable === null;
   const spokenLanguage = { ru: 'Русский', kk: 'Қазақша', en: 'English', und: 'Язык не указан' }[event.contentLanguage];
   const destination = event.lat !== null && event.lon !== null ? twoGisWalkingPlanUrl([{ lat: event.lat, lon: event.lon }]) : null;
   const address = event.address && event.address !== event.venueName ? event.address : null;
@@ -84,7 +97,10 @@ export function EventDetail({ event, onSave, saved, onBack, onAddToPlan, onBuild
     <section className={s.detailBody}><div className={s.factPills}><div><small>Когда</small><b>{eventDate(event.startsAt, language)}</b></div><div><small>Язык</small><b>{spokenLanguage}</b></div><div><small>Вход</small><b>{price}</b></div></div><div className={s.venue}><MapPin size={19} /><div><b translate={event.venueName ? 'no' : undefined}>{event.venueName ?? 'Площадка уточняется'}</b>{address && <p translate="no">{address}</p>}</div></div>
       <div className={s.eventDescription}><p>Наличие мест и условия записи уточняй у организатора.{event.priceFromKzt !== null && event.priceFromKzt > 0 ? ' Стоимость зависит от выбранного билета.' : ''}</p><p>{event.endsAt ? `Окончание: ${eventDate(event.endsAt, language)}.` : 'Продолжительность и время окончания не указаны.'}</p>{!destination && <p>Координаты не предоставлены источником. Точку на карте и время пути не подставляем наугад.</p>}{event.coordinateMatch && <p>Точка определена по адресу OpenStreetMap, не подтверждена организатором. Вход уточняйте. <a href={event.coordinateMatch.sourceUrl} target="_blank" rel="noreferrer" translate="no">© OpenStreetMap contributors · ODbL ↗</a></p>}</div>
       {event.priceEvidence && <a className={s.compactCredit} href={event.priceEvidence.sourceUrl} target="_blank" rel="noreferrer"><span>Источник цены</span> <ExternalLink size={13} /></a>}
-      {destination && <><div className={s.twoButtons}>{onAddToPlan && <button className={s.secondary} onClick={onAddToPlan}><Plus size={17} />В мой план</button>}{onBuildPlan && <button className={s.primary} onClick={onBuildPlan}><Route size={17} />Оценить путь</button>}</div><a className={s.secondary} target="_blank" rel="noreferrer" href={destination}>Маршрут в 2ГИС <ExternalLink size={17} /></a></>}<a className={s.secondary} href={event.bookingUrl ?? event.contactUrl} target="_blank" rel="noreferrer">Подробности и запись <ExternalLink size={17} /></a><a className={s.compactCredit} href={event.requiredCredit.url} target="_blank" rel="noreferrer">Афиша: {event.requiredCredit.text} ↗</a>
+      {onShowOnMap && <button className={s.secondary} disabled={!eligible} aria-describedby={unavailable ? 'event-plan-unavailable' : undefined} onClick={() => { if (eventPlanStop(event)) onShowOnMap(); }}><MapPin size={17} />Показать на карте</button>}
+      <div className={s.twoButtons}>{onAddToPlan && <button className={s.secondary} disabled={!eligible} aria-describedby={unavailable ? 'event-plan-unavailable' : undefined} onClick={() => { if (eventPlanStop(event)) onAddToPlan(); }}><Plus size={17} />В мой план</button>}{onBuildPlan && <button className={s.primary} disabled={!eligible} aria-describedby={unavailable ? 'event-plan-unavailable' : undefined} onClick={() => { if (eventPlanStop(event)) onBuildPlan(); }}><Route size={17} />Оценить путь</button>}</div>
+      {unavailable && <p id="event-plan-unavailable" role="status" className={s.muted}>{unavailable}</p>}
+      {destination && <a className={s.secondary} target="_blank" rel="noreferrer" href={destination}>Маршрут в 2ГИС <ExternalLink size={17} /></a>}<a className={s.secondary} href={event.bookingUrl ?? event.contactUrl} target="_blank" rel="noreferrer">Подробности и запись <ExternalLink size={17} /></a><a className={s.compactCredit} href={event.requiredCredit.url} target="_blank" rel="noreferrer">Афиша: {event.requiredCredit.text} ↗</a>
     </section>
   </main></Localize>;
 }

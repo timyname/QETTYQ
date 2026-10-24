@@ -2,8 +2,9 @@ import { catalogMeta, pilotPlaces, publicPlace } from "../../../server/pilot/cat
 import { planInputSchema } from "../../../server/pilot/contracts";
 import { calculateMixedPlan, publicPlan, type PlanStop } from "../../../server/pilot/plans";
 import { eventPlanStop } from "../../../server/pilot/event-plan-stop";
-import { getHostedRuntime } from "../../../server/pilot/host-runtime";
+import { getHostedRuntime, type HostedRuntime } from "../../../server/pilot/host-runtime";
 import { liveEventsService } from "../../../server/ingestion/live-events";
+import { publicEventLocations } from "../../../server/ingestion/public-event-locations";
 import { apiError, blockCrossSiteMutation, jsonResponse, readJson, requireSession, validationError } from "../../../server/session/http";
 
 export async function GET(request: Request) {
@@ -28,8 +29,8 @@ export async function POST(request: Request) {
   let events: Awaited<ReturnType<typeof liveEventsService.get>>['items'] = [];
   if (hasEvents) {
     try {
-      const feed = await (getHostedRuntime()?.events ?? liveEventsService).get();
-      events = feed.items.map(event => ({ ...event, freshness: event.freshness ?? (feed.freshness === 'fresh' ? 'fresh' : 'stale') }));
+      const provider: HostedRuntime['events'] = getHostedRuntime()?.events ?? liveEventsService;
+      events = publicEventLocations(await provider.get(), provider.resolveSourcePolicy).items;
     }
     catch { return apiError("PROVIDER_UNAVAILABLE", 503); }
   }
