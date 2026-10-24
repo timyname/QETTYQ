@@ -39,6 +39,11 @@ const dateIntent = /свидани\p{L}*|романтич\p{L}*|\b(?:a\s+date|da
 const resetPattern = /(?:^|[.!?]\s*|\s)(?:а\s+теперь|теперь\s+лучше|новый\s+запрос|начн[её]м\s+заново|передумал\p{L}*|now\s+instead|new\s+request|start\s+over|енді\s+|жаңа\s+сұрау)/iu;
 const greeting = /^(?:привет|здравствуй(?:те)?|добрый\s+(?:день|вечер)|hello|hi|hey|сәлем(?:етсіз\s+бе)?)[\s!?.]*$/iu;
 const vague = /куда\s+(?:сходить|пойти)|не\s+знаю\s+(?:куда|чего)|чем\s+заняться|what\s+(?:can|should)\s+(?:i|we)\s+do|қайда\s+бар|не\s+істе/iu;
+// These whole utterances supply no entity/category to resolve. Never guess a
+// referent from an assistant-authored recommendation or store a new dislike.
+const referenceOnly = /^(?:(?:а\s+)?там|(?:а\s+)?туда|а\s+это|что\s+там|а\s+где\s+это|what\s+about\s+there|and\s+there|there|what\s+about\s+that|which\s+one|(?:ал\s+)?онда|ал\s+ол|қайсысы)[\s.!?]*$/iu;
+const alternativeOnly = /^(?:(?:не\s+это[,.]?\s*)?(?:другое|другой|другую|другие)|(?:давай|покажи)\s+(?:другое|другой|другие)|не\s+это|not\s+(?:this|that)(?:[,.]?\s*(?:something\s+else|another\s+one))?|something\s+else|another\s+one|басқа(?:сын|сы)?|бұл\s+емес(?:[,.]?\s*басқа(?:сын|сы)?)?)[\s.!?]*$/iu;
+const acknowledgementOnly = /^(?:да|угу|ок|окей|ладно|хорошо|yes|okay|ok|alright|жақсы|иә|түсінікті)[\s.!?]*$/iu;
 const budgetOptOut = /(?:бюджет|цена|деньги)\s+(?:не\s*важ\p{L}*|любо\p{L}*|без\s+огранич\p{L}*)|без\s+ограничения\s+бюджета|любой\s+бюджет|budget\s+(?:doesn'?t\s+matter|unknown|unlimited|not\s+important)|no\s+(?:fixed\s+)?budget\s+limit|unlimited\s+budget|бюджет\s+(?:маңызды\s+емес|шектеусіз)/iu;
 const indifferent = /^(?:не\s*важно|без\s+разницы|любое|любой|любая|не\s+знаю|doesn'?t\s+matter|anything|any|бәрібір|маңызды\s+емес)[.!?\s]*$/iu;
 const amount = /\d[\d\s.,]*(?:₸|тг|тенге|теңге|kzt)|\d+(?:[.,]\d+)?\s*(?:тыс(?:яч)?|k)\s*(?:₸|тг|тенге|теңге|kzt)?/iu;
@@ -80,12 +85,15 @@ function dayQuery(text: string, now: number): string | null {
 const labels = {
   ru: { greeting: 'Привет! Помогу выбрать прогулку, место для встречи, ужин или событие в Астане. Что вам хочется?',
     lead: 'Помогу подобрать варианты. ', format: 'Что вам ближе: прогулка, ужин или событие?', date: 'На какой день планируете?',
+    reference: 'Какое место или событие имеете в виду? Напишите название.', alternative: 'Что поменяем: место, событие или вид отдыха? Назовите желаемый вариант.',
     budget: 'Какой бюджет в тенге, на человека или на всех? Можно без ограничения.', ready: 'Посмотрю варианты по вашим условиям. Цены, расписание и доступность проверяем по карточкам, а неизвестное не угадываем.' },
   kk: { greeting: 'Сәлем! Астанада серуен, кездесу орны, кешкі ас немесе іс-шара таңдауға көмектесемін. Не қалайсыз?',
     lead: 'Нұсқаларды таңдауға көмектесемін. ', format: 'Серуен, кешкі ас әлде іс-шара — қайсысы ұнайды?', date: 'Қай күнге жоспарлап отырсыз?',
+    reference: 'Қай орын немесе іс-шара туралы айтып тұрсыз? Атауын жазыңыз.', alternative: 'Нені өзгертеміз: орынды, іс-шараны әлде демалыс түрін? Қалаған нұсқаны атаңыз.',
     budget: 'Бюджетіңіз теңгемен қанша: бір адамға ма, әлде барлығына ма? Шектеусіз де болады.', ready: 'Шарттарыңызға сай нұсқаларды қараймын. Баға, кесте және қолжетімділік карточкадағы дерекпен тексеріледі; белгісізі ойдан қосылмайды.' },
   en: { greeting: 'Hi! I can help with a walk, a place to meet, dinner or an event in Astana. What would you like?',
     lead: 'I can help narrow it down. ', format: 'Would you prefer a walk, dinner or an event?', date: 'Which day are you planning for?',
+    reference: 'Which place or event do you mean? Please name it.', alternative: 'What would you like to change: the place, event or activity? Please name the kind you want.',
     budget: 'What is your budget in tenge, per person or for everyone? No limit is fine too.', ready: 'I will look for options matching your conditions. Prices, schedules and availability come from the cards; unknown facts stay unknown.' },
 };
 
@@ -113,6 +121,9 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
   /** Internal only: authenticated SQLite write times, aligned with normalized history.
    * API callers MUST NOT populate this from browser-supplied timestamps. */
   historyCreatedAtMs?: readonly number[];
+  /** Internal only: unique exact whole-current-utterance match in the allowed
+   * server catalog. Never infer it from history, assistant prose or a model. */
+  currentNamedPlace?: { name: string; goal: 'food' | 'walk' | 'activity' };
   confirmedFields?: readonly DialogueConfirmedField[] }): LeisureDialogue {
   const language = input.language ?? 'ru', copy = labels[language], now = input.now ?? Date.now();
   const current = redactDecimalCoordinates(input.text, '[координаты скрыты]').slice(0, 1000);
@@ -132,9 +143,10 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
   const protectedContext = Object.fromEntries([...protectedFields].map(field => [field, input.context[field]])) as Partial<Pick<PilotContext, DialogueConfirmedField>>;
   let intent: LeisureDialogue['intent'] = 'general', romantic = false, format: FormatChoice | null = null;
   let date: string | null = null, dateKnown = false, staleHistoricalDate = false, budgetKnown = context.budget !== null;
-  let query = '', pending: DialogueQuestion['field'][] = [];
+  let query = '', pending: DialogueQuestion['field'][] = [], unresolvedReference: 'reference' | 'alternative' | null = null;
   const explicit = new Set<string>(), excluded = new Set<string>();
   const missing = (): DialogueQuestion['field'][] => {
+    if (unresolvedReference) return ['format'];
     if (staleHistoricalDate) return ['date'];
     if (!romantic && !turns.some(turn => vague.test(turn.text))) return [];
     return [...(!format ? ['format' as const] : []), ...(!dateKnown ? ['date' as const] : []),
@@ -200,13 +212,23 @@ export function prepareLeisureDialogue(input: { text: string; history?: unknown;
     if (indifferent.test(turn) && pending.includes('format')) { format = { ...formats[1], goal: 'new', query: 'досуг' }; context.goal = 'new'; explicit.add('format'); }
     if (pending.includes('budget') && /^\d{1,6}$/u.test(turn.trim())) { context = parseContext(`${turn} тенге`, context); budgetKnown = true; explicit.add('budget'); }
     const terms = searchTerms(positiveText);
-    if (selected || positiveCuisine) query = terms || selected?.query || 'еда';
-    else if (terms && !amount.test(turn) && !duration.test(turn) && !indifferent.test(turn) && !budgetOptOut.test(turn) && !day) query = `${query} ${terms}`.trim();
+    const unresolved = referenceOnly.test(turn.trim()) ? 'reference' : alternativeOnly.test(turn.trim()) ? 'alternative' : null;
+    if (unresolved) { unresolvedReference = unresolved; query = ''; }
+    else if (selected || positiveCuisine) { unresolvedReference = null; query = terms || selected?.query || 'еда'; }
+    else if (terms && !amount.test(turn) && !duration.test(turn) && !indifferent.test(turn) && !budgetOptOut.test(turn) && !acknowledgementOnly.test(turn.trim()) && !day) {
+      query = `${query} ${terms}`.trim(); unresolvedReference = null;
+    }
+    if (turnIndex === turns.length - 1 && input.currentNamedPlace) {
+      const named = input.currentNamedPlace;
+      format = { ...formats[1], key: 'places', goal: named.goal, query: named.name };
+      context.goal = named.goal; intent = 'places'; query = named.name;
+      unresolvedReference = null; explicit.add('format');
+    }
     pending = missing().slice(0, 2);
   }
   const genericGreeting = greeting.test(current);
   if (genericGreeting) { intent = 'general'; pending = []; }
-  const questions = pending.map(field => ({ field, text: copy[field] }));
+  const questions = pending.map(field => ({ field, text: field === 'format' && unresolvedReference ? copy[unresolvedReference] : copy[field] }));
   const action = genericGreeting || questions.length ? 'clarify' : 'retrieve';
   const excludes = exclusions.filter(entry => excluded.has(entry.tag));
   const retrievalText = [query || format?.query || current, ...excludes.map(entry => `без ${entry.term}`), date].filter(Boolean).join(' ').slice(0, 1000);

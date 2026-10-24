@@ -10,6 +10,8 @@ export type PublisherPlaceRecord = {
   placeId: string; sourcePageUrl: string; sourceImageUrl: string; sourceName: string;
   sourceAddress: string; sourceHouse: string; sourceStreetAlias: string;
   sourceLat: number; sourceLon: number; catalogName: string; catalogLat: number; catalogLon: number;
+  articleImageEvidence?: { sourceArticleUrl: string; sectionTitle: string; sourceArticleAddress: string;
+    sourceStreetAlias: string; sourceHouse: string; singleVenueSection: true };
   identity: { method: 'exact_name_and_observed_address' | 'exact_name_and_shared_address_building';
     observedStreet: string; observedStreetAliases: string[]; streetAliasSourceUrl: string;
     observedHouse: string; osmSourceUrl: string; boundary?: number[][]; sourceAsOf: string };
@@ -21,6 +23,24 @@ export type PublisherPlaceRecord = {
 const terms = 'https://sxodim.com/polzovatelskoe-soglashenie';
 const plain = (v: unknown, max = 500): v is string => typeof v === 'string' && v.trim().length > 0 && v.length <= max && !/[<>\u0000-\u001f]/u.test(v);
 const normalizedName = (v: string) => v.normalize('NFKC').toLowerCase().replace(/^ресторан\s*/u, '').replace(/[«»"'\s]/gu, '');
+const articleAddressPart = (v: string) => v.normalize('NFKC').toLowerCase().trim()
+  .replace(/^(?:проспект\s+|улица\s+|пр\.\s*|ул\.\s*)/u, '').replace(/[,\s]/gu, '');
+/** Separately reviewed, single-venue article section. The canonical place page
+ * still supplies the observed identity/coordinates; a generic OG image is never
+ * treated as proof that every inline article image belongs to this venue. */
+function validArticleImageEvidence(p: PublisherPlaceRecord): boolean {
+  const proof = p.articleImageEvidence;
+  return Boolean(proof && proof.singleVenueSection === true && plain(p.sourceName) && plain(proof.sourceHouse, 30)
+    && /^https:\/\/sxodim\.com\/astana\/article\/[a-z0-9-]+$/u.test(proof.sourceArticleUrl)
+    && plain(proof.sectionTitle) && normalizedName(proof.sectionTitle) === normalizedName(p.sourceName)
+    && plain(proof.sourceArticleAddress) && plain(proof.sourceStreetAlias)
+    && proof.sourceHouse === p.sourceHouse
+    // Punctuation/known road-prefix normalization only; never transliteration,
+    // fuzzy street matching or inventing a new observed OSM alias.
+    && /\p{L}/u.test(articleAddressPart(proof.sourceStreetAlias))
+    && articleAddressPart(proof.sourceArticleAddress) === articleAddressPart(proof.sourceStreetAlias) + articleAddressPart(proof.sourceHouse)
+    && Array.isArray(p.identity?.observedStreetAliases) && p.identity.observedStreetAliases.includes(proof.sourceStreetAlias));
+}
 function inside(lat: number, lon: number, ring?: number[][]): boolean {
   if (!Array.isArray(ring) || ring.length < 4 || ring.length > 500 || !ring.every(p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite))
     || JSON.stringify(ring[0]) !== JSON.stringify(ring.at(-1))) return false;
@@ -64,7 +84,9 @@ export function resolvePublisherPlaceMedia(placeId: string, input: unknown = reg
     if (!p || p.placeId !== placeId || p.status !== 'approved' || p.rightsBasis !== 'publisher_public_noncommercial_permission_with_credit_and_link'
       || p.termsUrl !== terms || p.visualVerified !== true || p.knownThirdPartyRestriction !== false
       || !/^https:\/\/sxodim\.com\/astana\/place\/[a-z0-9-]+$/u.test(p.sourcePageUrl)
-      || !/^https:\/\/sxodim\.com\/uploads\/posts\/[a-z0-9/_.-]+\.jpg$/iu.test(p.sourceImageUrl) || p.sourceImageUrl.includes('..')
+      || p.articleImageEvidence !== undefined && !validArticleImageEvidence(p)
+      || !(/^https:\/\/sxodim\.com\/uploads\/posts\/[a-z0-9/_.-]+\.jpg$/iu.test(p.sourceImageUrl)
+        || validArticleImageEvidence(p) && /^https:\/\/sxodim\.com\/uploads\/astana\/20\d{2}\/\d{2}\/[a-z0-9_.-]+\.jpg$/iu.test(p.sourceImageUrl)) || p.sourceImageUrl.includes('..')
       || !/^[a-f0-9]{64}$/u.test(p.sha256) || p.mime !== 'image/jpeg' || !plain(p.alt) || !plain(p.modifications)
       || !Number.isInteger(p.bytes) || p.bytes < 100 || p.bytes > 3_000_000
       || !Number.isInteger(p.width) || !Number.isInteger(p.height) || Math.min(p.width, p.height) < 64 || Math.max(p.width, p.height) > 3000
@@ -75,7 +97,7 @@ export function resolvePublisherPlaceMedia(placeId: string, input: unknown = reg
       || sourceAsOf > now || now - sourceAsOf > 35 * 86_400_000) continue;
     return { kind: 'publisher_place_photo', src: `/api/media/places/${p.sha256}`, alt: p.alt, author: null, photographer: null,
       publisher: 'Давай Сходим', credit: 'Давай Сходим · некоммерческий пилот', license: 'Publisher noncommercial permission', licenseUrl: terms,
-      sourceUrl: p.sourcePageUrl, width: p.width, height: p.height, changes: p.modifications };
+      sourceUrl: p.articleImageEvidence?.sourceArticleUrl ?? p.sourcePageUrl, width: p.width, height: p.height, changes: p.modifications };
   }
   return null;
 }

@@ -1,5 +1,5 @@
 /** Small, versioned lexical rules; no inferred venue facts or model calls. */
-export const LEXICAL_QUERY_VERSION = "multilingual-lexical-v2";
+export const LEXICAL_QUERY_VERSION = "multilingual-lexical-v3";
 export const normalizeLexical = (text: string) => text.normalize("NFKC").toLocaleLowerCase("ru-RU").replace(/ё/g, "е");
 
 /** Negation applies only immediately around a category mention, never across a clause. */
@@ -11,7 +11,8 @@ export function isNegatedMention(query: string, match: RegExpMatchArray): boolea
   return /(?:сіз|сыз)$/u.test(match[0])
     || /(?:^|[^\p{L}])без$/u.test(before)
     || /(?:^|[^\p{L}])(?:без|вместо|не(?:\s+(?:хочу|хотим|нужен|нужны|нужно|интересует|нравится))?|(?:no|not|without)(?:\s+(?:want|like))?|except|exclude|excluding|avoid|instead\s+of|(?:don['’]?t|do\s+not)\s+(?:want|like))(?:\s+(?:in|to|at))?(?:\s+(?:a|an|any|the|в|на))?\s+$/u.test(before)
-    || /^\s+(?:емес|керек\s+емес|қоспа)(?=$|[^\p{L}])/u.test(after);
+    || /^\s+(?:емес|керек\s+емес|қоспа)(?=$|[^\p{L}])/u.test(after)
+    || /^\s+(?:(?:мне|нам)\s+)?не\s+(?:хочу|хотим|нужен|нужны|нужно|интересует|интересуют|нравится|нравятся)(?=$|[^\p{L}])/u.test(after);
 }
 
 export const placeCategoryRules = [

@@ -1,5 +1,13 @@
 # Следующие шаги
 
+## После v19 · 24.10.2026
+
+- [x] Опубликованы10/749реальных фото и botgardenpond, legacy single-venue article JPEG support, context/reference corrections, exact known venue search, source guard передtop3.960unit/integration+19E2E+build/livecanary PASS; SSH сохранён.
+- [ ] Приоритет владельца: опубликованный адрес мероприятия → проверенное сопоставление с существующим address/venue enrichment → derived coords/provenance → маркер на карте и остановка маршрута. Проверить точный адрес/неоднозначность и прохождение DTO до карты; не дублировать геокодер, не угадывать координаты и не включать платный geocoding молча.
+- [ ] Фото:739мест ещё без approved фото. Продолжать article-section discovery с конкретным филиалом; PNG/legacy статьи без canonical geo и неоднозначные сети не поддержаны этой волной. Нужны отдельные условия прямых владельцев для более широкого современного покрытия; genericOG/чужойphotocredit не обходить.
+- [ ] RAG: закрыть оставшиеся7assertion gaps и source scope для прочих низкоуровневых consumers/index до hybrid/embeddings. No semantic-quality uplift claimed; holdout не использовать для настройки. Уточнять референты без выдуманного контекста; долговременная память по-прежнему consent/TTL20turns/6KiB, не безграничная память.
+- [ ] Внешний AI/Sybil cap занятUSD10резервов; не сбрасывать ledger и не увеличивать бюджет. Physical iPhone/native memorycookie/relaunch, keyboard/touch и2GIS проверить отдельно. Презентация/видео/заявка без новых изменений.
+
 ## После v18 · 24.10.2026
 
 - [x] Забрать финальный GLM ZCode report; подтвердить/исправить скрытые onboarding actions, семантику счётчика и публичную навигацию. Опровергнутые visual claims не реализовывать.

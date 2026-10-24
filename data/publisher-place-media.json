@@ -267,6 +267,52 @@
       "sha256": "fb1d94d1254eb55a1abd921c320b5e58253ca3f2a716ca8ab26829eaf74e21db",
       "bytes": 191602,
       "alt": "Интерьер кофейни Chaleur в Abu Dhabi Plaza на Сыганак, 60/5, опубликованный Давай Сходим; снимок из материала 2022 года."
+    },
+    {
+      "status": "approved",
+      "rightsBasis": "publisher_public_noncommercial_permission_with_credit_and_link",
+      "termsUrl": "https://sxodim.com/polzovatelskoe-soglashenie",
+      "reviewedAt": "2026-10-23T23:53:46Z",
+      "reviewExpiresAt": "2026-11-22T23:53:46Z",
+      "fetchedAt": "2026-10-23T23:53:46Z",
+      "width": 745,
+      "height": 497,
+      "mime": "image/jpeg",
+      "visualVerified": true,
+      "knownThirdPartyRestriction": false,
+      "modifications": "Exact served publisher article JPEG; no crop, retouching or AI alteration. Photographer unknown. Venue heading/address/image observed together in a single 2018 article section; canonical place page separately corroborates address/coordinates. Not a current appearance guarantee.",
+      "placeId": "osm:way:237347726",
+      "sourcePageUrl": "https://sxodim.com/astana/place/yakitoriya",
+      "sourceImageUrl": "https://sxodim.com/uploads/astana/2018/07/a2019632-79fb-4ebb-849e-34a2516d1359-745x497.jpg",
+      "sourceName": "Якитория",
+      "sourceAddress": "Казахстан, Нур-Султан (Астана), проспект Туран, 21",
+      "sourceHouse": "21",
+      "sourceStreetAlias": "проспект Туран",
+      "sourceLat": 51.143082,
+      "sourceLon": 71.409858,
+      "catalogName": "Якитория",
+      "catalogLat": 51.1430985,
+      "catalogLon": 71.4099997,
+      "articleImageEvidence": {
+        "sourceArticleUrl": "https://sxodim.com/astana/article/terrasy-na-kotoryh-nuzhno-uspet-pobyvat-do-kontsa-leta",
+        "sectionTitle": "Якитория",
+        "sourceArticleAddress": "Туран 21",
+        "sourceStreetAlias": "проспект Туран",
+        "sourceHouse": "21",
+        "singleVenueSection": true
+      },
+      "identity": {
+        "method": "exact_name_and_observed_address",
+        "observedStreet": "Тұран даңғылы",
+        "observedStreetAliases": ["проспект Туран", "Turan Avenue"],
+        "streetAliasSourceUrl": "https://www.openstreetmap.org/way/23984063",
+        "observedHouse": "21",
+        "osmSourceUrl": "https://www.openstreetmap.org/way/237347726",
+        "sourceAsOf": "2026-10-19T20:21:11Z"
+      },
+      "sha256": "51798fc98fa8f03eafc369c73ea02871090ca63521cf78fdda58a0a668cc6ec1",
+      "bytes": 98605,
+      "alt": "Интерьер террасы Якитория на Туран, 21, в статье Давай Сходим от 31 июля 2018 года; современный вид может отличаться."
     }
   ]
 }

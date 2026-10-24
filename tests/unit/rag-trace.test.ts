@@ -32,6 +32,15 @@ afterEach(() => {
 });
 
 describe("privacy-bounded optional SQLite RAG traces", () => {
+  it("keeps stored query-v2 traces readable while accepting new query-v3 records", () => {
+    const { store } = setup();
+    const old = trace(), next = { ...trace(), versions: { ...trace().versions, query: 'multilingual-lexical-v3' as const, dialogue: 'leisure-dialogue-v3' as const } };
+    expect(store.write(sessionA, old)).toBe(true);
+    expect(store.write(sessionA, next)).toBe(true);
+    expect(store.read(sessionA, old.requestId)?.versions.query).toBe('multilingual-lexical-v2');
+    expect(store.read(sessionA, next.requestId)?.versions.query).toBe('multilingual-lexical-v3');
+    expect(store.read(sessionA, next.requestId)?.versions.dialogue).toBe('leisure-dialogue-v3');
+  });
   it("roundtrips only a strict technical record and stores a namespaced session hash, never the token", () => {
     const { db, store } = setup(), value = trace();
     expect(store.write(sessionA, value)).toBe(true);

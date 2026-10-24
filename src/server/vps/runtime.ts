@@ -129,6 +129,11 @@ export function initializeVpsRuntime(options: {
         const result = await mergedEvents.get();
         // Independent derived OSM evidence; raw publisher snapshot stays unchanged.
         return { ...result, items: enrichEventAddresses(result.items, matchAddress, matchVenue) };
+      }, resolveSourcePolicy(sourceId) {
+        try {
+          const row = db.prepare("SELECT allow_persist,allow_display,allow_llm FROM data_sources WHERE id=?").get(sourceId);
+          return row ? { persist: row.allow_persist === 1, display: row.allow_display === 1, sendToLlm: row.allow_llm === 1, embed: false } : null;
+        } catch { return null; }
       }, canSendToLlm(sourceId) {
         try { return Boolean(db.prepare("SELECT 1 FROM data_sources WHERE id=? AND allow_persist=1 AND allow_display=1 AND allow_llm=1").get(sourceId)); }
         catch { return false; }

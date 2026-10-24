@@ -12,7 +12,8 @@ const fixture = () => structuredClone(registry);
 describe('reviewed Commons place photography (offline)', () => {
   it('resolves exact approved OSM venue with plain credit and local photo only', () => {
     const media = resolveCommonsPlaceMedia(id, registry, now);
-    expect(media).toMatchObject({ kind: 'real_place_photo', license: 'CC BY-SA 4.0', author: 'Nurken' });
+    expect(media).toMatchObject({ kind: 'real_place_photo', license: 'CC BY-SA 4.0', author: 'Nurken',
+      src: '/assets/places/astana-botanical-garden-pond-2026.jpg', photographedAt: '2026-06-28 19:56:06' });
     if (media.kind !== 'real_place_photo') throw new Error('Expected reviewed photograph');
     expect(media.src).toMatch(/^\/assets\/places\/[a-z0-9-]+\.jpg$/u);
     expect(media.credit).toContain(media.author);
@@ -82,5 +83,18 @@ describe('reviewed Commons place photography (offline)', () => {
       expect(Math.max(record.width, record.height)).toBeLessThanOrEqual(1500);
       expect(resolveCommonsPlaceMedia(record.placeId, registry, now).kind).toBe('real_place_photo');
     }
+  });
+  it('uses the historical Presidential Park stream only with its observed in-boundary GPS and CC BY-SA 2.0 credit', () => {
+    const parkId = 'osm:way:112177946';
+    const media = resolveCommonsPlaceMedia(parkId, registry, now);
+    expect(media).toMatchObject({ kind: 'real_place_photo', author: 'jtstewart', license: 'CC BY-SA 2.0',
+      src: '/assets/places/astana-presidential-park-stream-2012.jpg', photographedAt: '2012-07-30 05:19' });
+    if (media.kind !== 'real_place_photo') throw new Error('Expected reviewed historical park photograph');
+    expect(media.credit).toContain('Astana DSC04106 (7709613510)');
+    const copy = fixture();
+    const record = copy.records.find(record => record.placeId === parkId);
+    if (!record?.identityProof.geographicMatch) throw new Error('Expected actual GPS proof');
+    record.identityProof.geographicMatch.fileLat = 51.135;
+    expect(resolveCommonsPlaceMedia(parkId, copy, now).kind).toBe('none');
   });
 });

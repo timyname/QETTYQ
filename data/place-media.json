@@ -4,26 +4,26 @@
   "records": [
     {
       "placeId": "osm:way:1196402246",
-      "src": "/assets/places/astana-botanical-garden-acalypha-2026.jpg",
-      "alt": "Acalypha hispida в оранжерее Ботанического сада Астаны. Фото 28 июня 2026 года.",
+      "src": "/assets/places/astana-botanical-garden-pond-2026.jpg",
+      "alt": "Пруд и закат в Ботаническом саду Астаны. Реальная фотография 28 июня 2026 года.",
       "author": "Nurken",
       "credit": "Nurken · Wikimedia Commons · CC BY-SA 4.0",
       "license": "CC BY-SA 4.0",
       "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Acalypha_hispida_at_the_Astana_Botanical_Garden_(1).jpg",
-      "fileTitle": "File:Acalypha hispida at the Astana Botanical Garden (1).jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Astana_Botanical_Garden_20260628_(1).jpg",
+      "fileTitle": "File:Astana Botanical Garden 20260628 (1).jpg",
       "fileCategories": [
-        "Astana botanical garden greenhouses",
-        "Astana botanical garden by Nurken, 2026"
+        "Astana botanical garden by Nurken, 2026",
+        "Astana botanical garden pond"
       ],
       "width": 1280,
       "height": 960,
-      "bytes": 610835,
-      "sha256": "5a7223e40c2633b1aa44128e4915019d45392c4015ed5119635ac498ecf95a1b",
-      "reviewedSha256": "5a7223e40c2633b1aa44128e4915019d45392c4015ed5119635ac498ecf95a1b",
+      "bytes": 241160,
+      "sha256": "6b57d874f097991f4396c3f59c894df68e4b880ebab8458645beef42b352cb04",
+      "reviewedSha256": "6b57d874f097991f4396c3f59c894df68e4b880ebab8458645beef42b352cb04",
       "changes": "Commons thumbnail resized to 1280×960; no crop, retouching or AI alteration.",
-      "fetchedAt": "2026-10-20T21:22:35.871Z",
-      "photographedAt": "2026-06-28 19:39:56",
+      "fetchedAt": "2026-10-23T23:46:54Z",
+      "photographedAt": "2026-06-28 19:56:06",
       "identityProof": {
         "osmUrl": "https://www.openstreetmap.org/way/1196402246",
         "osmTag": "wikimedia_commons",
@@ -35,7 +35,7 @@
       },
       "rights": {
         "status": "approved",
-        "reviewedAt": "2026-10-20T21:22:01Z",
+        "reviewedAt": "2026-10-23T23:46:54Z",
         "reviewExpiresAt": null,
         "photographLicenseVerified": true,
         "visualVerified": true,
@@ -43,10 +43,10 @@
         "allowStore": true,
         "allowDisplay": true,
         "allowRedistribute": true,
-        "notes": "File-specific CC BY-SA 4.0 and own-work author verified via Commons page and imageinfo. Exact Botanical Garden Q104866948 appears on file page; greenhouse is a subcategory of the OSM-linked venue category. Native decoded thumbnail visually inspected: plant close-up, no modern architectural/artistic work used as subject. Real dated plant photo, not a current availability claim or generated illustration. Preserve attribution, license and ShareAlike for this media."
+        "notes": "File-specific CC BY-SA 4.0, own-work photographer Nurken and Botanical Garden Q104866948 verified from current Commons page and imageinfo. Pond/Nurken2026 categories are subcategories of exact OSM-linked Botanical Garden category. Native-decoded thumbnail visually reviewed by agent and orchestrator: main subject is pond, trees, sky/sunset; small distant urban buildings and visitors are incidental background, not presented as an architectural work or endorsement. This is a documented scoped review, not a universal legal guarantee. Preserve credit, source, license and ShareAlike. Photo dated June2026 does not guarantee current appearance or access."
       },
-      "commonsOriginalSha1": "66d0e76444bf8c84d41d27cbe19f661255dfa527",
-      "importedAt": "2026-10-20T21:24:28.546Z"
+      "commonsOriginalSha1": "b1e830fc1b9a9219e96e33253903837c00fc08c0",
+      "importedAt": "2026-10-23T23:51:15.827Z"
     },
     {
       "placeId": "osm:node:4894937300",
@@ -167,6 +167,641 @@
       },
       "commonsOriginalSha1": "3a533c903623edcf1cc2f66956a5ce9f0347cc0c",
       "importedAt": "2026-10-23T19:15:37.823Z"
+    },
+    {
+      "placeId": "osm:way:112177946",
+      "src": "/assets/places/astana-presidential-park-stream-2012.jpg",
+      "alt": "Ручей и зелёные дорожки Президентского парка в Астане. Историческая фотография 30 июля 2012 года; современный вид может отличаться.",
+      "author": "jtstewart",
+      "credit": "jtstewart · Astana DSC04106 (7709613510) · Wikimedia Commons · CC BY-SA 2.0",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Astana_DSC04106_(7709613510).jpg",
+      "fileTitle": "File:Astana DSC04106 (7709613510).jpg",
+      "fileCategories": [
+        "Presidential Park (Astana)"
+      ],
+      "width": 1280,
+      "height": 851,
+      "bytes": 291820,
+      "sha256": "3e2afd8f1374a4b31172fa8ab1c62e03969ccd5fd9857cb45592bd2ac7a4698e",
+      "reviewedSha256": "3e2afd8f1374a4b31172fa8ab1c62e03969ccd5fd9857cb45592bd2ac7a4698e",
+      "changes": "Commons thumbnail resized to 1280×851; no crop, retouching or AI alteration.",
+      "fetchedAt": "2026-10-23T23:46:54Z",
+      "photographedAt": "2012-07-30 05:19",
+      "identityProof": {
+        "osmUrl": "https://www.openstreetmap.org/way/112177946",
+        "osmTag": "reviewed_geographic_match",
+        "osmTagValue": "manual_file_gps_inside_observed_osm_boundary",
+        "commonsCategory": "Category:Presidential Park (Astana)",
+        "categoryVerified": true,
+        "categoryEvidenceUrl": "https://commons.wikimedia.org/wiki/Category:Presidential_Park_(Astana)",
+        "sourceAsOf": "2026-10-19T20:21:11Z",
+        "geographicMatch": {
+          "fileLat": 51.127052,
+          "fileLon": 71.456255,
+          "osmBoundary": [
+            [
+              71.4469974,
+              51.1207224
+            ],
+            [
+              71.4471576,
+              51.1206
+            ],
+            [
+              71.4481604,
+              51.1204375
+            ],
+            [
+              71.450613,
+              51.1200399
+            ],
+            [
+              71.4521933,
+              51.119825
+            ],
+            [
+              71.4536798,
+              51.1196229
+            ],
+            [
+              71.4539353,
+              51.1195881
+            ],
+            [
+              71.4539777,
+              51.1195459
+            ],
+            [
+              71.454075,
+              51.1195465
+            ],
+            [
+              71.4542403,
+              51.1198133
+            ],
+            [
+              71.4544699,
+              51.1200587
+            ],
+            [
+              71.4547164,
+              51.120241
+            ],
+            [
+              71.4550054,
+              51.1203971
+            ],
+            [
+              71.4551741,
+              51.1204901
+            ],
+            [
+              71.4555054,
+              51.1207287
+            ],
+            [
+              71.4560134,
+              51.1208337
+            ],
+            [
+              71.4562878,
+              51.1208708
+            ],
+            [
+              71.4565517,
+              51.1208863
+            ],
+            [
+              71.4568167,
+              51.1208805
+            ],
+            [
+              71.4569724,
+              51.1208784
+            ],
+            [
+              71.4581128,
+              51.1207884
+            ],
+            [
+              71.4591954,
+              51.120727
+            ],
+            [
+              71.4598495,
+              51.1206899
+            ],
+            [
+              71.4600821,
+              51.1206791
+            ],
+            [
+              71.4601345,
+              51.1206767
+            ],
+            [
+              71.4613181,
+              51.1206163
+            ],
+            [
+              71.4613549,
+              51.1208114
+            ],
+            [
+              71.4618255,
+              51.1207832
+            ],
+            [
+              71.4618076,
+              51.120591
+            ],
+            [
+              71.4622542,
+              51.1205622
+            ],
+            [
+              71.4622764,
+              51.1205607
+            ],
+            [
+              71.4629346,
+              51.1205182
+            ],
+            [
+              71.4633007,
+              51.1205022
+            ],
+            [
+              71.4636787,
+              51.1204812
+            ],
+            [
+              71.4639628,
+              51.1204654
+            ],
+            [
+              71.4662997,
+              51.1203217
+            ],
+            [
+              71.4669315,
+              51.1202818
+            ],
+            [
+              71.4670963,
+              51.12068
+            ],
+            [
+              71.4671611,
+              51.1207521
+            ],
+            [
+              71.4675216,
+              51.121671
+            ],
+            [
+              71.4676037,
+              51.1218843
+            ],
+            [
+              71.4680098,
+              51.1228981
+            ],
+            [
+              71.4680812,
+              51.123093
+            ],
+            [
+              71.4685108,
+              51.1241726
+            ],
+            [
+              71.4685595,
+              51.124181
+            ],
+            [
+              71.4687327,
+              51.1242828
+            ],
+            [
+              71.4688497,
+              51.1245787
+            ],
+            [
+              71.4684226,
+              51.1246812
+            ],
+            [
+              71.4679874,
+              51.1248019
+            ],
+            [
+              71.4678545,
+              51.1246241
+            ],
+            [
+              71.4664733,
+              51.1249889
+            ],
+            [
+              71.4666063,
+              51.1251562
+            ],
+            [
+              71.4664415,
+              51.125205
+            ],
+            [
+              71.4662557,
+              51.125253
+            ],
+            [
+              71.4660907,
+              51.1252936
+            ],
+            [
+              71.4659747,
+              51.1251155
+            ],
+            [
+              71.4650661,
+              51.1253647
+            ],
+            [
+              71.4651786,
+              51.1255348
+            ],
+            [
+              71.4647791,
+              51.1256397
+            ],
+            [
+              71.4646912,
+              51.1256621
+            ],
+            [
+              71.4645961,
+              51.1256865
+            ],
+            [
+              71.4645082,
+              51.1257087
+            ],
+            [
+              71.4643966,
+              51.1257371
+            ],
+            [
+              71.464265,
+              51.1257707
+            ],
+            [
+              71.4639925,
+              51.1258401
+            ],
+            [
+              71.4639019,
+              51.1256631
+            ],
+            [
+              71.4633482,
+              51.1257916
+            ],
+            [
+              71.4634623,
+              51.1259833
+            ],
+            [
+              71.4632872,
+              51.1260295
+            ],
+            [
+              71.4630917,
+              51.126081
+            ],
+            [
+              71.4623047,
+              51.1262886
+            ],
+            [
+              71.4621772,
+              51.1260928
+            ],
+            [
+              71.4615444,
+              51.1262598
+            ],
+            [
+              71.4605724,
+              51.1265112
+            ],
+            [
+              71.4605838,
+              51.1265286
+            ],
+            [
+              71.4606972,
+              51.1267008
+            ],
+            [
+              71.4601792,
+              51.1268436
+            ],
+            [
+              71.4600838,
+              51.1268699
+            ],
+            [
+              71.4600441,
+              51.1268809
+            ],
+            [
+              71.4595084,
+              51.1270286
+            ],
+            [
+              71.4593787,
+              51.1268583
+            ],
+            [
+              71.4593471,
+              51.1268675
+            ],
+            [
+              71.4589355,
+              51.1269868
+            ],
+            [
+              71.4582309,
+              51.1272903
+            ],
+            [
+              71.4580482,
+              51.1274666
+            ],
+            [
+              71.4582533,
+              51.1275773
+            ],
+            [
+              71.4583002,
+              51.1276026
+            ],
+            [
+              71.4579058,
+              51.1280529
+            ],
+            [
+              71.4575839,
+              51.1279931
+            ],
+            [
+              71.4575535,
+              51.1280119
+            ],
+            [
+              71.4575248,
+              51.1280297
+            ],
+            [
+              71.4574508,
+              51.128203
+            ],
+            [
+              71.4574419,
+              51.1282239
+            ],
+            [
+              71.4573886,
+              51.1284135
+            ],
+            [
+              71.4573573,
+              51.1285946
+            ],
+            [
+              71.457354,
+              51.1287938
+            ],
+            [
+              71.4573844,
+              51.1290288
+            ],
+            [
+              71.4576314,
+              51.1290104
+            ],
+            [
+              71.4577933,
+              51.1290009
+            ],
+            [
+              71.4578729,
+              51.1292317
+            ],
+            [
+              71.4578499,
+              51.1293554
+            ],
+            [
+              71.457642,
+              51.129407
+            ],
+            [
+              71.4539136,
+              51.1300168
+            ],
+            [
+              71.4538289,
+              51.1300307
+            ],
+            [
+              71.4535595,
+              51.1300747
+            ],
+            [
+              71.4532908,
+              51.1301187
+            ],
+            [
+              71.4532741,
+              51.1300698
+            ],
+            [
+              71.4530902,
+              51.1295316
+            ],
+            [
+              71.4530746,
+              51.1294859
+            ],
+            [
+              71.4527923,
+              51.1286595
+            ],
+            [
+              71.4527418,
+              51.1285117
+            ],
+            [
+              71.4526773,
+              51.128307
+            ],
+            [
+              71.4527232,
+              51.1282955
+            ],
+            [
+              71.4524277,
+              51.128341
+            ],
+            [
+              71.4524485,
+              51.1282421
+            ],
+            [
+              71.4528008,
+              51.1277878
+            ],
+            [
+              71.452973,
+              51.1275863
+            ],
+            [
+              71.4533209,
+              51.127179
+            ],
+            [
+              71.4532929,
+              51.127127
+            ],
+            [
+              71.4533589,
+              51.1270637
+            ],
+            [
+              71.4534334,
+              51.1270551
+            ],
+            [
+              71.454216,
+              51.1262014
+            ],
+            [
+              71.4541907,
+              51.1261453
+            ],
+            [
+              71.4542348,
+              51.126089
+            ],
+            [
+              71.4537261,
+              51.1247706
+            ],
+            [
+              71.4536052,
+              51.1247114
+            ],
+            [
+              71.4535662,
+              51.1246856
+            ],
+            [
+              71.4535371,
+              51.1246599
+            ],
+            [
+              71.4535756,
+              51.1245917
+            ],
+            [
+              71.4536202,
+              51.1245388
+            ],
+            [
+              71.4531357,
+              51.1232599
+            ],
+            [
+              71.4530732,
+              51.123235
+            ],
+            [
+              71.453054,
+              51.1231829
+            ],
+            [
+              71.4513081,
+              51.1224909
+            ],
+            [
+              71.4512245,
+              51.1225019
+            ],
+            [
+              71.4511311,
+              51.1224643
+            ],
+            [
+              71.4511199,
+              51.1224184
+            ],
+            [
+              71.4494302,
+              51.1217484
+            ],
+            [
+              71.44936,
+              51.1217568
+            ],
+            [
+              71.449258,
+              51.1217165
+            ],
+            [
+              71.449226,
+              51.1216695
+            ],
+            [
+              71.4477691,
+              51.1211115
+            ],
+            [
+              71.4474599,
+              51.1209998
+            ],
+            [
+              71.447189,
+              51.1208753
+            ],
+            [
+              71.4469974,
+              51.1207224
+            ]
+          ],
+          "matchedVenueLabel": "Президентский парк",
+          "fileDescription": "Stream in the park - check a satellite image to see the pattern made by these paths and streams",
+          "filePageUrl": "https://commons.wikimedia.org/wiki/File:Astana_DSC04106_(7709613510).jpg",
+          "reviewedAt": "2026-10-23T23:46:54Z"
+        }
+      },
+      "rights": {
+        "status": "approved",
+        "reviewedAt": "2026-10-23T23:46:54Z",
+        "reviewExpiresAt": null,
+        "photographLicenseVerified": true,
+        "visualVerified": true,
+        "subjectRights": "nature_no_protected_work",
+        "allowStore": true,
+        "allowDisplay": true,
+        "allowRedistribute": true,
+        "notes": "File-specific CC BY-SA 2.0 and photographer jtstewart verified from current Commons imageinfo; Flickr license review recorded on file. Observed GPS lies inside actual named President Park OSM polygon and file category/description identify park. Native-decoded thumbnail visually reviewed: landscape/stream/trees dominant; a distant bridge and small background figures are incidental, not presented as an architectural artwork or endorsement. Label historical 2012 view rather than current state. Preserve supplied file title, attribution, license and ShareAlike."
+      },
+      "commonsOriginalSha1": "73e29f3f0e7f4fafa988fae2e5ebf16d2350647c",
+      "importedAt": "2026-10-23T23:47:40.204Z"
     }
   ]
 }

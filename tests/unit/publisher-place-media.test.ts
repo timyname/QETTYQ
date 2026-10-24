@@ -64,6 +64,36 @@ describe('publisher venue photos with exact independently observed identity', ()
       expect(validPublisherPlaceIdentity(p)).toBe(false);
     }
   });
+  it('uses an exact reviewed Yakitoriya article interior with literal single-branch caption/address and article attribution', () => {
+    const p = registry.records.find(record => record.placeId === 'osm:way:237347726') as PublisherPlaceRecord;
+    expect(validPublisherPlaceIdentity(p)).toBe(true);
+    expect(p.articleImageEvidence?.sourceArticleAddress).toBe('Туран 21');
+    expect(p.identity.observedStreetAliases).not.toContain('Туран');
+    expect(resolvePublisherPlaceMedia(p.placeId, registry, now)).toMatchObject({
+      kind: 'publisher_place_photo', width: 745, height: 497,
+      sourceUrl: p.articleImageEvidence?.sourceArticleUrl,
+      src: '/api/media/places/51798fc98fa8f03eafc369c73ea02871090ca63521cf78fdda58a0a668cc6ec1',
+    });
+  });
+  it('rejects legacy article JPEG without exact section, single branch, street/house and publisher URL proof', () => {
+    const original = registry.records.find(record => record.placeId === 'osm:way:237347726') as PublisherPlaceRecord;
+    if (!original.articleImageEvidence) throw new Error('Expected reviewed article evidence');
+    const noProof = structuredClone(original); delete noProof.articleImageEvidence;
+    expect(resolvePublisherPlaceMedia(noProof.placeId, { ...registry, records: [noProof] }, now)).toBeNull();
+    for (const patch of [
+      { singleVenueSection: false }, { sectionTitle: 'Other Restaurant' }, { sourceHouse: '22' },
+      { sourceArticleAddress: 'Туран 22' }, { sourceArticleAddress: 'Кунаева 21' },
+      { sourceArticleAddress: 'Туран 21, Достык 9' }, { sourceStreetAlias: 'Туран' },
+      { sourceArticleUrl: 'https://example.com/astana/article/test' },
+      { sourceArticleUrl: 'https://sxodim.com/astana/place/yakitoriya' },
+    ]) {
+      const p = structuredClone(original);
+      Object.assign(p.articleImageEvidence!, patch);
+      expect(resolvePublisherPlaceMedia(p.placeId, { ...registry, records: [p] }, now)).toBeNull();
+    }
+    const png = structuredClone(original); png.sourceImageUrl = png.sourceImageUrl.replace('.jpg', '.png');
+    expect(resolvePublisherPlaceMedia(png.placeId, { ...registry, records: [png] }, now)).toBeNull();
+  });
   it('blocks expired/revoked/restricted media and commercial or disabled scope', () => {
     const p = fixture();
     for (const patch of [{ status: 'revoked' as const }, { visualVerified: false }, { knownThirdPartyRestriction: true }, { reviewExpiresAt: new Date(now).toISOString() }]) {
@@ -79,7 +109,7 @@ describe('publisher venue photos with exact independently observed identity', ()
     }
   });
   it('verifies real private JPEGs and gated served bytes by SHA, and denies expired media', async () => {
-    expect(registry.records).toHaveLength(5);
+    expect(registry.records).toHaveLength(6);
     for (const record of registry.records) {
       const bytes = readFileSync(`data/place-media-cache/${record.sha256}.jpg`);
       expect(bytes.length).toBe(record.bytes);

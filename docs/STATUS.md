@@ -1,5 +1,15 @@
 # Статус QETTYQ
 
+## Фото / source-aware retrieval / контекст · v19 · 24.10.2026
+
+- Сервис/deploy: `qettyq:vps-20261024-19` опубликован, healthy,178.2MiB/640MiB. Immutable input tree `25d6263e1ed283bb7914012dbc7ef6d26a186914`; image manifest-list `30cdc782e47b85b97cf6eccb24d4b9f0c71497cd6c9d6cda36b2449286f22eab`. Проверена SQLite backup; SSH hash неизменен; обновлён только compose app, другие проекты не менялись.
+- Настоящие3субагента: фото, контекст/память, retrieval; root API/runtime integration и независимый QA. Фото8→10/749 (4Commons+6publisher), афиша16/16. Новые Президентскийпарк2012/Якитория2018, ботсад заменён на pond2026; старыйplantasset сохранён.22privateJPEG/3126396B, sortedJSONmanifest SHA `1467c0d3f39dc70a5b745e180f55dd304c5eb7cdf99521189e068b7045561958`. Не обещаем актуальный интерьер или фото всех мест.
+- RAG: capability resolver доtop3, deny/missing/error/revoke/expiry failclosed; display отдельно отLLM/embed. Runtime DB lookup заменяет bundled grant без fallback при denial; API /events,/catalog,/chat проверены. Legacy pure matcher остаётся низкоуровневым, неуниверсальный policy-aware index. RU непосредственное postfix-отрицание исправлено; trace пишет query/dialogue v3, читает v2/v3.
+- Память/контекст: ambiguous reference/rejection RU/KK/EN → уточнение, «ещё варианты» сохранено. Server-only exact unique current venue hint меняет goal/query, но не деньги/время/дату; venueOnly предотвращает ошибочную афишу для «Астана балет». Google не вызывается для уже найденного имени. Consents/TTL/delete20turns/6KiB/серверные часы прежние.
+- Проверки: изолированный релиз960/960unit/integration82files, typecheck/scopedlint, Docker77.8s PASS;19/19E2E48s (включая новые JPEG390/430px). Fixed RAG eval40:36outcomes/33allassertions, forbidden0, nDCG.852822unchanged;7assertiongaps/semantic gate остаются, gold/corpus SHA прежние. No paid provider calls, capUSD10reserved/remainingCalls0; бюджетов не добавлено.
+- Live canary PASS: новая guest memory, текущие7000/90, localGoogleblock, известныйбалетныйтеатр послеfood → venue, «Атам?»→clarify,10photos/16posters,22publisher exacthash/no-store+4Commons exacthash. Собственные тестовые данные удалены и проверены. Browser live Якитория+articlecredit открыты; screenshot output/playwright/qettyq-v19-yakitoriya-live.png.
+- Маршруты — multistop regression, не изменение алгоритма. Новый запрос владельца address→event marker записан в NEXT_STEPS, отдельное расширение не заявляется. Physical iPhone/native relaunch не проверялись. Презентация/видео/заявка без изменений.
+
 ## GLM, две фотографии и междневная память · v18 · 24.10.2026
 
 - Сервис/deploy: `qettyq:vps-20261024-18` опубликован, healthy,176.2MiB/640MiB. Immutable build input tree `8683af6ad622ed15d27274bed17acfc9d8743381`; image manifest-list `82b709b95d7e3600a80ef2a8fc50393b44d7be8e35714b6cafd009b77a64cb4f`. Проверена SQLite backup; SSH authorized_keys hash не изменился; другие проекты не менялись. Первая немедленная health-проверка после recreate получила reset, последующие internal/public HTTPS дали200/healthy.

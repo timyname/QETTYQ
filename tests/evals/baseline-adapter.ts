@@ -1,5 +1,6 @@
 import { prepareLeisureDialogue } from '../../src/server/assistant/leisure-dialogue';
-import { retrieveEventEvidence } from '../../src/server/ingestion/event-evidence';
+import { retrieveAuthorizedEventEvidence } from '../../src/server/retrieval/service';
+import type { RetrievalSourcePolicy } from '../../src/server/retrieval/source-permission';
 import type { LiveAstanaEvent } from '../../src/server/ingestion/sxodim-live';
 import { parseContext, answerPilotChat } from '../../src/server/pilot/chat';
 import { searchPilotPlaces, publicPlaceAt } from '../../src/server/pilot/catalog';
@@ -12,6 +13,7 @@ import type { GoldenCase } from './schema';
 export type EvalCorpus = {
   schemaVersion: number; corpusVersion: string; frozenNow: string; provenance: unknown;
   places: Place[]; events: LiveAstanaEvent[]; syntheticPlaces: Place[]; syntheticEvents: LiveAstanaEvent[];
+  sourcePolicies: Record<string, RetrievalSourcePolicy>;
 };
 export type BaselineResult = { ids: string[]; outcome: 'feasible' | 'infeasible' | 'uncertain' | 'empty' | 'clarify';
   unknowns: string[]; assertions: string[]; actualContext: Record<string, unknown>; planSummary?: GoldenCase['expectedPlan'] };
@@ -28,11 +30,11 @@ export function runBaseline(c: GoldenCase, corpus: EvalCorpus): BaselineResult {
       assertions: [], actualContext: context };
   }
   if (c.engine === 'events') {
-    const result = retrieveEventEvidence({ items: events, dataMode: c.feedMode === 'unavailable' ? 'unavailable' : 'snapshot',
+    const result = retrieveAuthorizedEventEvidence({ items: events, dataMode: c.feedMode === 'unavailable' ? 'unavailable' : 'snapshot',
       freshness: c.feedMode === 'unavailable' ? 'unavailable' : c.track === 'snapshot' ? 'stale' : 'fresh',
       cacheStatus: 'hit', fetchedAt: c.track === 'snapshot' ? '2026-10-20T11:02:28.509Z' : '2026-10-21T06:50:00Z',
       expiresAt: c.track === 'snapshot' ? '2026-10-20T12:02:28.509Z' : '2026-10-21T07:50:00Z', source: null, coverage: null, warnings: [] },
-    c.text, context, now);
+    c.text, context, now, { resolveSourcePolicy: id => corpus.sourcePolicies[id] });
     return { ids: result.items.map(e => e.id), outcome: result.items.length ? 'uncertain' : 'empty',
       unknowns: result.evidence.flatMap(e => e.unknowns), assertions: [], actualContext: context };
   }

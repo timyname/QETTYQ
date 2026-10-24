@@ -8,6 +8,9 @@ import { getGooglePlacesRuntime, unavailableGooglePlaces, type GooglePlacesResul
 import { pilotPlaces, searchPilotPlaces } from "../../../server/pilot/catalog";
 import type { MemoryAIContext, MemoryDialogueContext } from "../../../server/memory/contracts";
 import { persistedReplayClocks } from "../../../server/memory/replay-alignment";
+import { resolveCurrentNamedPlace } from "../../../server/assistant/named-place";
+import { sourcePermission } from "../../../server/retrieval/source-permission";
+import { applicationSourcePolicy } from "../../../server/retrieval/application-source-policy";
 import { liveEventsService } from "../../../server/ingestion/live-events";
 import { answerSmartAssistant, type SmartAssistantResult } from "../../../server/pilot/smart-assistant";
 import { getLocalAITestGate, reserveLocalAITestCall } from "../../../server/pilot/ai-test-quota";
@@ -78,7 +81,10 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
     && auth.session.context![field] === context[field])
     : localMemoryUsed && parsed.data.context ? DIALOGUE_CONFIRMED_FIELDS.filter(field => field !== "goal"
       && (context[field] !== defaultContext[field] || context.budget !== null && budgetFields.has(field))) : undefined;
-  const dialogue = prepareLeisureDialogue({ text: parsed.data.text, history, historyCreatedAtMs, context, confirmedFields, language: parsed.data.language, now });
+  const resolveSourcePolicy = events.resolveSourcePolicy ?? applicationSourcePolicy;
+  const currentNamedPlace = sourcePermission('osm-overpass-poi', 'display', resolveSourcePolicy, now).allowed
+    ? resolveCurrentNamedPlace(parsed.data.text, pilotPlaces) : undefined;
+  const dialogue = prepareLeisureDialogue({ text: parsed.data.text, history, historyCreatedAtMs, currentNamedPlace, context, confirmedFields, language: parsed.data.language, now });
   trace.mark("dialogue");
   const remember = async (reply: string, mode: "openai" | "deterministic") => {
     if (!memory) return false;
@@ -96,9 +102,10 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
       traceId ? { "x-qettyq-trace-id": traceId } : undefined);
   }
   const retrievalText = dialogue.retrievalText, effectiveContext = dialogue.context;
-  let result = await answerPilotChatWithEvents(retrievalText, effectiveContext, { getEvents: () => events.get() });
+  let result = await answerPilotChatWithEvents(retrievalText, effectiveContext, { getEvents: () => events.get(), resolveSourcePolicy, venueOnly: Boolean(currentNamedPlace) });
   const constrain = () => {
-    result.items = filterDialogueCandidates(result.items, dialogue);
+    result.items = sourcePermission('osm-overpass-poi', 'display', resolveSourcePolicy, now).allowed
+      ? filterDialogueCandidates(result.items, dialogue) : [];
     result.events = filterDialogueCandidates(result.events, dialogue);
     result.eventEvidence = result.eventEvidence.filter(evidence => result.events.some(event => event.id === evidence.eventId));
   };
@@ -123,7 +130,7 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
         const plan = contradicts ? { ...proposedPlan, intent: knownIntent as "food" | "events" | "places", query: retrievalText.slice(0, 240), cuisineOrDish: null } : proposedPlan;
         if ((plan.intent === "general" || plan.intent === "clarify") && dialogue.intent === "general") result = { ...result, reply: localizedClarification(parsed.data.language), items: [], events: [], eventEvidence: [], eventsMeta: null };
         if (plan.intent === "events") result = await answerPilotChatWithEvents(retrievalText, effectiveContext, {
-          getEvents: () => events.get(), forceEvents: true, semanticText: plan.query,
+          getEvents: () => events.get(), forceEvents: true, semanticText: plan.query, resolveSourcePolicy,
         });
         if (plan.intent === "places" && result.items.length) {
           // Re-query only the already admissible pool; model terms cannot widen it.
@@ -147,7 +154,10 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
         constrain();
         if (plan.intent !== "general" && plan.intent !== "clarify" || dialogue.intent !== "general") result.reply = localizedSearchReply(parsed.data.language, result);
         // A person's consent never grants a data source new LLM rights.
-        const allowed = (id: string) => events.canSendToLlm ? events.canSendToLlm(id) : ["osm-overpass-poi", "sxodim-astana-noncommercial"].includes(id);
+        const allowed = (id: string) => {
+          if (!sourcePermission(id, 'sendToLlm', resolveSourcePolicy, now).allowed) return false;
+          try { return events.canSendToLlm ? events.canSendToLlm(id) : true; } catch { return false; }
+        };
         const withheld = result.items.length > 0 && !allowed("osm-overpass-poi") || result.events.some(event => !allowed(event.provenance.sourceId));
         return { reply: withheld ? localizedClarification(parsed.data.language) : result.reply, items: allowed("osm-overpass-poi") ? result.items : [],
           events: result.events.filter(event => allowed(event.provenance.sourceId)),
@@ -164,7 +174,8 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   }
   if (result.proposedContext.goal === "food" && !googlePlaces) {
     const google = getGooglePlacesRuntime();
-    googlePlaces = localMemoryUsed ? unavailableGooglePlaces("MEMORY_LOCAL_ONLY")
+    googlePlaces = currentNamedPlace ? unavailableGooglePlaces("CATALOG_NAME_MATCH")
+      : localMemoryUsed ? unavailableGooglePlaces("MEMORY_LOCAL_ONLY")
       : result.proposedContext.strictBudget && result.proposedContext.budget !== null
       ? unavailableGooglePlaces("GOOGLE_PRICE_NOT_VERIFIED")
       : parsed.data.googleConsent && google

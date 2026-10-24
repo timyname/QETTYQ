@@ -1,5 +1,13 @@
 # Решения
 
+## Source-aware поиск, точное имя и legacy-фото · 24.10.2026
+
+- Policy guard проверяется доmatching/top3: неизвестное/отозванное/истёкшее разрешение не превращается в пользовательское согласие. Hosted resolver полностью заменяет bundled application grants; display=true/sendToLlm=false оставляет публичные факты видимыми, но не разрешает модель. Embed не наследуется. Статический default соответствует существующему noncommercial pilot, не новой лицензии.
+- Контекстные правила не должны угадывать референт «там» по assistant prose. Сначала уточнение, сохранение ограничений и отсутствие скрытого dislike. Exact whole-utterance unique catalog name получает внутренний hint с наблюдаемым типом места; ambiguous chain/fuzzy/clienthint не принимаются. Известное заведение подавляет event dispatch и ненужный Google, но не strict budget/unknown price.
+- Разрешён узкий legacy JPEG path только с отдельным articleImageEvidence: одна секция, точное название, сопоставленный адрес/дом, та же observed street alias и canonical venue geo. Нормализация только roadprefix/comma/space, не транслитерация/не новое наблюдаемое имя улицы. PNG/multibranch/чужой домен/genericOG остаются отклонёнными. Credit ссылается на фактическую статью; canonical source отдельно подтверждает место.
+- Commons CC BY-SA2.0 добавлен как конкретная известная лицензия; identity/subject-rights/attribution gates не сняты. Botgarden pond проверен visual main-agent: основной сюжет пруд/небо/природа, городские здания — дальний фон; это curated evidence, не универсальная правовая гарантия. Старый лицензированный plantasset не удалён. Неподтверждённые современные фасады не допущены автоматически.
+- RAG gold/corpus не менялись ради score. Улучшение этого этапа — safety+контекст, не рост recall/nDCG и не пройденный semantic gate. Внешний AI остаётся blocked прежним accounting. Изолированный git-archive build исключает чужие mobile/PWA/config changes; QA использует direct existing Node CLIs без pnpm auto-resync рабочего node_modules.
+
 ## Доверенные междневные часы и проверяемый GLM-аудит · 24.10.2026
 
 - Внешний GLM report — untrusted evidence: исправлять независимо подтверждённые B4/B5/B6, не превращать ошибку visual model или environment budget block в баг кода. Сохранены метод, self-refutations и ограничения отдельно от QA.

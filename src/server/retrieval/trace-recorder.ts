@@ -25,8 +25,8 @@ export function beginRagTrace(sessionId: string, language: RagTrace['language'],
         }));
         const mode = result.eventsMeta?.dataMode ?? result.dataMode;
         const trace: RagTrace = { version: RAG_TRACE_VERSION, requestId: id, createdAtMs: started,
-          versions: { corpus: 'osm-astana-20261019_sxodim-hourly', query: 'multilingual-lexical-v2',
-            dialogue: 'leisure-dialogue-v2', index: 'none', generation: 'existing-bounded-plan-answer-v1' },
+          versions: { corpus: 'osm-astana-20261019_sxodim-hourly', query: 'multilingual-lexical-v3',
+            dialogue: 'leisure-dialogue-v3', index: 'none', generation: 'existing-bounded-plan-answer-v1' },
           language, outcome, generationMode: outcome === 'error' ? 'not_executed' : result.mode === 'openai' ? 'openai' : 'deterministic',
           dataMode: outcome === 'clarify' || outcome === 'error' ? 'not_retrieved'
             : mode === 'live' || mode === 'snapshot' || mode === 'unavailable' ? mode : 'snapshot',

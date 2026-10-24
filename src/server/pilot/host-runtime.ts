@@ -3,6 +3,7 @@ import type { PublicAIRuntime } from "./public-ai-runtime";
 import type { MemoryService } from "../memory/contracts";
 import type { HubPublicFeed } from "../data-hub/public-feed";
 import type { RagTraceStore } from "../retrieval/trace";
+import type { SourcePolicyResolver } from "../retrieval/source-permission";
 
 /** Node-free dependency bridge. Server code only; never serialize this object.
  * Worker entrypoints may continue injecting their own bindings explicitly.
@@ -10,7 +11,7 @@ import type { RagTraceStore } from "../retrieval/trace";
  */
 export type HostedRuntime = {
   ai: PublicAIRuntime;
-  events: { get(): Promise<LiveEventsResult>; canSendToLlm?(sourceId: string): boolean };
+  events: { get(): Promise<LiveEventsResult>; canSendToLlm?(sourceId: string): boolean; resolveSourcePolicy?: SourcePolicyResolver };
   routing: { reserve(sessionId: string): Promise<boolean>; env?: Record<string, string | undefined> };
   memory?: MemoryService;
   ragTraces?: RagTraceStore;

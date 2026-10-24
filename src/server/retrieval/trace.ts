@@ -10,7 +10,7 @@ export const ragTraceSchema = z.object({
   version: z.literal(RAG_TRACE_VERSION), requestId: z.string().uuid(),
   createdAtMs: z.number().int().nonnegative(),
   versions: z.object({ corpus: z.literal('osm-astana-20261019_sxodim-hourly'),
-    query: z.literal('multilingual-lexical-v2'), dialogue: z.literal('leisure-dialogue-v2'),
+    query: z.enum(['multilingual-lexical-v2', 'multilingual-lexical-v3']), dialogue: z.enum(['leisure-dialogue-v2', 'leisure-dialogue-v3']),
     index: z.literal('none'), generation: z.literal('existing-bounded-plan-answer-v1') }).strict(),
   language: z.enum(['ru', 'kk', 'en']), outcome: z.enum(['success', 'empty', 'clarify', 'error']),
   generationMode: z.enum(['openai', 'deterministic', 'not_executed']),

@@ -2,15 +2,16 @@ import { createHash } from 'node:crypto';
 import { expect, test, type Locator, type Page, type Response } from '@playwright/test';
 import registry from '../../data/publisher-place-media.json';
 import { pilotPlaces, publicPlace } from '../../src/server/pilot/catalog';
+import type { PublisherPlaceRecord } from '../../src/server/media/publisher-place-media';
 
 /** Real reviewed, branch-matched restaurant JPEGs and real gated media handler.
  * Catalogue/chat delivery is mocked snapshot data, never live recommendation. */
-const ids = ['osm:node:12041597269', 'osm:node:4953253121'] as const;
+const ids = ['osm:node:12041597269', 'osm:node:4953253121', 'osm:way:237347726'] as const;
 const now = '2026-10-24T07:00:00.000Z';
 
 async function fixture(page: Page, id: string) {
   const original = pilotPlaces.find(place => place.id === id);
-  const record = registry.records.find(photo => photo.placeId === id);
+  const record = registry.records.find(photo => photo.placeId === id) as PublisherPlaceRecord | undefined;
   if (!original || !record) throw new Error('Exact reviewed restaurant/photo binding missing');
   const place = publicPlace(original);
   if (place.media.kind !== 'publisher_place_photo') throw new Error('Restaurant publisher media must resolve through the real catalogue resolver');
@@ -72,7 +73,7 @@ for (const id of ids) for (const width of [390, 430]) {
       const feedCredit = card.getByTestId('catalog-photo-credit');
       await expect(feedCredit).toContainText('Источник фото');
       await expect(feedCredit).not.toContainText('Автор фото');
-      await expect(feedCredit.getByRole('link', { name: 'Источник фото', exact: true })).toHaveAttribute('href', record.sourcePageUrl);
+      await expect(feedCredit.getByRole('link', { name: 'Источник фото', exact: true })).toHaveAttribute('href', record.articleImageEvidence?.sourceArticleUrl ?? record.sourcePageUrl);
       await expect(feedCredit.getByRole('link', { name: 'Условия использования', exact: true })).toHaveAttribute('href', registry.termsUrl);
       const response = mediaResponses.find(item => new URL(item.url()).pathname === photo.src)!;
       expect(response).toBeDefined();
@@ -90,7 +91,7 @@ for (const id of ids) for (const width of [390, 430]) {
       await expect(credit).toContainText('Источник фото');
       await expect(credit).toContainText('Давай Сходим');
       await expect(credit).not.toContainText('Автор фото');
-      await expect(credit.getByRole('link', { name: 'Источник фото', exact: true })).toHaveAttribute('href', record.sourcePageUrl);
+      await expect(credit.getByRole('link', { name: 'Источник фото', exact: true })).toHaveAttribute('href', record.articleImageEvidence?.sourceArticleUrl ?? record.sourcePageUrl);
       await expect(credit.getByRole('link', { name: photo.license, exact: true })).toHaveAttribute('href', registry.termsUrl);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
       await page.screenshot({ path: `output/playwright/real-place-photos/detail-${record.catalogName}-${width}.png` });
@@ -110,7 +111,7 @@ for (const id of ids) for (const width of [390, 430]) {
         const failedDetail = page.locator('[data-screen="detail"]');
         await expect(failedDetail.getByRole('img', { name: /^Фото пока нет:/ })).toBeVisible();
         await expect(failedDetail.getByRole('heading', { name: place.name, exact: true })).toBeVisible();
-        await expect(failedDetail.getByTestId('catalog-photo-credit').getByRole('link', { name: 'Источник фото', exact: true })).toHaveAttribute('href', record.sourcePageUrl);
+        await expect(failedDetail.getByTestId('catalog-photo-credit').getByRole('link', { name: 'Источник фото', exact: true })).toHaveAttribute('href', record.articleImageEvidence?.sourceArticleUrl ?? record.sourcePageUrl);
         await page.screenshot({ path: 'output/playwright/real-place-photos/real-handler-404.png' });
       }
       expect(requested.filter(url => url.pathname === '/_next/image' && /sxodim|%2Fapi%2Fmedia%2Fplaces|\/api\/media\/places/i.test(url.search))).toEqual([]);

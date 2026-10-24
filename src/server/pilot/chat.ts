@@ -5,6 +5,9 @@ import type { LiveEventsResult } from "../ingestion/live-events";
 import type { LiveAstanaEvent } from "../ingestion/sxodim-live";
 import { retrieveEventEvidence, type EventEvidence } from "../ingestion/event-evidence";
 import { isNegatedMention } from "../retrieval/lexical-query";
+import { retrieveAuthorizedEventEvidence } from "../retrieval/service";
+import { applicationSourcePolicy } from "../retrieval/application-source-policy";
+import type { SourcePolicyResolver } from "../retrieval/source-permission";
 
 export function parseContext(text: string, context: PilotContext): PilotContext {
   const value = text.toLocaleLowerCase("ru-RU");
@@ -60,10 +63,10 @@ export function filterChatEvents(events: LiveAstanaEvent[], text: string, contex
 }
 
 /** The only network dependency is the fixed-source, hourly cached service passed by the route. */
-export async function answerPilotChatWithEvents(text: string, context: PilotContext, options: { getEvents: () => Promise<LiveEventsResult>; now?: () => number; forceEvents?: boolean; semanticText?: string }) {
+export async function answerPilotChatWithEvents(text: string, context: PilotContext, options: { getEvents: () => Promise<LiveEventsResult>; now?: () => number; forceEvents?: boolean; semanticText?: string; resolveSourcePolicy?: SourcePolicyResolver; venueOnly?: boolean }) {
   const base = answerPilotChat(text, context);
   const query = text.toLocaleLowerCase("ru-RU");
-  if (cinemaQuery.test(query) || !options.forceEvents && !eventQuery.test(query)) return { ...base, events: [] as LiveAstanaEvent[], eventEvidence: [] as EventEvidence[], eventsMeta: null };
+  if (options.venueOnly || cinemaQuery.test(query) || !options.forceEvents && !eventQuery.test(query)) return { ...base, events: [] as LiveAstanaEvent[], eventEvidence: [] as EventEvidence[], eventsMeta: null };
   const now = options.now?.() ?? Date.now();
   let data: LiveEventsResult;
   try { data = await options.getEvents(); }
@@ -71,7 +74,8 @@ export async function answerPilotChatWithEvents(text: string, context: PilotCont
     data = { dataMode: "unavailable", freshness: "unavailable", cacheStatus: "miss", fetchedAt: null, expiresAt: null, source: null, coverage: null, items: [], warnings: ["Не удалось проверить афишу. События не выдумываются."] };
   }
   // Preserve the original explicit preference mode even when parsing the event noun proposes activity.
-  const retrieval = retrieveEventEvidence(data, text, { ...base.proposedContext, goal: context.goal }, now, { semanticText: options.semanticText });
+  const retrieval = retrieveAuthorizedEventEvidence(data, text, { ...base.proposedContext, goal: context.goal }, now,
+    { semanticText: options.semanticText, resolveSourcePolicy: options.resolveSourcePolicy ?? applicationSourcePolicy });
   const events = retrieval.items;
   const firstDate = events.length ? new Intl.DateTimeFormat("ru-RU", { timeZone: "Asia/Almaty", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(events[0].startsAt)) : null;
   return {
