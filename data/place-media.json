@@ -802,6 +802,51 @@
       },
       "commonsOriginalSha1": "73e29f3f0e7f4fafa988fae2e5ebf16d2350647c",
       "importedAt": "2026-10-23T23:47:40.204Z"
+    },
+    {
+      "placeId": "osm:way:69232075",
+      "src": "/assets/places/astana-zhetysu-water-2019.jpg",
+      "alt": "Вода и фонтан в парке Жетысу в Астане, фотография 17 мая 2019 года. Современное состояние может отличаться.",
+      "author": "Ayratayrat",
+      "credit": "Ayratayrat · Bakhash in Zhetysu park · Wikimedia Commons · CC BY-SA 4.0",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bakhash_in_Zhetysu_park.jpg",
+      "fileTitle": "File:Bakhash in Zhetysu park.jpg",
+      "fileCategories": [
+        "Zhetysu park"
+      ],
+      "width": 1280,
+      "height": 720,
+      "bytes": 366589,
+      "sha256": "fc363812c6791e0c82af02405fe7cfa34fb529a0856e66d5e95bb454ab161564",
+      "reviewedSha256": "fc363812c6791e0c82af02405fe7cfa34fb529a0856e66d5e95bb454ab161564",
+      "changes": "Commons thumbnail resized to 1280×720; no crop, retouching or AI alteration.",
+      "fetchedAt": "2026-10-24T17:52:47Z",
+      "photographedAt": "2019-05-17 13:04:36",
+      "identityProof": {
+        "osmUrl": "https://www.openstreetmap.org/way/69232075",
+        "osmTag": "wikidata",
+        "osmTagValue": "Q104866925",
+        "commonsCategory": "Category:Zhetysu park",
+        "categoryVerified": true,
+        "categoryEvidenceUrl": "https://commons.wikimedia.org/wiki/Category:Zhetysu_park",
+        "sourceAsOf": "2026-10-19T20:21:11Z"
+      },
+      "rights": {
+        "status": "approved",
+        "reviewedAt": "2026-10-24T17:52:47Z",
+        "reviewExpiresAt": null,
+        "photographLicenseVerified": true,
+        "visualVerified": true,
+        "subjectRights": "nature_no_protected_work",
+        "allowStore": true,
+        "allowDisplay": true,
+        "allowRedistribute": true,
+        "notes": "File-specific CC BY-SA 4.0, own-work photographer Ayratayrat and no file Restrictions verified from current Commons imageinfo. Observed OSM wikidata Q104866925 has current P373 Zhetysu park; file is an actual member of that exact Commons category. Native-decoded JPEG visually reviewed by agent and orchestrator: water and plain functional circular basin/jets dominate, trees behind; no primary sculpture, architectural building or artwork. Distant benches and tiny visitors are incidental, not endorsements. This is a scoped subject review, not a universal legal guarantee. Preserve file title, photographer, source, license and ShareAlike. Historical May2019 view does not establish current appearance, access or operation."
+      },
+      "commonsOriginalSha1": "ec5d95a70861454de71b1ba75c1a527b7d3b75f2",
+      "importedAt": "2026-10-24T17:53:09.443Z"
     }
   ]
 }

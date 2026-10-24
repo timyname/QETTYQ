@@ -50,6 +50,13 @@ export function parseContext(text: string, context: PilotContext): PilotContext 
 const cinemaQuery = /кино|фильм|кинозал|movie|cinema/u;
 const eventQuery = /концерт|спектак|балет|лекци|квиз|стендап|выстав|мастер.класс|событи|мероприят|сегодня|завтра|афиш|concert|lecture|\btoday\b|\bevents?\b|\bquiz\b|қойылым|дәріс|көрме/u;
 
+function hasPositiveMention(text: string, pattern: RegExp): boolean {
+  const query = text.toLocaleLowerCase('ru-RU');
+  // Include the complete inflected noun so postfix negation remains adjacent.
+  return [...query.matchAll(new RegExp(`(?:${pattern.source})\\p{L}*`, 'giu'))]
+    .some(match => !isNegatedMention(query, match));
+}
+
 /** Category selector must not read an explicitly rejected noun as a request.
  * Original text still goes to money/time and food/event exclusion filters.
  */
@@ -66,7 +73,7 @@ export function filterChatEvents(events: LiveAstanaEvent[], text: string, contex
 export async function answerPilotChatWithEvents(text: string, context: PilotContext, options: { getEvents: () => Promise<LiveEventsResult>; prepareEvents?: (feed: LiveEventsResult) => LiveEventsResult; now?: () => number; forceEvents?: boolean; semanticText?: string; resolveSourcePolicy?: SourcePolicyResolver; venueOnly?: boolean }) {
   const base = answerPilotChat(text, context);
   const query = text.toLocaleLowerCase("ru-RU");
-  if (options.venueOnly || cinemaQuery.test(query) || !options.forceEvents && !eventQuery.test(query)) return { ...base, events: [] as LiveAstanaEvent[], eventEvidence: [] as EventEvidence[], eventsMeta: null };
+  if (options.venueOnly || hasPositiveMention(query, cinemaQuery) || !options.forceEvents && !hasPositiveMention(query, eventQuery)) return { ...base, events: [] as LiveAstanaEvent[], eventEvidence: [] as EventEvidence[], eventsMeta: null };
   const now = options.now?.() ?? Date.now();
   let data: LiveEventsResult;
   try { data = await options.getEvents(); }
@@ -100,8 +107,8 @@ export async function answerPilotChatWithEvents(text: string, context: PilotCont
 
 export function answerPilotChat(text: string, context: PilotContext) {
   const proposedContext = parseContext(text, context);
-  const unsupported = /кино|фильм|кинозал|movie|cinema|концерт|билет|concert/u.test(text.toLocaleLowerCase("ru-RU"));
-  const unavailableActivity = /баня|сауна|шашлык|барабан|бачат|армрестл|армресл|гончар|керамик/u.test(text.toLocaleLowerCase("ru-RU"));
+  const unsupported = hasPositiveMention(text, /кино|фильм|кинозал|movie|cinema|концерт|билет|concert/u);
+  const unavailableActivity = hasPositiveMention(text, /баня|сауна|шашлык|барабан|бачат|армрестл|армресл|гончар|керамик/u);
   const candidates = proposedContext.goal === "food" ? pilotPlaces.filter(place => requestedFoodMatch(place, text)) : pilotPlaces;
   const items = unsupported || unavailableActivity ? [] : searchPilotPlaces(proposedContext, positiveCategoryQuery(text), candidates);
   return {

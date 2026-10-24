@@ -1,4 +1,4 @@
-import addressIndex from '../../../data/astana-address-index.json';
+import { publicAddressIndex } from './public-address-index';
 import places from '../../../data/places.json';
 import { createAddressMatcher, enrichEventAddresses, type AddressIndex } from './address-match';
 import { createEventVenueMatcher, type VenueGeoRecord } from './event-geo-media';
@@ -12,7 +12,7 @@ import { applicationSourcePolicy } from '../retrieval/application-source-policy'
 export function createPublicEventLocationEnricher(options: {
   index?: AddressIndex; places?: VenueGeoRecord[]; now?: () => number;
 } = {}) {
-  const index = options.index ?? addressIndex as AddressIndex;
+  const index = options.index ?? publicAddressIndex;
   const clock = options.now ?? Date.now;
   const match = createAddressMatcher(index, clock);
   const venue = createEventVenueMatcher(options.places ?? places, match, clock);

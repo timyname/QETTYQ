@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clusterMapPoints, clusterMarkerSize, createClusterLabel, createMapTooltip } from "../../src/components/CityMap";
+import { clusterMapPoints, clusterMarkerSize, createClusterLabel, createMapTooltip, coLocatedMapPoints, mapOccurrenceLabel } from "../../src/components/CityMap";
 
 describe("CityMap tooltip DOM", () => {
   it("keeps untrusted title and date as text rather than HTML", () => {
@@ -38,6 +38,27 @@ describe("CityMap screen-space clusters", () => {
     expect(result).toHaveLength(2);
     expect(result.find(group => group.points.some(value => value.id === "active"))?.points).toHaveLength(1);
     expect(result.find(group => group.points.length === 2)?.points.map(value => value.id)).toEqual(["b", "c"]);
+  });
+  it('keeps exact coordinate peers in one selectable cluster even when one is active, without changing coordinates', () => {
+    const points = [point('active', 50, 50), point('other-occurrence', 50, 50)];
+    const before = structuredClone(points);
+    for (const values of [points, [...points].reverse()]) {
+      const result = clusterMapPoints(values, project, viewport, 'active');
+      expect(result).toHaveLength(1); expect(result[0].points.map(value => value.id).sort()).toEqual(['active', 'other-occurrence']);
+      expect(coLocatedMapPoints(result[0].points)).toBe(true);
+    }
+    expect(points).toEqual(before);
+  });
+  it('recognizes only exact same-coordinate groups for an immediate occurrence picker', () => {
+    expect(coLocatedMapPoints([point('a', 50, 50), point('b', 50, 50)])).toBe(true);
+    expect(coLocatedMapPoints([point('a', 50, 50), point('b', 50.000001, 50)])).toBe(false);
+    expect(coLocatedMapPoints([])).toBe(false); expect(coLocatedMapPoints([point('a', 50, 50)])).toBe(false);
+    expect(coLocatedMapPoints([point('a', NaN, 50), point('b', NaN, 50)])).toBe(false);
+  });
+  it('labels each occurrence with its original title and date as plain text', () => {
+    expect(mapOccurrenceLabel({ title: '<script>untrusted()</script>', dateLabel: '25 октября, 18:00' }))
+      .toBe('<script>untrusted()</script> · 25 октября, 18:00');
+    expect(mapOccurrenceLabel({ title: 'Title', dateLabel: '' })).toBe('Title');
   });
 
   it("recalculates grouping from projected pixels when zoom changes", () => {

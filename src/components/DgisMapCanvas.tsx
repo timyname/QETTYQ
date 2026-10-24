@@ -5,7 +5,7 @@ import { Compass, Minus, Plus } from 'lucide-react';
 import { Localize, translateText, useI18n } from '../client/i18n';
 import { dgisBounds, dgisRouteBounds, loadDgisSdk, type DgisMap, type DgisObject } from '../client/dgis-mapgl';
 import { approvedDgisStyleId, dgisThemeOptions, QETTYQ_DGIS_PALETTE } from '../client/dgis-theme';
-import { clusterMapPoints } from './CityMap';
+import { clusterMapPoints, coLocatedMapPoints, mapOccurrenceLabel } from './CityMap';
 import type { MapCanvasProps } from './MapCanvas';
 import { markerIconPaths } from './map-marker-icons';
 import s from './MapCanvas.module.css';
@@ -123,11 +123,12 @@ export function DgisMapCanvas(props: Props) {
             button.className = `${s.marker} ${multiple ? s.cluster : ''} ${!multiple && group.points[0].id === current.activeId ? s.active : ''}`;
             const coordinates = view.unproject([group.x, group.y]);
             if (multiple) {
+              const coLocated = coLocatedMapPoints(group.points);
               button.textContent = String(group.points.length);
-              button.title = translateText(`Мест: ${group.points.length}. Приблизить`, language);
+              button.title = translateText(coLocated ? `Мест: ${group.points.length}. Выбрать` : `Мест: ${group.points.length}. Приблизить`, language);
               button.addEventListener('click', event => {
                 event.stopPropagation();
-                if (view.getZoom() < 18.9) {
+                if (!coLocated && view.getZoom() < 18.9) {
                   const box = dgisBounds(group.points.map(point => [point.lon, point.lat]));
                   if (box) view.fitBounds(box, { maxZoom: Math.min(19, view.getZoom() + 2), padding: padding.fit, animation: animation() });
                 } else {
@@ -135,7 +136,7 @@ export function DgisMapCanvas(props: Props) {
                   const list = document.createElement('div'); list.className = s.coincident;
                   const close = document.createElement('button'); close.type = 'button'; close.textContent = translateText('Закрыть', language);
                   close.addEventListener('click', () => { popup?.destroy(); popup = null; }); list.appendChild(close);
-                  for (const point of group.points) { const item = document.createElement('button'); item.type = 'button'; item.textContent = point.title;
+                  for (const point of group.points) { const item = document.createElement('button'); item.type = 'button'; item.textContent = mapOccurrenceLabel(point);
                     item.addEventListener('click', () => { latest.current.onSelect?.(point.id); popup?.destroy(); popup = null; }); list.appendChild(item); }
                   popup = new api.HtmlMarker(view, { coordinates, html: list, anchor: [0, 0], interactive: true, preventMapInteractions: true });
                 }

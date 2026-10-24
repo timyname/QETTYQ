@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Compass, Minus, Plus } from 'lucide-react';
 import type { Map as VectorMap, Marker } from 'maplibre-gl';
 import type { RouteGeometry } from '../server/pilot/street-routing';
-import { CityMap, clusterMapPoints } from './CityMap';
+import { CityMap, clusterMapPoints, coLocatedMapPoints, mapOccurrenceLabel } from './CityMap';
 import { loadQettyqMapStyle } from './map-style';
 import { markerIconPaths } from './map-marker-icons';
 import s from './MapCanvas.module.css';
@@ -149,18 +149,19 @@ export function MapLibreCanvas(props: MapCanvasProps) {
           button.className = `${s.marker} ${group.points.length > 1 ? s.cluster : ''} ${group.points[0].id === current.activeId && group.points.length === 1 ? s.active : ''}`;
           const position = view.unproject([group.x, group.y]);
           if (group.points.length > 1) {
+            const coLocated = coLocatedMapPoints(group.points);
             button.textContent = String(group.points.length);
-            button.title = translateText(`Мест: ${group.points.length}. Приблизить`, language);
+            button.title = translateText(coLocated ? `Мест: ${group.points.length}. Выбрать` : `Мест: ${group.points.length}. Приблизить`, language);
             button.setAttribute('aria-label', button.title);
             button.addEventListener('click', event => {
               event.stopPropagation();
-              if (view.getZoom() < 18.9) {
+              if (!coLocated && view.getZoom() < 18.9) {
                 const first = group.points[0];
                 const box = group.points.reduce((b, p) => b.extend([p.lon, p.lat]), new gl.LngLatBounds([first.lon, first.lat], [first.lon, first.lat]));
                 view.fitBounds(box, { padding: 64, maxZoom: Math.min(19, view.getZoom() + 2), duration });
               } else {
                 const list = document.createElement('div'); list.className = s.coincident;
-                group.points.forEach(point => { const item = document.createElement('button'); item.type = 'button'; item.textContent = point.title; item.addEventListener('click', () => { latest.current.onSelect?.(point.id); popup.remove(); }); list.appendChild(item); });
+                group.points.forEach(point => { const item = document.createElement('button'); item.type = 'button'; item.textContent = mapOccurrenceLabel(point); item.addEventListener('click', () => { latest.current.onSelect?.(point.id); popup.remove(); }); list.appendChild(item); });
                 const popup = new gl.Popup({ maxWidth: '270px' }).setLngLat(position).setDOMContent(list).addTo(view);
               }
             });

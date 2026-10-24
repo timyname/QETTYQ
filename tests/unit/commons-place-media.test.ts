@@ -5,7 +5,7 @@ import registry from '../../data/place-media.json';
 import places from '../../data/places.json';
 import { getPlaceMedia, resolveCommonsPlaceMedia } from '../../src/server/media/commons-place-media';
 
-const now = Date.parse('2026-10-24T00:00:00Z');
+const now = Date.parse('2026-10-24T23:00:00Z');
 const id = registry.records[0].placeId;
 const fixture = () => structuredClone(registry);
 
@@ -96,5 +96,25 @@ describe('reviewed Commons place photography (offline)', () => {
     if (!record?.identityProof.geographicMatch) throw new Error('Expected actual GPS proof');
     record.identityProof.geographicMatch.fileLat = 51.135;
     expect(resolveCommonsPlaceMedia(parkId, copy, now).kind).toBe('none');
+  });
+  it('links the historical Zhetysu water photograph through observed OSM Wikidata and the exact verified Commons category', () => {
+    const parkId = 'osm:way:69232075';
+    const record = registry.records.find(record => record.placeId === parkId);
+    expect(record?.identityProof).toMatchObject({ osmTag: 'wikidata', osmTagValue: 'Q104866925',
+      commonsCategory: 'Category:Zhetysu park', categoryVerified: true });
+    const media = resolveCommonsPlaceMedia(parkId, registry, now);
+    expect(media).toMatchObject({ kind: 'real_place_photo', author: 'Ayratayrat', license: 'CC BY-SA 4.0',
+      src: '/assets/places/astana-zhetysu-water-2019.jpg', photographedAt: '2019-05-17 13:04:36' });
+    if (media.kind !== 'real_place_photo') throw new Error('Expected reviewed water photograph');
+    expect(media.credit).toContain('Bakhash in Zhetysu park');
+    for (const patch of [{ categoryVerified: false }, { osmTagValue: 'invalid-id' },
+      { categoryEvidenceUrl: 'https://commons.wikimedia.org/wiki/Category:Unrelated' }]) {
+      const copy = fixture();
+      Object.assign(copy.records.find(record => record.placeId === parkId)!.identityProof, patch);
+      expect(resolveCommonsPlaceMedia(parkId, copy, now).kind).toBe('none');
+    }
+    const unreviewed = fixture();
+    unreviewed.records.find(record => record.placeId === parkId)!.rights.subjectRights = 'unknown';
+    expect(resolveCommonsPlaceMedia(parkId, unreviewed, now).kind).toBe('none');
   });
 });

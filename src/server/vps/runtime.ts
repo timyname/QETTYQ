@@ -1,7 +1,7 @@
 import { constants, fstatSync, lstatSync, openSync, readFileSync, closeSync } from "node:fs";
 import { isAbsolute } from "node:path";
 import baselinePlaces from "../../../data/places.json";
-import addressIndex from "../../../data/astana-address-index.json";
+import { publicAddressIndex } from "../ingestion/public-address-index";
 import { createAddressMatcher, enrichEventAddresses, type AddressIndex } from "../ingestion/address-match";
 import { createEventVenueMatcher } from "../ingestion/event-geo-media";
 import baselineEvents from "../../../data/livedata/sxodim-astana-2026-10-20.json";
@@ -122,7 +122,7 @@ export function initializeVpsRuntime(options: {
     hubCleanup.unref();
     let closed = false;
     const mergedEvents = dataHub ? createHubEventsBridge({ baseGet: events.get, hubGet: () => dataHub.getFeed({ cityId: "astana" }), now: options.now }) : events;
-    const matchAddress = createAddressMatcher(addressIndex as AddressIndex, options.now ?? Date.now);
+    const matchAddress = createAddressMatcher(publicAddressIndex as AddressIndex, options.now ?? Date.now);
     const matchVenue = createEventVenueMatcher(baselinePlaces, matchAddress, options.now ?? Date.now);
     const runtime: VpsRuntime = {
       ai, dataHub, ragTraces, events: { async get() {

@@ -106,7 +106,11 @@ export async function handleChat(request: Request, publicRuntime?: PublicAIRunti
   }
   const retrievalText = dialogue.retrievalText, effectiveContext = dialogue.context;
   const prepareEvents = (feed: Awaited<ReturnType<typeof events.get>>) => publicEventLocations(feed, resolveSourcePolicy);
-  let result = await answerPilotChatWithEvents(retrievalText, effectiveContext, { getEvents: () => events.get(), prepareEvents, resolveSourcePolicy, venueOnly: dialogue.resolvedPlaceName !== null });
+  // A date or excluded event word does not turn an explicit museum/park/meal
+  // request into an afisha query. The deterministic dialogue owns this choice.
+  const venueOnly = dialogue.resolvedPlaceName !== null || dialogue.intent === 'places' || dialogue.intent === 'food'
+    || dialogue.intent === 'date' && effectiveContext.goal === 'food';
+  let result = await answerPilotChatWithEvents(retrievalText, effectiveContext, { getEvents: () => events.get(), prepareEvents, resolveSourcePolicy, venueOnly });
   const constrain = () => {
     result.items = sourcePermission('osm-overpass-poi', 'display', resolveSourcePolicy, now).allowed
       ? filterDialogueCandidates(result.items, dialogue) : [];

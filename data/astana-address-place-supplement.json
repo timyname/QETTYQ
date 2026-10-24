@@ -1,0 +1,19 @@
+{
+  "source": {
+    "url": "https://download.geofabrik.de/asia/kazakhstan-261019.osm.pbf",
+    "asOf": "2026-10-19T20:21:11Z",
+    "retrievedAt": "2026-10-20T20:18:57Z",
+    "license": "ODbL-1.0"
+  },
+  "review": {
+    "reviewedAt": "2026-10-24T17:53:00Z",
+    "extractSha256": "a767ae4bb5b0d6bed68e2148f8960178403813a19661f37edea1973beeb8b342",
+    "observedAddressField": "addr:place",
+    "geometryMethod": "osmium-export-polygon-centroid",
+    "notes": "Two previously omitted public building addresses from the same approved extract, not new geocoding. street stores the whole observed addr:place label. Polygon centroids are derived, not entrances. Original source cutoff and retrieval date are retained."
+  },
+  "entries": [
+    { "street": "Микрорайон Самал", "houseNumber": "9", "lat": 51.1558078, "lon": 71.4281891, "sourceUrl": "https://www.openstreetmap.org/way/158630926", "quality": "derived" },
+    { "street": "микрорайон Самал", "houseNumber": "12", "lat": 51.1534007, "lon": 71.4292544, "sourceUrl": "https://www.openstreetmap.org/way/240391706", "quality": "derived" }
+  ]
+}

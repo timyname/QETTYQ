@@ -8,6 +8,7 @@ import { createPublicAIRuntime } from '../../src/server/pilot/public-ai-runtime'
 import { pilotContextSchema } from '../../src/server/pilot/contracts';
 import { pilotPlaces } from '../../src/server/pilot/catalog';
 import type { LiveAstanaEvent } from '../../src/server/ingestion/sxodim-live';
+import { reviewedEventVenueCorrespondences } from '../../src/server/ingestion/reviewed-event-venues';
 
 const now = Date.parse('2026-10-24T12:00:00Z');
 const event = { ...snapshot.items[0], id: 'sxodim:synthetic-address-api', name: 'SYNTHETIC TEST address event',
@@ -31,6 +32,20 @@ beforeEach(() => {
 afterEach(() => { setHostedRuntime(null); resetSessionStoreForTests(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('address → public map DTO → ordered route API, no provider calls', () => {
+  it.each(reviewedEventVenueCorrespondences)('carries documentary address evidence into a mixed plan: $eventUrl', async review => {
+    vi.mocked(Date.now).mockReturnValue(Date.parse('2026-10-24T18:00:00Z'));
+    const sourceEvent = { ...event, venueName: review.eventVenueName, address: review.eventAddress,
+      contactUrl: review.eventUrl, provenance: { ...event.provenance, sourceUrl: review.eventUrl } };
+    const provider: HostedRuntime['events'] = { get: async () => ({ ...await events.get(), items: [sourceEvent] }) }; host(provider);
+    const item = (await (await handleEvents(new Request('https://qettyq.example/api/events'), provider)).json()).items[0];
+    expect(item.coordinateMatch).toMatchObject({ method: 'osm-exact-venue-v1', sourceUrl: review.sourceUrl });
+    expect(item.coordinateQuality).toBe('derived'); expect(sourceEvent.lat).toBeNull();
+    const ids = [pilotPlaces[0].id, item.id, pilotPlaces[1].id];
+    const response = await savePlan(request(ids)); expect(response.status).toBe(201);
+    const body = await response.json(); expect(body.plan.placeIds).toEqual(ids);
+    expect(body.plan.stops[1]).toMatchObject({ lat: item.lat, lon: item.lon, coordinateQuality: 'derived' });
+    expect(fetch).not.toHaveBeenCalled();
+  });
   it('resolves the observed exact address and accepts the same event among three reordered stops', async () => {
     const response = await handleEvents(new Request('https://qettyq.example/api/events'), events);
     const item = (await response.json()).items[0];
@@ -53,6 +68,18 @@ describe('address → public map DTO → ordered route API, no provider calls', 
   it('rechecks source permissions for route creation, not only the public list', async () => {
     const provider = { ...events, resolveSourcePolicy: () => null }; host(provider);
     expect((await (await handleEvents(new Request('https://qettyq.example/api/events'), provider)).json()).items).toEqual([]);
+    expect((await savePlan(request([event.id]))).status).toBe(400);
+  });
+  it('does not let documentary venue correspondence override an OSM display denial', async () => {
+    const review = reviewedEventVenueCorrespondences[0];
+    vi.mocked(Date.now).mockReturnValue(Date.parse('2026-10-24T18:00:00Z'));
+    const provider: HostedRuntime['events'] = {
+      get: async () => ({ ...await events.get(), items: [{ ...event, contactUrl: review.eventUrl,
+        venueName: review.eventVenueName, address: review.eventAddress }] }),
+      resolveSourcePolicy: id => id === 'osm-overpass-poi' ? null : { persist: true, display: true },
+    }; host(provider);
+    const item = (await (await handleEvents(new Request('https://qettyq.example/api/events'), provider)).json()).items[0];
+    expect(item.lat).toBeNull(); expect(item.coordinateMatch).toBeUndefined();
     expect((await savePlan(request([event.id]))).status).toBe(400);
   });
   it('can display a stale address point without treating the event as currently plannable', async () => {

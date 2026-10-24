@@ -50,8 +50,8 @@ test('synthetic detail → event-filtered map → marker → detail retains two 
   await expect(page.locator('[data-screen="map"]')).toBeVisible();
   await expect(page.locator('[data-screen="map"]').getByRole('button', { name: 'События', exact: true })).toHaveAttribute('aria-pressed', 'true');
   const marker = page.getByRole('button', { name: new RegExp(event.name) });
-  await expect(marker).toHaveCount(1);
-  await expect(marker).toBeVisible({ timeout: 20000 }); await marker.click();
+  await expect(marker).toBeVisible({ timeout: 20000 });
+  await expect(marker).toHaveCount(1); await marker.click();
   await expect(page.getByRole('heading', { name: event.name, exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'В мой план', exact: true }).click();
   await page.getByRole('button', { name: 'Оценить путь', exact: true }).click();

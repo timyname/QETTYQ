@@ -31,16 +31,30 @@ export function createMapTooltip(point: Pick<MapPoint, "title" | "dateLabel">, d
   return tooltip;
 }
 
+export function coLocatedMapPoints(points: readonly Coordinates[]): boolean {
+  const first = points[0];
+  return points.length > 1 && Number.isFinite(first.lat) && Number.isFinite(first.lon)
+    && points.every(point => point.lat === first.lat && point.lon === first.lon);
+}
+
+export function mapOccurrenceLabel(point: Pick<MapPoint, 'title' | 'dateLabel'>): string {
+  return `${point.title}${point.dateLabel ? ` · ${point.dateLabel}` : ''}`;
+}
+
 /** Grid buckets narrow neighbour checks; distances are screen pixels, not metres. */
 export function clusterMapPoints(points: MapPoint[], project: (point: MapPoint) => ScreenPoint, size: { width: number; height: number }, activeId?: string, cellSize = 52): PointCluster[] {
   const clusters: PointCluster[] = [];
   const cells = new Map<string, PointCluster[]>();
+  const coordinateCounts = new Map<string, number>();
+  for (const point of points) if (Number.isFinite(point.lat) && Number.isFinite(point.lon)) {
+    const key = `${point.lat},${point.lon}`; coordinateCounts.set(key, (coordinateCounts.get(key) ?? 0) + 1);
+  }
   const step = Number.isFinite(cellSize) && cellSize > 0 ? cellSize : 52;
   for (const point of points) {
     if (!Number.isFinite(point.lat) || !Number.isFinite(point.lon)) continue;
     const pixel = project(point);
     if (!Number.isFinite(pixel.x) || !Number.isFinite(pixel.y) || pixel.x < 0 || pixel.y < 0 || pixel.x > size.width || pixel.y > size.height) continue;
-    if (point.id === activeId) {
+    if (point.id === activeId && coordinateCounts.get(`${point.lat},${point.lon}`) === 1) {
       clusters.push({ ...pixel, points: [point] });
       continue;
     }
@@ -161,23 +175,25 @@ export function CityMap({ points, activeId, onSelect, onPick, origin, focusPoint
       const groups = clusterMapPoints(points, point => map.latLngToContainerPoint([point.lat, point.lon]), { width: viewport.x, height: viewport.y }, activeId);
       for (const group of groups) {
         if (group.points.length > 1) {
+          const coLocated = coLocatedMapPoints(group.points);
           const size = clusterMarkerSize(group.points.length);
           const position = map.containerPointToLatLng([group.x, group.y]);
           const marker = L.marker(position, {
-            bubblingMouseEvents: false, title: translateText(`Мест: ${group.points.length}. Приблизить`, language), alt: translateText(`Мест: ${group.points.length}. Приблизить`, language),
+            bubblingMouseEvents: false, title: translateText(coLocated ? `Мест: ${group.points.length}. Выбрать` : `Мест: ${group.points.length}. Приблизить`, language), alt: translateText(coLocated ? `Мест: ${group.points.length}. Выбрать` : `Мест: ${group.points.length}. Приблизить`, language),
             icon: L.divIcon({ className: "qettyq-map-cluster-wrap", html: createClusterLabel(group.points.length, document), iconSize: [size, size], iconAnchor: [size / 2, size / 2] }),
           }).addTo(layer);
-          marker.bindTooltip(createMapTooltip({ title: translateText(`Мест: ${group.points.length}`, language), dateLabel: translateText("Нажмите, чтобы приблизить", language) }, document));
+          marker.bindTooltip(createMapTooltip({ title: translateText(`Мест: ${group.points.length}`, language), dateLabel: translateText(coLocated ? 'Нажмите, чтобы выбрать' : 'Нажмите, чтобы приблизить', language) }, document));
           marker.on("click", () => {
-            if (map.getZoom() < 19) {
+            if (!coLocated && map.getZoom() < 19) {
               map.fitBounds(group.points.map(point => [point.lat, point.lon] as [number, number]), { padding: [52, 52], maxZoom: Math.min(19, map.getZoom() + 2) });
             } else {
-              // Several records can share coordinates; keep them selectable at max zoom.
+              // Exact coordinate peers cannot separate with zoom. List each
+              // occurrence immediately without moving or inventing coordinates.
               const list = document.createElement("div");
               for (const point of group.points) {
                 const button = document.createElement("button");
                 button.type = "button";
-                button.textContent = point.title;
+                button.textContent = mapOccurrenceLabel(point);
                 Object.assign(button.style, { display: "block", width: "100%", minHeight: "44px", border: "0", borderBottom: "1px solid #d9e5df", background: "white", color: "#0B332D", textAlign: "left", padding: "8px" });
                 button.addEventListener("click", () => { map.closePopup(); callbacks.current.onSelect?.(point.id); });
                 list.appendChild(button);

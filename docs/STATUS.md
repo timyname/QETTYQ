@@ -1,5 +1,15 @@
 # Статус QETTYQ
 
+## Адреса, выбор события и память · v21/v22 · 24.10.2026
+
+- Тот же live-срез: 4 → 12/15 мероприятий с координатами; 11 проверенных постеров. Восемь новых exact URL/venue/address correspondences, источники и три отказа перечислены в A-event-geo-wave2-20261024.md. Координаты здания/адресной точки OSM, не обещание входа. Две addr:place записи Самала восстановлены из того же разрешённого PBF; дата снимка не омоложена.
+- При точном совпадении координат события выбираются по названию и времени из popup. Исправлен подтверждённый live-баг, когда перекрытый маркер открывал другое событие. Координаты не раздвигаются; соседние разные точки приближаются как раньше. По frontend-design сохранена текущая стеклянная система, без редизайна/CSS-расширения.
+- Фото мест 12 → 13/749: новый Commons-снимок парка Жетысу (2019), Ayratayrat, CC BY-SA4.0. Новых ресторанных фото в этой волне нет: неподтверждённые филиалы/права отклонены. 24 private publisher JPEG / 3350072 bytes, manifest SHA 2866422150f5b8fc11bc233f397022ba8a43b809b612136b16844b66267cee64; 5 Commons. Генерации/watermark не было.
+- RAG: запрос места с датой/отрицанием концертов не переходит ошибочно в афишу; KK postfix-отрицания сохраняются. Бюджет «5000 теңге, 90 минут» больше не подавляется как адрес. Реальные адреса/GPS/URL всё ещё подавляются. Переоткрытие SQLite через два дня и новый guest проверены; consent/TTL/delete прежние.
+- Финальная изолированная сборка v22: tree 5effd7bd253272f5a56db71d31018f2cb0b0e7f1; image 0369fa6e5d09eedcc776e4a0df94d359278591fe9fc36d65e31a55b179dfde95. 1137/1137 unit/integration (96 files), typecheck/scoped lint/Docker build; E2E 22/22 + 2/2 PASS. Отдельные промежуточные неуспехи/исправления тестового ожидания отражены в TEST_REPORT.
+- OpenAI USD10 полностью RESERVED (не доказанный расход), remainingCalls0 / ACCOUNTING_BLOCKED. Google cap прежний; новых платных вызовов 0. Semantic RAG gate ещё не пройден. Презентация, видео и заявка этим релизом не изменяются; physical iPhone и 2ГИС не перепроверялись.
+- Deploy/live: v22 healthy, 222MiB/640MiB, backup PASS. SSH authorized_keys SHA 9abd2d5bb7b3e791b345eeaf6bd608cb40930acb908e6dd9056cf1ab38135c40 неизменен. Обновлён только QETTYQ compose app. Live canary all8new points→ordered plan, KK newguest5000/90,13photos/11posters,24publisherSHA/no-store+5CommonsSHA PASS; собственные test memory/session очищены. Browser exact picker Kinusaiga14:00 → её event ID подтверждён. Screenshot output/playwright/qettyq-v22-occurrence-picker-live.png. Баннер резервного режима может закрывать popup при определённой позиции карты; это отдельный подтверждённый остаточный UI-дефект, не полный UI sign-off.
+
 ## Адрес события → карта → план · v20 · 24.10.2026
 
 - Опубликован `qettyq:vps-20261024-20`, healthy, 203.3 MiB / 640 MiB. Build input tree `ca14c7e2cee239ae60de4dc78d6be9816a26d448`; image `c5dd582a8fcef4033abb3e2fd43d081f6624471c08c6831a4577059d1ab57b27`. Backup проверен; SSH сохранён, hash прежний; изменён только QETTYQ compose app.

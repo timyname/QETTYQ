@@ -27,7 +27,11 @@ export function redactMemoryLocation(text: string) {
   const withoutUrls = text.replace(/https?:\/\/\S+/giu, "[ссылка не сохранена]");
   const addressMarker = /(?:^|[^\p{L}])(?:ул(?:ица|ице|ицу|ицы)?\.?|проспект\p{L}*|пр-т|переул\p{L}*|бульвар\p{L}*|микрорайон\p{L}*|мкр\.?|квартира|кв\.|адрес\p{L}*|живу|проживаю|көшесі\p{L}*|даңғылы\p{L}*|мекенжай\p{L}*|address|street|avenue|road|latitude|longitude|gps|координат\p{L}*|геопозиц\p{L}*)(?=$|[^\p{L}])/iu;
   const bareAddress = /\p{L}{3,}(?:[ -]\p{L}{2,}){0,3},\s*\d{1,4}(?:\/\d+)?(?:[^\d]|$)/u;
-  if (addressMarker.test(withoutUrls) || bareAddress.test(withoutUrls)) return "[Сообщение с адресом или геопозицией не сохранено]";
+  // A numeric budget followed by a numeric duration is not a street/house.
+  // This copy is for the bare-address detector only: explicit address words,
+  // other addresses, URLs and decimal coordinates retain their original guard.
+  const addressCandidate = withoutUrls.replace(/(?<![\p{L}\d])\d{1,7}\s*(?:тенге|теңге|kzt|₸)\s*,\s*\d{1,4}\s*(?:минут\p{L}*|мин\.?|сағат\p{L}*|minutes?|hours?)(?!\p{L})/giu, ' ');
+  if (addressMarker.test(withoutUrls) || bareAddress.test(addressCandidate)) return "[Сообщение с адресом или геопозицией не сохранено]";
   return withoutUrls.replace(/[+-]?\d{1,3}[.,]\d{1,}/gu, "[координата скрыта]");
 }
 

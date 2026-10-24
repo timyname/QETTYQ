@@ -12,6 +12,9 @@ export function isNegatedMention(query: string, match: RegExpMatchArray): boolea
     || /(?:^|[^\p{L}])без$/u.test(before)
     || /(?:^|[^\p{L}])(?:без|вместо|не(?:\s+(?:хочу|хотим|нужен|нужны|нужно|интересует|нравится))?|(?:no|not|without)(?:\s+(?:want|like))?|except|exclude|excluding|avoid|instead\s+of|(?:don['’]?t|do\s+not)\s+(?:want|like))(?:\s+(?:in|to|at))?(?:\s+(?:a|an|any|the|в|на))?\s+$/u.test(before)
     || /^\s+(?:емес|керек\s+емес|қоспа)(?=$|[^\p{L}])/u.test(after)
+    // Exact Kazakh negative predicates, attached to this mention only. Do not
+    // cross a clause, or read positive "ұнайды" / "ғана емес" as rejection.
+    || /^\s+(?:(?:маған|бізге)\s+)?(?:ұнамайды|ұнатпаймын|қаламаймын|қажет\s+емес|барғым\s+келмейді)(?=$|[^\p{L}])/u.test(after)
     || /^\s+(?:(?:мне|нам)\s+)?не\s+(?:хочу|хотим|нужен|нужны|нужно|интересует|интересуют|нравится|нравятся)(?=$|[^\p{L}])/u.test(after);
 }
 
